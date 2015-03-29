@@ -5,7 +5,8 @@ import android.content.res.XmlResourceParser;
 import android.net.Uri;
 
 import com.forsuredb.record.As;
-import com.forsuredb.record.FSRecordModel;
+import com.forsuredb.record.FSAdapter;
+import com.forsuredb.record.FSApi;
 import com.forsuredb.record.ForeignKey;
 import com.forsuredb.record.PrimaryKey;
 import com.google.common.base.Strings;
@@ -14,7 +15,7 @@ import com.google.common.collect.Lists;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +25,7 @@ public class FSTableDescriber {
     private static final int NO_STATIC_DATA_RESOURCE_ID = -1;
 
     private final String name;
-    private final Class<? extends FSRecordModel> recordModelClass;
+    private final FSApi tableApi;
     private final int staticDataResourceId;
     private final String staticDataRecordName;
     private final String mimeType;
@@ -32,10 +33,10 @@ public class FSTableDescriber {
 
     private String tableCreateQuery;
 
-    public FSTableDescriber(String authority, Class<? extends FSRecordModel> recordModelClass, int staticDataResourceId, String staticDataRecordName) throws IllegalStateException {
-        validate(authority, recordModelClass);
-        this.name = recordModelClass.getAnnotation(FSTable.class).value();
-        this.recordModelClass = recordModelClass;
+    public FSTableDescriber(String authority, Class<? extends FSApi> tableApi, int staticDataResourceId, String staticDataRecordName) throws IllegalStateException {
+        validate(authority, tableApi);
+        this.name = tableApi.getAnnotation(FSTable.class).value();
+        this.tableApi = FSAdapter.create(tableApi);
         this.staticDataResourceId = staticDataResourceId;
         this.staticDataRecordName = staticDataRecordName;
         mimeType = "vnd.android.cursor/" + name;
@@ -43,16 +44,16 @@ public class FSTableDescriber {
         ForSure.getInstance().putTable(this);
     }
 
-    public FSTableDescriber(String authority, Class<? extends FSRecordModel> recordModelClass) throws IllegalStateException {
-        this(authority, recordModelClass, NO_STATIC_DATA_RESOURCE_ID, "");
+    public FSTableDescriber(String authority, Class<? extends FSApi> tableApi) throws IllegalStateException {
+        this(authority, tableApi, NO_STATIC_DATA_RESOURCE_ID, "");
     }
 
     public String getName() {
         return name;
     }
 
-    public Class<? extends FSRecordModel> getRecordModelClass() {
-        return recordModelClass;
+    public FSApi getTableApi() {
+        return tableApi;
     }
 
     public String getMimeType() {
@@ -111,8 +112,8 @@ public class FSTableDescriber {
     private String buildTableCreateQuery() {
         StringBuffer queryBuffer = new StringBuffer("CREATE TABLE ").append(name).append("(");
 
-        for (Field field : recordModelClass.getDeclaredFields()) {
-            appendColumnDefinitionTo(queryBuffer, field);
+        for (Method method : tableApi.getClass().getDeclaredMethods()) {
+            appendColumnDefinitionTo(queryBuffer, method);
             queryBuffer.append(", ");
         }
         queryBuffer.delete(queryBuffer.length() - 2, queryBuffer.length()); // <-- remove final ", "
@@ -120,20 +121,20 @@ public class FSTableDescriber {
         return queryBuffer.append(");").toString();
     }
 
-    private void appendColumnDefinitionTo(StringBuffer queryBuffer, Field field) {
-        final TypeTranslator typeTranslator = TypeTranslator.getFrom(field.getGenericType());
-        queryBuffer.append(getColumnName(field)).append(" ")
+    private void appendColumnDefinitionTo(StringBuffer queryBuffer, Method method) {
+        final TypeTranslator typeTranslator = TypeTranslator.getFrom(method.getGenericReturnType());
+        queryBuffer.append(getColumnName(method)).append(" ")
                    .append(typeTranslator == null ? "" : typeTranslator.getSQLiteTypeString())
-                   .append(field.isAnnotationPresent(PrimaryKey.class) ? " " + field.getAnnotation(PrimaryKey.class).definitionText() : "");
+                   .append(method.isAnnotationPresent(PrimaryKey.class) ? " " + method.getAnnotation(PrimaryKey.class).definitionText() : "");
     }
 
     private void appendForeignKeysLineTo(StringBuffer queryBuffer) {
-        for (Field field : recordModelClass.getDeclaredFields()) {
-            if (!field.isAnnotationPresent(ForeignKey.class)) {
+        for (Method method : tableApi.getClass().getDeclaredMethods()) {
+            if (!method.isAnnotationPresent(ForeignKey.class)) {
                 continue;
             }
-            final String columnName = field.isAnnotationPresent(As.class) ? field.getAnnotation(As.class).value() : field.getName();
-            final ForeignKey foreignKey = field.getAnnotation(ForeignKey.class);
+            final String columnName = method.isAnnotationPresent(As.class) ? method.getAnnotation(As.class).value() : method.getName();
+            final ForeignKey foreignKey = method.getAnnotation(ForeignKey.class);
             queryBuffer.append(", FOREIGN KEY(")
                        .append(columnName)
                        .append(") REFERENCES ")
@@ -143,8 +144,8 @@ public class FSTableDescriber {
         }
     }
 
-    private String getColumnName(Field field) {
-        return field.isAnnotationPresent(As.class) ? field.getAnnotation(As.class).value() : field.getName();
+    private String getColumnName(Method method) {
+        return method.isAnnotationPresent(As.class) ? method.getAnnotation(As.class).value() : method.getName();
     }
 
 
@@ -153,48 +154,48 @@ public class FSTableDescriber {
      *     Validates the properties of this table to be correct
      * </p>
      */
-    private void validate(String authority, Class<? extends FSRecordModel> recordModelClass) throws IllegalStateException, IllegalArgumentException {
-        if (!recordModelClass.isAnnotationPresent(FSTable.class)) {
+    private void validate(String authority, Class<? extends FSApi> tableApi) throws IllegalStateException, IllegalArgumentException {
+        if (!tableApi.isAnnotationPresent(FSTable.class)) {
             throw new IllegalArgumentException("Cannot create table without a table name. Use the FSTable annotation on all FSDataModel extensions");
         }
-        final String name = recordModelClass.getAnnotation(FSTable.class).value();
+        final String name = tableApi.getAnnotation(FSTable.class).value();
         if (ForSure.getInstance().containsTable(name)) {
             throw new IllegalArgumentException("Cannot create table named " + name + "; that table already exists.");
         }
         if (authority == null) {
             throw new IllegalArgumentException ("Cannot create table with null authority");
         }
-        for (Field field : recordModelClass.getDeclaredFields()) {
-            if (!field.isAnnotationPresent(ForeignKey.class)) {
+        for (Method method : tableApi.getDeclaredMethods()) {
+            if (!method.isAnnotationPresent(ForeignKey.class)) {
                 continue;
             }
-            final ForeignKey foreignKey = field.getAnnotation(ForeignKey.class);
-            validateForeignKeyRelationship(field, foreignKey);
+            final ForeignKey foreignKey = method.getAnnotation(ForeignKey.class);
+            validateForeignKeyRelationship(method, foreignKey);
         }
     }
 
-    private void validateForeignKeyRelationship(Field field, ForeignKey foreignKey) throws IllegalStateException, IllegalArgumentException {
+    private void validateForeignKeyRelationship(Method method, ForeignKey foreignKey) throws IllegalStateException, IllegalArgumentException {
         final ForSure forSure = ForSure.getInstance();
         if (!forSure.containsTable(foreignKey.tableName())) {
             throw new IllegalStateException("Must create table " + foreignKey.tableName() + " prior to creating table " + name);
         }
 
-        Class<? extends FSRecordModel> foreignRecordModelClass = forSure.getTable(foreignKey.tableName()).getRecordModelClass();
+        FSApi foreignTableApi = forSure.getTable(foreignKey.tableName()).getTableApi();
         boolean foreignKeyExists = false;
         Type foreignKeyType = null;
-        for (Field foreignField : foreignRecordModelClass.getDeclaredFields()) {
-            final String foreignColumnName = getColumnName(foreignField);
+        for (Method foreignMethod : foreignTableApi.getClass().getDeclaredMethods()) {
+            final String foreignColumnName = getColumnName(foreignMethod);
             if (foreignKey.columnName().equals(foreignColumnName)) {
                 foreignKeyExists = true;
-                foreignKeyType = foreignField.getType();
+                foreignKeyType = foreignMethod.getGenericReturnType();
                 break;
             }
         }
         if (!foreignKeyExists) {
-            throw new IllegalArgumentException("field " + field.getName() + " references foreign field (" + foreignKey.tableName() + "." + foreignKey.columnName() + ") that does not exist");
+            throw new IllegalArgumentException("method " + method.getName() + " references foreign method (" + foreignKey.tableName() + "." + foreignKey.columnName() + ") that does not exist");
         }
-        if (!field.getType().equals(foreignKeyType)) {
-            throw new IllegalArgumentException("field " + field.getName() + " references foreign field (" + foreignKey.tableName() + "." + foreignKey.columnName() + ") that exists, but is of incorrect type");
+        if (!method.getGenericReturnType().equals(foreignKeyType)) {
+            throw new IllegalArgumentException("field " + method.getName() + " references foreign field (" + foreignKey.tableName() + "." + foreignKey.columnName() + ") that exists, but is of incorrect type");
         }
     }
 
@@ -203,8 +204,8 @@ public class FSTableDescriber {
     private String getInsertionQuery(XmlResourceParser parser, String queryPrefix) {
         final StringBuffer queryBuf = new StringBuffer(queryPrefix);
         final StringBuffer valueBuf = new StringBuffer();
-        for (Field field : recordModelClass.getDeclaredFields()) {
-            final String columnName = getColumnName(field);
+        for (Method method : tableApi.getClass().getDeclaredMethods()) {
+            final String columnName = getColumnName(method);
             if ("_id".equals(columnName)) {
                 continue;   // <-- never insert an _id column
             }

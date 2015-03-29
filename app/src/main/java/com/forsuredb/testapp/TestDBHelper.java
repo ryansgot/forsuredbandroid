@@ -5,8 +5,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.forsuredb.table.FSTableDescriber;
-import com.forsuredb.testapp.model.ProfileInfo;
-import com.forsuredb.testapp.model.User;
+import com.forsuredb.testapp.model.ProfileInfoTableApi;
+import com.forsuredb.testapp.model.UserTableApi;
 import com.google.common.collect.Lists;
 
 import java.util.List;
@@ -21,8 +21,8 @@ public class TestDBHelper extends SQLiteOpenHelper {
      * has an @FSColumn that is a foreign key reference to an @FSColumn in UserTableDescriber, then UserTable must
      * appear first in this list.
      */
-    private static final List<FSTableDescriber> tables = Lists.newArrayList(new FSTableDescriber(TestContentProvider.AUTHORITY, User.class, R.xml.user, "user"),
-                                                                            new FSTableDescriber(TestContentProvider.AUTHORITY, ProfileInfo.class, R.xml.profile_info, "profile_info"));
+    private static final List<FSTableDescriber> tables = Lists.newArrayList(new FSTableDescriber(TestContentProvider.AUTHORITY, UserTableApi.class, R.xml.user, "user"),
+                                                                            new FSTableDescriber(TestContentProvider.AUTHORITY, ProfileInfoTableApi.class, R.xml.profile_info, "profile_info"));
 
     private final Context context;
 

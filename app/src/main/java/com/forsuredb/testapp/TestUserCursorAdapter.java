@@ -8,14 +8,18 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import com.forsuredb.record.Request;
+import com.forsuredb.record.FSAdapter;
+import com.forsuredb.table.ForSure;
+import com.forsuredb.testapp.model.UserTableApi;
 
 public class TestUserCursorAdapter extends BaseAdapter {
 
+    private final UserTableApi tableApi;
     private Context context;
     private Cursor cursor;
 
     public TestUserCursorAdapter(Context context) {
+        tableApi = (UserTableApi) ForSure.getInstance().getTable("user").getTableApi();
         this.context = context;
         cursor = null;
     }
@@ -40,8 +44,8 @@ public class TestUserCursorAdapter extends BaseAdapter {
         if (cursor == null || !cursor.moveToPosition(position)) {
             return null;
         }
-        return new ViewBuilder().id(Request.get("_id", Long.class).from(cursor))
-                                .globalId(Request.get("global_id", Long.class).from(cursor))
+        return new ViewBuilder().id(tableApi.id(cursor))
+                                .globalId(tableApi.globalId(cursor))
                                 .targetLayout(view)
                                 .build(context);
     }
