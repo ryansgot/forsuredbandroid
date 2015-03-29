@@ -49,8 +49,6 @@ public class TestContentProvider extends ContentProvider {
 
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-        // Correct selection and selectionArgs if uri specifies a resource ID, but the selection string and selectionArgs do not
-        // specify the resource ID
         FSTableDescriber fsTableDescriber = ContentProviderHelper.resolveUri(uri);
         if (fsTableDescriber == null) {
             return 0;
