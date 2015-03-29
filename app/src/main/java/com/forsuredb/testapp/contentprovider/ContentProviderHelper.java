@@ -32,6 +32,7 @@ import java.util.List;
         }
     }
 
+    // TODO(ryan): this is brittle and depends upon SQL query style
     public static String ensureIdInSelection(String selection) {
         if (Strings.isNullOrEmpty(selection)) {
             return "_id = ?";
