@@ -3,8 +3,9 @@ package com.forsuredb.table;
 import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.net.Uri;
+import android.util.Log;
 
-import com.forsuredb.record.As;
+import com.forsuredb.record.FSColumn;
 import com.forsuredb.record.FSAdapter;
 import com.forsuredb.record.FSApi;
 import com.forsuredb.record.ForeignKey;
@@ -15,6 +16,7 @@ import com.google.common.collect.Lists;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -25,18 +27,19 @@ public class FSTableDescriber {
     private static final int NO_STATIC_DATA_RESOURCE_ID = -1;
 
     private final String name;
-    private final FSApi tableApi;
+    private final Class<? extends FSApi> tableApiClass;
     private final int staticDataResourceId;
     private final String staticDataRecordName;
     private final String mimeType;
     private final Uri allRecordsUri;
 
     private String tableCreateQuery;
+    private FSApi tableApi;
 
-    public FSTableDescriber(String authority, Class<? extends FSApi> tableApi, int staticDataResourceId, String staticDataRecordName) throws IllegalStateException {
-        validate(authority, tableApi);
-        this.name = tableApi.getAnnotation(FSTable.class).value();
-        this.tableApi = FSAdapter.create(tableApi);
+    public FSTableDescriber(String authority, Class<? extends FSApi> tableApiClass, int staticDataResourceId, String staticDataRecordName) throws IllegalStateException {
+        validate(authority, tableApiClass);
+        this.name = tableApiClass.getAnnotation(FSTable.class).value();
+        this.tableApiClass = tableApiClass;
         this.staticDataResourceId = staticDataResourceId;
         this.staticDataRecordName = staticDataRecordName;
         mimeType = "vnd.android.cursor/" + name;
@@ -50,10 +53,6 @@ public class FSTableDescriber {
 
     public String getName() {
         return name;
-    }
-
-    public FSApi getTableApi() {
-        return tableApi;
     }
 
     public String getMimeType() {
@@ -73,6 +72,13 @@ public class FSTableDescriber {
             tableCreateQuery = buildTableCreateQuery();
         }
         return tableCreateQuery;
+    }
+
+    public FSApi getTableApi() {
+        if (tableApi == null) {
+            tableApi = FSAdapter.create(tableApiClass);
+        }
+        return tableApi;
     }
 
     /**
@@ -112,7 +118,10 @@ public class FSTableDescriber {
     private String buildTableCreateQuery() {
         StringBuffer queryBuffer = new StringBuffer("CREATE TABLE ").append(name).append("(");
 
-        for (Method method : tableApi.getClass().getDeclaredMethods()) {
+        for (Method method : tableApiClass.getDeclaredMethods()) {
+            if (!method.isAnnotationPresent(FSColumn.class)) {
+                continue;
+            }
             appendColumnDefinitionTo(queryBuffer, method);
             queryBuffer.append(", ");
         }
@@ -128,24 +137,28 @@ public class FSTableDescriber {
                    .append(method.isAnnotationPresent(PrimaryKey.class) ? " " + method.getAnnotation(PrimaryKey.class).definitionText() : "");
     }
 
+    private boolean isForeignKey(Method method) {
+        return method.isAnnotationPresent(ForeignKey.class);
+    }
+
     private void appendForeignKeysLineTo(StringBuffer queryBuffer) {
-        for (Method method : tableApi.getClass().getDeclaredMethods()) {
-            if (!method.isAnnotationPresent(ForeignKey.class)) {
+        for (Method method : tableApiClass.getDeclaredMethods()) {
+            if (!method.isAnnotationPresent(FSColumn.class) || !isForeignKey(method)) {
                 continue;
             }
-            final String columnName = method.isAnnotationPresent(As.class) ? method.getAnnotation(As.class).value() : method.getName();
+            final String columnName = getColumnName(method);
             final ForeignKey foreignKey = method.getAnnotation(ForeignKey.class);
             queryBuffer.append(", FOREIGN KEY(")
                        .append(columnName)
                        .append(") REFERENCES ")
-                       .append(foreignKey.tableName())
+                       .append(foreignKey.apiClass().getAnnotation(FSTable.class).value())
                        .append("(").append(foreignKey.columnName())
                        .append(")");
         }
     }
 
     private String getColumnName(Method method) {
-        return method.isAnnotationPresent(As.class) ? method.getAnnotation(As.class).value() : method.getName();
+        return method.getAnnotation(FSColumn.class).value().isEmpty() ? method.getName() : method.getAnnotation(FSColumn.class).value();
     }
 
 
@@ -166,7 +179,7 @@ public class FSTableDescriber {
             throw new IllegalArgumentException ("Cannot create table with null authority");
         }
         for (Method method : tableApi.getDeclaredMethods()) {
-            if (!method.isAnnotationPresent(ForeignKey.class)) {
+            if (!method.isAnnotationPresent(FSColumn.class) || !isForeignKey(method)) {
                 continue;
             }
             final ForeignKey foreignKey = method.getAnnotation(ForeignKey.class);
@@ -175,27 +188,42 @@ public class FSTableDescriber {
     }
 
     private void validateForeignKeyRelationship(Method method, ForeignKey foreignKey) throws IllegalStateException, IllegalArgumentException {
-        final ForSure forSure = ForSure.getInstance();
-        if (!forSure.containsTable(foreignKey.tableName())) {
-            throw new IllegalStateException("Must create table " + foreignKey.tableName() + " prior to creating table " + name);
-        }
+        validateForeignKeyTable(foreignKey.apiClass());
+        validateForeignKeyPresence(method, foreignKey);
+    }
 
-        FSApi foreignTableApi = forSure.getTable(foreignKey.tableName()).getTableApi();
+    private void validateForeignKeyTable(Class<? extends FSApi> foreignTableApiClass) {
+        if (!foreignTableApiClass.isAnnotationPresent(FSTable.class)) {
+            throw new IllegalArgumentException("ForeignKey apiClass must be a class annotated with the FSTable annotation");
+        }
+        final String foreignTableName = foreignTableApiClass.getAnnotation(FSTable.class).value();
+        final ForSure forSure = ForSure.getInstance();
+        if (!forSure.containsTable(foreignTableName)) {
+            throw new IllegalStateException("Must create table " + foreignTableName + " prior to creating table " + name);
+        }
+    }
+
+    private void validateForeignKeyPresence(Method method, ForeignKey foreignKey) {
+        final Class<? extends FSApi> foreignTableApiClass = foreignKey.apiClass();
+        final String foreignTableName = foreignTableApiClass.getAnnotation(FSTable.class).value();
         boolean foreignKeyExists = false;
         Type foreignKeyType = null;
-        for (Method foreignMethod : foreignTableApi.getClass().getDeclaredMethods()) {
+        for (Method foreignMethod : foreignTableApiClass.getDeclaredMethods()) {
+            if (!foreignMethod.isAnnotationPresent(FSColumn.class)) {
+                continue;
+            }
             final String foreignColumnName = getColumnName(foreignMethod);
-            if (foreignKey.columnName().equals(foreignColumnName)) {
+            if (foreignColumnName.equals(foreignColumnName)) {
                 foreignKeyExists = true;
                 foreignKeyType = foreignMethod.getGenericReturnType();
                 break;
             }
         }
         if (!foreignKeyExists) {
-            throw new IllegalArgumentException("method " + method.getName() + " references foreign method (" + foreignKey.tableName() + "." + foreignKey.columnName() + ") that does not exist");
+            throw new IllegalArgumentException("method " + method.getName() + " references foreign method (" + foreignTableName + "." + foreignKey.columnName() + ") that does not exist");
         }
         if (!method.getGenericReturnType().equals(foreignKeyType)) {
-            throw new IllegalArgumentException("field " + method.getName() + " references foreign field (" + foreignKey.tableName() + "." + foreignKey.columnName() + ") that exists, but is of incorrect type");
+            throw new IllegalArgumentException("field " + method.getName() + " references foreign field (" + foreignTableName + "." + foreignKey.columnName() + ") that exists, but is of incorrect type");
         }
     }
 
@@ -204,7 +232,10 @@ public class FSTableDescriber {
     private String getInsertionQuery(XmlResourceParser parser, String queryPrefix) {
         final StringBuffer queryBuf = new StringBuffer(queryPrefix);
         final StringBuffer valueBuf = new StringBuffer();
-        for (Method method : tableApi.getClass().getDeclaredMethods()) {
+        for (Method method : tableApiClass.getDeclaredMethods()) {
+            if (!method.isAnnotationPresent(FSColumn.class)) {
+                continue;
+            }
             final String columnName = getColumnName(method);
             if ("_id".equals(columnName)) {
                 continue;   // <-- never insert an _id column
@@ -230,7 +261,7 @@ public class FSTableDescriber {
     // Private classes
 
     private static enum TypeTranslator {
-        LONG(Long.class, "INTEGER"),
+        LONG(long.class, "INTEGER"),
         STRING(String.class, "TEXT");
 
         private Type type;

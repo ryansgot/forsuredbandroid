@@ -1,6 +1,7 @@
 package com.forsuredb.record;
 
 import android.database.Cursor;
+import android.database.CursorWrapper;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -11,7 +12,7 @@ import java.lang.reflect.Type;
 
 public class FSAdapter {
 
-    private static ImmutableMap<Type, Method> cursorMethodMap;
+    /*package*/ static ImmutableMap<Type, Method> cursorMethodMap;
     static {
         try {
             cursorMethodMap = new ImmutableMap.Builder<Type, Method>().put(long.class, Cursor.class.getDeclaredMethod("getLong", int.class))
@@ -22,36 +23,11 @@ public class FSAdapter {
         }
     }
 
-    private static final Handler handler = new Handler();
-
-    private final Class<? extends FSApi> tableApi;
-
-    private FSAdapter(Class<? extends FSApi> tableApi) {
-        this.tableApi = tableApi;
-    }
+    private static final Handler handler = new Handler();   // <-- there only needs to be one handler ever
 
     public static <T> T create(Class<T> tableApi) {
-        validateTableApi(tableApi);
+        ApiValidator.validate(tableApi);
         return (T) Proxy.newProxyInstance(tableApi.getClassLoader(), new Class<?>[] {tableApi}, handler);
-    }
-
-    private static <T> void validateTableApi(Class<T> tableApi) {
-        for (Method m : tableApi.getDeclaredMethods()) {
-            if (!cursorMethodMap.containsKey(m.getGenericReturnType())) {
-                throw new IllegalArgumentException("method " + m.getName() + " has illegal return type, supported types are: " + cursorMethodMap.keySet().toString());
-            }
-
-            Type[] types = m.getParameterTypes();
-            if (types.length > 1) {
-                throw new IllegalArgumentException("method " + m.getName() + " has more than one parameter. Only one Cursor parameter is allowed");
-            }
-            if (types.length < 1) {
-                throw new IllegalArgumentException("method " + m.getName() + " has less than one parameter. A Cursor parameter is required.");
-            }
-            if (!types[0].equals(Cursor.class)) {
-                throw new IllegalArgumentException("method " + m.getName() + " has a " + types[0].getClass().getName() + " parameter. A Cursor parameter is required.");
-            }
-        }
     }
 
     private static class Handler implements InvocationHandler {
@@ -60,10 +36,11 @@ public class FSAdapter {
             if (method.getDeclaringClass() == Object.class) {
                 return method.invoke(this, args);
             }
-            if (args[0] == null || !args[0].getClass().equals(Cursor.class)) {
-                throw new IllegalArgumentException("You must pass an object of the Cursor class");
+            if (args[0] == null || !(args[0] instanceof CursorWrapper)) {
+                throw new IllegalArgumentException("You must pass an object of the Cursor class as the first argument, passed: " + args[0].getClass().getName());
             }
-            return cursorMethodMap.get(method.getGenericReturnType()).invoke(proxy, args);
+            FSColumn fsColumn = method.getAnnotation(FSColumn.class);
+            return cursorMethodMap.get(method.getGenericReturnType()).invoke(args[0], ((CursorWrapper) args[0]).getColumnIndex(fsColumn.value()));
         }
     }
 }
