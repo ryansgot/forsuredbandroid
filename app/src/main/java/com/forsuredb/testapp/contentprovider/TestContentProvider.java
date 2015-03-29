@@ -33,6 +33,10 @@ public class TestContentProvider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues values) {
         final FSTableDescriber fsTableDescriber = ContentProviderHelper.resolveUri(uri);
+        if (fsTableDescriber == null) {
+            return null;
+        }
+
         final SQLiteDatabase db = ForSure.getInstance().getWritableDatabase();
         long rowId = db.insertWithOnConflict(fsTableDescriber.getName(), null, values, SQLiteDatabase.CONFLICT_IGNORE);
         if (rowId != -1) {
@@ -48,6 +52,10 @@ public class TestContentProvider extends ContentProvider {
         // Correct selection and selectionArgs if uri specifies a resource ID, but the selection string and selectionArgs do not
         // specify the resource ID
         FSTableDescriber fsTableDescriber = ContentProviderHelper.resolveUri(uri);
+        if (fsTableDescriber == null) {
+            return 0;
+        }
+
         final boolean singleRecord = ContentProviderHelper.isSingleRecord(uri);
         selection = singleRecord ? ContentProviderHelper.ensureIdInSelection(selection) : selection;
         selectionArgs = singleRecord ? ContentProviderHelper.ensureIdInSelectionArgs(uri, selection, selectionArgs) : selectionArgs;
@@ -62,9 +70,11 @@ public class TestContentProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        // Correct selection and selectionArgs if uri specifies a resource ID, but the selection string and selectionArgs do not
-        // specify the resource ID
         FSTableDescriber fsTableDescriber = ContentProviderHelper.resolveUri(uri);
+        if (fsTableDescriber == null) {
+            return 0;
+        }
+
         final boolean singleRecord = ContentProviderHelper.isSingleRecord(uri);
         selection = singleRecord ? ContentProviderHelper.ensureIdInSelection(selection) : selection;
         selectionArgs = singleRecord ? ContentProviderHelper.ensureIdInSelectionArgs(uri, selection, selectionArgs) : selectionArgs;
@@ -79,9 +89,11 @@ public class TestContentProvider extends ContentProvider {
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-        // Correct selection and selectionArgs if uri specifies a resource ID, but the selection string and selectionArgs do not
-        // specify the resource ID
         FSTableDescriber fsTableDescriber = ContentProviderHelper.resolveUri(uri);
+        if (fsTableDescriber == null) {
+            return null;
+        }
+
         final boolean singleRecord = ContentProviderHelper.isSingleRecord(uri);
         selection = singleRecord ? ContentProviderHelper.ensureIdInSelection(selection) : selection;
         selectionArgs = singleRecord ? ContentProviderHelper.ensureIdInSelectionArgs(uri, selection, selectionArgs) : selectionArgs;
