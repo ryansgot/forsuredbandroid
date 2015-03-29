@@ -6,6 +6,7 @@ import android.database.CursorWrapper;
 import com.google.common.collect.ImmutableMap;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
@@ -26,21 +27,35 @@ public class FSAdapter {
     private static final Handler handler = new Handler();   // <-- there only needs to be one handler ever
 
     public static <T> T create(Class<T> tableApi) {
-        ApiValidator.validate(tableApi);
+        ApiValidator.validateClass(tableApi);
         return (T) Proxy.newProxyInstance(tableApi.getClassLoader(), new Class<?>[] {tableApi}, handler);
     }
 
     private static class Handler implements InvocationHandler {
+
+        /**
+         * <p>
+         *     Generates a Proxy for the FSApi interface created by the client.
+         * </p>
+         * @param proxy not actually ever used.
+         * @param method not actually ever called, rather, it stores the meta-data associated with a call to one of the Cursor class methods
+         * @param args The Cursor object on which one of the get methods will be called
+         *
+         * @return
+         * @throws Throwable
+         */
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             if (method.getDeclaringClass() == Object.class) {
                 return method.invoke(this, args);
             }
-            if (args[0] == null || !(args[0] instanceof CursorWrapper)) {
-                throw new IllegalArgumentException("You must pass an object of the Cursor class as the first argument, passed: " + args[0].getClass().getName());
-            }
-            FSColumn fsColumn = method.getAnnotation(FSColumn.class);
-            return cursorMethodMap.get(method.getGenericReturnType()).invoke(args[0], ((CursorWrapper) args[0]).getColumnIndex(fsColumn.value()));
+            ApiValidator.validateCall(method, args);
+            return callCursorMethod((CursorWrapper) args[0], method.getAnnotation(FSColumn.class), method.getGenericReturnType());
+        }
+
+        private Object callCursorMethod(CursorWrapper cursor, FSColumn fsColumn, Type type)
+                                                                        throws InvocationTargetException, IllegalAccessException {
+            return cursorMethodMap.get(type).invoke(cursor, cursor.getColumnIndex(fsColumn.value()));
         }
     }
 }

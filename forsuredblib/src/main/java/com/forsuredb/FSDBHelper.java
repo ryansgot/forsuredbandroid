@@ -1,43 +1,43 @@
-package com.forsuredb.testapp;
+package com.forsuredb;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.forsuredb.table.FSTableDescriber;
-import com.forsuredb.testapp.model.ProfileInfoTableApi;
-import com.forsuredb.testapp.model.UserTableApi;
-import com.google.common.collect.Lists;
 
 import java.util.List;
 
-public class TestDBHelper extends SQLiteOpenHelper {
-
-    private static final String DB_NAME = "fs_test.db";
-    private static final int DB_VERSION = 1;
+/*package*/ class FSDBHelper extends SQLiteOpenHelper {
 
     /**
-     * Add the tables in the order that is necessary for proper SQL Execution. In other words, if ContactTable
-     * has an @FSColumn that is a foreign key reference to an @FSColumn in UserTableDescriber, then UserTable must
-     * appear first in this list.
+     * Add the tables in the order that is necessary for proper SQL Execution. In other words, if ProfileInfoApi
+     * has an @FSColumn that is a foreign key reference to an @FSColumn in UserApi, then UserApi must be used to create an
+     * FSTableDescriber first
      */
-    private static final List<FSTableDescriber> tables = Lists.newArrayList(new FSTableDescriber(TestContentProvider.AUTHORITY, UserTableApi.class, R.xml.user, "user"),
-                                                                            new FSTableDescriber(TestContentProvider.AUTHORITY, ProfileInfoTableApi.class, R.xml.profile_info, "profile_info"));
+    private final List<FSTableDescriber> tables;
 
     private final Context context;
 
-    private TestDBHelper(Context context) {
-        super(context.getApplicationContext(), DB_NAME, null, DB_VERSION);
-        this.context = context.getApplicationContext();
+    private FSDBHelper(Context context, String dbName, int dbVersion, List<FSTableDescriber> tables) {
+        super(context, dbName, null, dbVersion);
+        this.context = context;
+        this.tables = tables;
     }
 
     private static final class Holder {
-        public static TestDBHelper instance;
+        public static FSDBHelper instance;
     }
 
-    public static TestDBHelper getInstance(Context context) {
+    public static void init(Context context, String dbName, int dbVersion, List<FSTableDescriber> tables) {
         if (Holder.instance == null) {
-            Holder.instance = new TestDBHelper(context);
+            Holder.instance = new FSDBHelper(context, dbName, dbVersion, tables);
+        }
+    }
+
+    public static FSDBHelper getInstance() {
+        if (Holder.instance == null) {
+            throw new IllegalStateException("Must call FSDBHelper.init prior to getting instance");
         }
         return Holder.instance;
     }

@@ -1,0 +1,74 @@
+package com.forsuredb;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+
+import com.forsuredb.table.FSTableCreator;
+import com.forsuredb.table.FSTableDescriber;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class ForSure {
+
+    private Map<String, FSTableDescriber> tableDescriberMap = new HashMap<String, FSTableDescriber>();
+
+    private ForSure() {}
+
+    private static class Holder {
+        public static ForSure instance;
+    }
+
+    /**
+     * <p>
+     *     Initializes the underlying database tables and
+     * </p>
+     * @param context
+     * @param tableCreators
+     */
+    public static void init(Context context, String dbName, int dbVersion, List<FSTableCreator> tableCreators) {
+        if (Holder.instance == null) {
+            Holder.instance = new ForSure();
+            FSDBHelper.init(context.getApplicationContext(), dbName, dbVersion, initializeTableDescribers(tableCreators));
+        }
+    }
+
+    public static ForSure getInstance() throws IllegalStateException {
+        if (Holder.instance == null) {
+            throw new IllegalStateException("Must call ForSure.init method prior to getting an instance");
+        }
+        return Holder.instance;
+    }
+
+    private static List<FSTableDescriber> initializeTableDescribers(List<FSTableCreator> tableCreators) {
+        final List<FSTableDescriber> retList = new ArrayList<FSTableDescriber>();
+        for (FSTableCreator tableCreator : tableCreators) {
+            final FSTableDescriber table = new FSTableDescriber(tableCreator);
+            Holder.instance.addTable(table);
+            retList.add(table);
+        }
+        return retList;
+    }
+
+    public SQLiteDatabase getReadableDatabase() {
+        return FSDBHelper.getInstance().getReadableDatabase();
+    }
+
+    public SQLiteDatabase getWritableDatabase() {
+        return FSDBHelper.getInstance().getWritableDatabase();
+    }
+
+    public FSTableDescriber getTable(String tableName) {
+        return tableName == null ? null : tableDescriberMap.get(tableName);
+    }
+
+    public boolean containsTable(String tableName) {
+        return tableDescriberMap.containsKey(tableName);
+    }
+
+    private void addTable(FSTableDescriber fsTableDescriber) {
+        tableDescriberMap.put(fsTableDescriber.getName(), fsTableDescriber);
+    }
+}

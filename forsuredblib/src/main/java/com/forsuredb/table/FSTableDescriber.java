@@ -3,8 +3,8 @@ package com.forsuredb.table;
 import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.net.Uri;
-import android.util.Log;
 
+import com.forsuredb.ForSure;
 import com.forsuredb.record.FSColumn;
 import com.forsuredb.record.FSAdapter;
 import com.forsuredb.record.FSApi;
@@ -16,7 +16,6 @@ import com.google.common.collect.Lists;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -24,11 +23,11 @@ import java.util.List;
 
 public class FSTableDescriber {
 
-    private static final int NO_STATIC_DATA_RESOURCE_ID = -1;
+    /*package*/ static final int NO_STATIC_DATA_RESOURCE_ID = -1;
 
     private final String name;
     private final Class<? extends FSApi> tableApiClass;
-    private final int staticDataResourceId;
+    private final int staticDataResId;
     private final String staticDataRecordName;
     private final String mimeType;
     private final Uri allRecordsUri;
@@ -36,19 +35,19 @@ public class FSTableDescriber {
     private String tableCreateQuery;
     private FSApi tableApi;
 
-    public FSTableDescriber(String authority, Class<? extends FSApi> tableApiClass, int staticDataResourceId, String staticDataRecordName) throws IllegalStateException {
+    public FSTableDescriber(FSTableCreator FSTableCreator) throws IllegalStateException {
+        this(FSTableCreator.getAuthority(), FSTableCreator.getTableApiClass(), FSTableCreator.getStaticDataResId(), FSTableCreator.getStaticDataRecordName());
+    }
+
+    private FSTableDescriber(String authority, Class<? extends FSApi> tableApiClass, int staticDataResId, String staticDataRecordName)
+                                                                                                    throws IllegalStateException {
         validate(authority, tableApiClass);
         this.name = tableApiClass.getAnnotation(FSTable.class).value();
         this.tableApiClass = tableApiClass;
-        this.staticDataResourceId = staticDataResourceId;
+        this.staticDataResId = staticDataResId;
         this.staticDataRecordName = staticDataRecordName;
         mimeType = "vnd.android.cursor/" + name;
         allRecordsUri = Uri.parse("content://" + authority + "/" + name);
-        ForSure.getInstance().putTable(this);
-    }
-
-    public FSTableDescriber(String authority, Class<? extends FSApi> tableApi) throws IllegalStateException {
-        this(authority, tableApi, NO_STATIC_DATA_RESOURCE_ID, "");
     }
 
     public String getName() {
@@ -89,12 +88,12 @@ public class FSTableDescriber {
      * @return an empty list if there should be no static data
      */
     public List<String> getStaticInsertsSQL(Context context) {
-        if (staticDataResourceId == NO_STATIC_DATA_RESOURCE_ID || Strings.isNullOrEmpty(staticDataRecordName)) {
+        if (staticDataResId == NO_STATIC_DATA_RESOURCE_ID || Strings.isNullOrEmpty(staticDataRecordName)) {
             return Collections.EMPTY_LIST;
         }
 
         final String queryPrefix = "INSERT INTO " + name + " (";
-        XmlResourceParser parser = context.getResources().getXml(staticDataResourceId);
+        XmlResourceParser parser = context.getResources().getXml(staticDataResId);
         List<String> insertionQueries = Lists.newArrayList();
         try {
             parser.next();

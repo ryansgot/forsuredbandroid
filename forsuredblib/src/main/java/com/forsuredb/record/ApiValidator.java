@@ -1,13 +1,23 @@
 package com.forsuredb.record;
 
 import android.database.Cursor;
+import android.database.CursorWrapper;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 /*package*/ class ApiValidator {
 
-    public static <T> void validate(Class<T> tableApi) {
+    public static void validateCall(Method method, Object[] args) {
+        if (args[0] == null || !(args[0] instanceof CursorWrapper)) {
+            throw new IllegalArgumentException("You must pass an object of the Cursor class as the first argument, passed: " + args[0].getClass().getName());
+        }
+        if (!method.isAnnotationPresent(FSColumn.class)) {
+            throw new IllegalArgumentException("You must annotate each method of your FSApi class with the FSColumn annotation");
+        }
+    }
+
+    public static <T> void validateClass(Class<T> tableApi) {
         for (Method m : tableApi.getDeclaredMethods()) {
             validateReturn(m);
             validateParameters(m);

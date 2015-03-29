@@ -1,4 +1,4 @@
-package com.forsuredb.testapp;
+package com.forsuredb.testapp.adapter;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -8,18 +8,18 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import com.forsuredb.record.FSAdapter;
-import com.forsuredb.table.ForSure;
-import com.forsuredb.testapp.model.UserTableApi;
+import com.forsuredb.ForSure;
+import com.forsuredb.testapp.R;
+import com.forsuredb.testapp.model.ProfileInfoTableApi;
 
-public class TestUserCursorAdapter extends BaseAdapter {
+public class TestProfileInfoCursorAdapter extends BaseAdapter {
 
-    private final UserTableApi tableApi;
+    private final ProfileInfoTableApi tableApi;
     private Context context;
     private Cursor cursor;
 
-    public TestUserCursorAdapter(Context context) {
-        tableApi = (UserTableApi) ForSure.getInstance().getTable("user").getTableApi();
+    public TestProfileInfoCursorAdapter(Context context) {
+        tableApi = (ProfileInfoTableApi) ForSure.getInstance().getTable("profile_info").getTableApi();
         this.context = context;
         cursor = null;
     }
@@ -45,7 +45,8 @@ public class TestUserCursorAdapter extends BaseAdapter {
             return null;
         }
         return new ViewBuilder().id(tableApi.id(cursor))
-                                .globalId(tableApi.globalId(cursor))
+                                .userId(tableApi.userId(cursor))
+                                .emalAddress(tableApi.emailAddress(cursor))
                                 .targetLayout(view)
                                 .build(context);
     }
@@ -61,7 +62,8 @@ public class TestUserCursorAdapter extends BaseAdapter {
     private class ViewBuilder {
 
         private long id;
-        private long globalId;
+        private long userId;
+        private String emailAddress;
         private View targetLayout;
 
         public ViewBuilder id(long id) {
@@ -69,8 +71,13 @@ public class TestUserCursorAdapter extends BaseAdapter {
             return this;
         }
 
-        public ViewBuilder globalId(long globalId) {
-            this.globalId = globalId;
+        public ViewBuilder userId(long userId) {
+            this.userId = userId;
+            return this;
+        }
+
+        public ViewBuilder emalAddress(String emailAddress) {
+            this.emailAddress = emailAddress;
             return this;
         }
 
@@ -87,13 +94,14 @@ public class TestUserCursorAdapter extends BaseAdapter {
 
         private void ensureTargetLayoutInflated(Context context) {
             if (targetLayout == null) {
-                targetLayout = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.user_row_layout, null);
+                targetLayout = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.profile_info_layout, null);
             }
         }
 
         private void initializeView() {
-            ((TextView) targetLayout.findViewById(R.id.user_id_text)).setText(Long.toString(id));
-            ((TextView) targetLayout.findViewById(R.id.user_global_id_text)).setText(Long.toString(globalId));
+            ((TextView) targetLayout.findViewById(R.id.profile_info_id_text)).setText(Long.toString(id));
+            ((TextView) targetLayout.findViewById(R.id.foreign_user_id_text)).setText(Long.toString(userId));
+            ((TextView) targetLayout.findViewById(R.id.email_address_text)).setText(emailAddress);
         }
     }
 }

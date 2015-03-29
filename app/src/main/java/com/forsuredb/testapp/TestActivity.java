@@ -5,7 +5,9 @@ import android.os.Bundle;
 import android.widget.ListView;
 
 import com.forsuredb.table.FSTableDescriber;
-import com.forsuredb.table.ForSure;
+import com.forsuredb.ForSure;
+import com.forsuredb.testapp.adapter.TestProfileInfoCursorAdapter;
+import com.forsuredb.testapp.adapter.TestUserCursorAdapter;
 
 public class TestActivity extends ActionBarActivity {
 
@@ -16,7 +18,6 @@ public class TestActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test);
-        TestDBHelper.getInstance(this).getWritableDatabase();
 
         userCursorAdapter = new TestUserCursorAdapter(this);
         ((ListView) findViewById(R.id.user_list_view)).setAdapter(userCursorAdapter);
