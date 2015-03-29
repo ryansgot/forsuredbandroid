@@ -1,0 +1,7 @@
+<resources>
+    <profile_info _id="1" user_id="5" email_address="user_id_5@email.com" />
+    <profile_info _id="2" user_id="4" email_address="user_id_4@email.com" />
+    <profile_info _id="3" user_id="3" email_address="user_id_3@email.com" />
+    <profile_info _id="4" user_id="2" email_address="user_id_2@email.com" />
+    <profile_info _id="5" user_id="1" email_address="user_id_1@email.com" />
+</resources>
