@@ -3,7 +3,7 @@ package com.forsuredb.testapp;
 import android.net.Uri;
 
 import com.forsuredb.table.FSTableDescriber;
-import com.forsuredb.table.TableTracker;
+import com.forsuredb.table.ForSure;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
@@ -17,10 +17,10 @@ import java.util.List;
         final List<String> segments = uri.getPathSegments();
         try {
             Long.parseLong(uri.getLastPathSegment());
-            return TableTracker.getInstance().get(segments.get(segments.size() - 2));
+            return ForSure.getInstance().getTable(segments.get(segments.size() - 2));
         } catch (NumberFormatException nfe) {
         }
-        return TableTracker.getInstance().get(uri.getLastPathSegment());
+        return ForSure.getInstance().getTable(uri.getLastPathSegment());
     }
 
     public static boolean isSingleRecord(Uri uri) {

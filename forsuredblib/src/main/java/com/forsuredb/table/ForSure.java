@@ -3,28 +3,28 @@ package com.forsuredb.table;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TableTracker {
+public class ForSure {
 
     private Map<String, FSTableDescriber> tableDescriberMap = new HashMap<String, FSTableDescriber>();
 
-    private TableTracker() {}
+    private ForSure() {}
 
     private static class Holder {
-        public static TableTracker instance;
+        public static ForSure instance;
     }
 
-    public static TableTracker getInstance() {
+    public static ForSure getInstance() {
         if (Holder.instance == null) {
-            Holder.instance = new TableTracker();
+            Holder.instance = new ForSure();
         }
         return Holder.instance;
     }
 
-    public void put(FSTableDescriber fsTableDescriber) {
+    public void putTable(FSTableDescriber fsTableDescriber) {
         tableDescriberMap.put(fsTableDescriber.getName(), fsTableDescriber);
     }
 
-    public FSTableDescriber get(String tableName) {
+    public FSTableDescriber getTable(String tableName) {
         return tableName == null ? null : tableDescriberMap.get(tableName);
     }
 

@@ -40,7 +40,7 @@ public class FSTableDescriber {
         this.staticDataRecordName = staticDataRecordName;
         mimeType = "vnd.android.cursor/" + name;
         allRecordsUri = Uri.parse("content://" + authority + "/" + name);
-        TableTracker.getInstance().put(this);
+        ForSure.getInstance().putTable(this);
     }
 
     public FSTableDescriber(String authority, Class<? extends FSRecordModel> recordModelClass) throws IllegalStateException {
@@ -158,7 +158,7 @@ public class FSTableDescriber {
             throw new IllegalArgumentException("Cannot create table without a table name. Use the FSTable annotation on all FSDataModel extensions");
         }
         final String name = recordModelClass.getAnnotation(FSTable.class).value();
-        if (TableTracker.getInstance().containsTable(name)) {
+        if (ForSure.getInstance().containsTable(name)) {
             throw new IllegalArgumentException("Cannot create table named " + name + "; that table already exists.");
         }
         if (authority == null) {
@@ -174,12 +174,12 @@ public class FSTableDescriber {
     }
 
     private void validateForeignKeyRelationship(Field field, ForeignKey foreignKey) throws IllegalStateException, IllegalArgumentException {
-        final TableTracker tableTracker = TableTracker.getInstance();
-        if (!tableTracker.containsTable(foreignKey.tableName())) {
+        final ForSure forSure = ForSure.getInstance();
+        if (!forSure.containsTable(foreignKey.tableName())) {
             throw new IllegalStateException("Must create table " + foreignKey.tableName() + " prior to creating table " + name);
         }
 
-        Class<? extends FSRecordModel> foreignRecordModelClass = tableTracker.get(foreignKey.tableName()).getRecordModelClass();
+        Class<? extends FSRecordModel> foreignRecordModelClass = forSure.getTable(foreignKey.tableName()).getRecordModelClass();
         boolean foreignKeyExists = false;
         Type foreignKeyType = null;
         for (Field foreignField : foreignRecordModelClass.getDeclaredFields()) {

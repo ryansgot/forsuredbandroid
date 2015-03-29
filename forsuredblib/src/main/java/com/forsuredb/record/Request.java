@@ -42,7 +42,7 @@ public class Request<T> {
             final Object arg = cursorMethod.invoke(cursor, cursor.getColumnIndex(columnName));
             return constructor.newInstance(arg);
         } catch (Exception e) {
-            Log.e("Request", "could not get column " + columnName + " from cursor");
+            Log.e("Request", "could not getTable column " + columnName + " from cursor");
             e.printStackTrace();
         }
         return null;
