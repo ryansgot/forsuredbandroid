@@ -1,4 +1,4 @@
-package com.forsuredb.table;
+package com.forsuredb;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

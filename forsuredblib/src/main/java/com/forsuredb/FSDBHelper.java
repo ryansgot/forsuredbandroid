@@ -4,8 +4,6 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.forsuredb.table.FSTableDescriber;
-
 import java.util.List;
 
 /*package*/ class FSDBHelper extends SQLiteOpenHelper {

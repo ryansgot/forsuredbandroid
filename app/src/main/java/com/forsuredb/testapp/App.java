@@ -3,7 +3,7 @@ package com.forsuredb.testapp;
 import android.app.Application;
 
 import com.forsuredb.ForSure;
-import com.forsuredb.table.FSTableCreator;
+import com.forsuredb.FSTableCreator;
 import com.forsuredb.testapp.contentprovider.TestContentProvider;
 import com.forsuredb.testapp.model.ProfileInfoTableApi;
 import com.forsuredb.testapp.model.UserTableApi;

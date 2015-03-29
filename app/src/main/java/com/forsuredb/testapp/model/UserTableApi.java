@@ -5,7 +5,7 @@ import android.database.Cursor;
 import com.forsuredb.record.FSColumn;
 import com.forsuredb.record.FSApi;
 import com.forsuredb.record.PrimaryKey;
-import com.forsuredb.table.FSTable;
+import com.forsuredb.FSTable;
 
 @FSTable("user")
 public interface UserTableApi extends FSApi {

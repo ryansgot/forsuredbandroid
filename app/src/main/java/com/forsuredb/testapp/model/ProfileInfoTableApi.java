@@ -6,7 +6,7 @@ import com.forsuredb.record.FSColumn;
 import com.forsuredb.record.FSApi;
 import com.forsuredb.record.ForeignKey;
 import com.forsuredb.record.PrimaryKey;
-import com.forsuredb.table.FSTable;
+import com.forsuredb.FSTable;
 
 @FSTable("profile_info")
 public interface ProfileInfoTableApi extends FSApi {

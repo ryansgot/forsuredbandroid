@@ -3,7 +3,7 @@ package com.forsuredb.testapp.contentprovider;
 import android.net.Uri;
 
 import com.forsuredb.ForSure;
-import com.forsuredb.table.FSTableDescriber;
+import com.forsuredb.FSTableDescriber;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 

@@ -1,12 +1,10 @@
-package com.forsuredb.table;
+package com.forsuredb;
 
 import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.net.Uri;
 
-import com.forsuredb.ForSure;
 import com.forsuredb.record.FSColumn;
-import com.forsuredb.record.FSAdapter;
 import com.forsuredb.record.FSApi;
 import com.forsuredb.record.ForeignKey;
 import com.forsuredb.record.PrimaryKey;
@@ -35,7 +33,7 @@ public class FSTableDescriber {
     private String tableCreateQuery;
     private FSApi tableApi;
 
-    public FSTableDescriber(FSTableCreator FSTableCreator) throws IllegalStateException {
+    /*package*/ FSTableDescriber(FSTableCreator FSTableCreator) throws IllegalStateException {
         this(FSTableCreator.getAuthority(), FSTableCreator.getTableApiClass(), FSTableCreator.getStaticDataResId(), FSTableCreator.getStaticDataRecordName());
     }
 

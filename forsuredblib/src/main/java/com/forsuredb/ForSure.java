@@ -3,9 +3,6 @@ package com.forsuredb;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.forsuredb.table.FSTableCreator;
-import com.forsuredb.table.FSTableDescriber;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

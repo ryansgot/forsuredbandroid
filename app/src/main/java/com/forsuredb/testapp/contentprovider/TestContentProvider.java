@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
 import com.forsuredb.ForSure;
-import com.forsuredb.table.FSTableDescriber;
+import com.forsuredb.FSTableDescriber;
 
 public class TestContentProvider extends ContentProvider {
 

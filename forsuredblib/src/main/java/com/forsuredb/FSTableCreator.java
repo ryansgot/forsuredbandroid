@@ -1,4 +1,4 @@
-package com.forsuredb.table;
+package com.forsuredb;
 
 import com.forsuredb.record.FSApi;
 

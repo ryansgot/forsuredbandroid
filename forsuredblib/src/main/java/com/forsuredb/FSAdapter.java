@@ -1,8 +1,9 @@
-package com.forsuredb.record;
+package com.forsuredb;
 
 import android.database.Cursor;
 import android.database.CursorWrapper;
 
+import com.forsuredb.record.FSColumn;
 import com.google.common.collect.ImmutableMap;
 
 import java.lang.reflect.InvocationHandler;
@@ -17,7 +18,6 @@ public class FSAdapter {
     static {
         try {
             cursorMethodMap = new ImmutableMap.Builder<Type, Method>().put(long.class, Cursor.class.getDeclaredMethod("getLong", int.class))
-                                                                      .put(boolean.class, Cursor.class.getDeclaredMethod("getInt", int.class))
                                                                       .put(String.class, Cursor.class.getDeclaredMethod("getString", int.class))
                                                                       .build();
         } catch (NoSuchMethodException nsme) {
