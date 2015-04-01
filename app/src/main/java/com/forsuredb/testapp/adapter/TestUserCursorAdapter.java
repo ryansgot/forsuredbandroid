@@ -19,7 +19,7 @@ public class TestUserCursorAdapter extends BaseAdapter {
     private Cursor cursor;
 
     public TestUserCursorAdapter(Context context) {
-        tableApi = (UserTableApi) ForSure.getInstance().getTable("user").getTableApi();
+        tableApi = ForSure.getInstance().getTableApi(UserTableApi.class);
         this.context = context;
         cursor = null;
     }

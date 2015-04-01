@@ -19,7 +19,7 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
     private Cursor cursor;
 
     public TestProfileInfoCursorAdapter(Context context) {
-        tableApi = (ProfileInfoTableApi) ForSure.getInstance().getTable("profile_info").getTableApi();
+        tableApi = ForSure.getInstance().getTableApi(ProfileInfoTableApi.class);
         this.context = context;
         cursor = null;
     }

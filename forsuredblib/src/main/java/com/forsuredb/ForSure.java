@@ -3,6 +3,8 @@ package com.forsuredb;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.forsuredb.record.FSApi;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,7 +12,8 @@ import java.util.Map;
 
 public class ForSure {
 
-    private Map<String, FSTableDescriber> tableDescriberMap = new HashMap<String, FSTableDescriber>();
+    private final Map<Class<? extends FSApi>, FSTableDescriber> tableDescriberByApi = new HashMap<Class<? extends FSApi>, FSTableDescriber>();
+    private final Map<String, FSTableDescriber> tableDescriberByName = new HashMap<String, FSTableDescriber>();
 
     private ForSure() {}
 
@@ -57,15 +60,20 @@ public class ForSure {
         return FSDBHelper.getInstance().getWritableDatabase();
     }
 
+    public <T> T getTableApi(Class<T> tableApiClass) {
+        return tableApiClass == null ? null : (T) tableDescriberByApi.get(tableApiClass).getTableApi();
+    }
+
     public FSTableDescriber getTable(String tableName) {
-        return tableName == null ? null : tableDescriberMap.get(tableName);
+        return tableName == null ? null : tableDescriberByName.get(tableName);
     }
 
     public boolean containsTable(String tableName) {
-        return tableDescriberMap.containsKey(tableName);
+        return tableDescriberByName.containsKey(tableName);
     }
 
     private void addTable(FSTableDescriber fsTableDescriber) {
-        tableDescriberMap.put(fsTableDescriber.getName(), fsTableDescriber);
+        tableDescriberByApi.put(fsTableDescriber.getTableApiClass(), fsTableDescriber);
+        tableDescriberByName.put(fsTableDescriber.getName(), fsTableDescriber);
     }
 }

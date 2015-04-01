@@ -110,6 +110,10 @@ public class FSTableDescriber {
         return insertionQueries;
     }
 
+    public Class<? extends FSApi> getTableApiClass() {
+        return tableApiClass;
+    }
+
     // Private methods to help with making the table create query
 
     private String buildTableCreateQuery() {
@@ -164,18 +168,18 @@ public class FSTableDescriber {
      *     Validates the properties of this table to be correct
      * </p>
      */
-    private void validate(String authority, Class<? extends FSApi> tableApi) throws IllegalStateException, IllegalArgumentException {
-        if (!tableApi.isAnnotationPresent(FSTable.class)) {
+    private void validate(String authority, Class<? extends FSApi> tableApiClass) throws IllegalStateException, IllegalArgumentException {
+        if (!tableApiClass.isAnnotationPresent(FSTable.class)) {
             throw new IllegalArgumentException("Cannot create table without a table name. Use the FSTable annotation on all FSDataModel extensions");
         }
-        final String name = tableApi.getAnnotation(FSTable.class).value();
+        final String name = tableApiClass.getAnnotation(FSTable.class).value();
         if (ForSure.getInstance().containsTable(name)) {
             throw new IllegalArgumentException("Cannot create table named " + name + "; that table already exists.");
         }
         if (authority == null) {
             throw new IllegalArgumentException ("Cannot create table with null authority");
         }
-        for (Method method : tableApi.getDeclaredMethods()) {
+        for (Method method : tableApiClass.getDeclaredMethods()) {
             if (!method.isAnnotationPresent(FSColumn.class) || !isForeignKey(method)) {
                 continue;
             }
