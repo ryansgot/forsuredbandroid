@@ -16,6 +16,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
@@ -214,7 +215,7 @@ public class FSTableDescriber {
                 continue;
             }
             final String foreignColumnName = getColumnName(foreignMethod);
-            if (foreignColumnName.equals(foreignColumnName)) {
+            if (foreignKey.columnName().equals(foreignColumnName)) {
                 foreignKeyExists = true;
                 foreignKeyType = foreignMethod.getGenericReturnType();
                 break;
@@ -262,6 +263,11 @@ public class FSTableDescriber {
     // Private classes
 
     private static enum TypeTranslator {
+        BIG_DECIMAL(BigDecimal.class, "REAL"),
+        BOOLEAN(boolean.class, "INTEGER"),
+        BYTE_ARRAY(byte[].class, "BLOB"),
+        DOUBLE(double.class, "REAL"),
+        INT(int.class, "INTEGER"),
         LONG(long.class, "INTEGER"),
         STRING(String.class, "TEXT");
 

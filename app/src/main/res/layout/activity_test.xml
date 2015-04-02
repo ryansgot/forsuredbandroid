@@ -30,11 +30,26 @@
                 android:layout_height="match_parent">
                 <TextView
                     android:text="_id"
-                    android:layout_weight="1"
+                    android:layout_weight="0.5"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"/>
                 <TextView
                     android:text="global_id"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"/>
+                <TextView
+                    android:text="login_count"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"/>
+                <TextView
+                    android:text="app_rating"
+                    android:layout_weight="1"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"/>
+                <TextView
+                    android:text="competitor_app_rating"
                     android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"/>
@@ -67,7 +82,7 @@
                 android:layout_height="match_parent">
                 <TextView
                     android:text="_id"
-                    android:layout_weight="1"
+                    android:layout_weight="0.5"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"/>
                 <TextView
@@ -78,6 +93,11 @@
                 <TextView
                     android:text="email_address"
                     android:layout_weight="2"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"/>
+                <TextView
+                    android:text="binary_data"
+                    android:layout_weight="1"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"/>
             </LinearLayout>

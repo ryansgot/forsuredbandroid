@@ -11,17 +11,22 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 
 public class FSAdapter {
 
     /*package*/ static ImmutableMap<Type, Method> cursorMethodMap;
     static {
         try {
-            cursorMethodMap = new ImmutableMap.Builder<Type, Method>().put(long.class, Cursor.class.getDeclaredMethod("getLong", int.class))
+            cursorMethodMap = new ImmutableMap.Builder<Type, Method>().put(BigDecimal.class, Cursor.class.getDeclaredMethod("getString", int.class))
+                                                                      .put(boolean.class, Cursor.class.getDeclaredMethod("getInt", int.class))
+                                                                      .put(byte[].class, Cursor.class.getDeclaredMethod("getBlob", int.class))
+                                                                      .put(double.class, Cursor.class.getDeclaredMethod("getDouble", int.class))
+                                                                      .put(int.class, Cursor.class.getDeclaredMethod("getInt", int.class))
+                                                                      .put(long.class, Cursor.class.getDeclaredMethod("getLong", int.class))
                                                                       .put(String.class, Cursor.class.getDeclaredMethod("getString", int.class))
                                                                       .build();
-        } catch (NoSuchMethodException nsme) {
-        }
+        } catch (NoSuchMethodException nsme) {}
     }
 
     private static final Handler handler = new Handler();   // <-- there only needs to be one handler ever
@@ -55,7 +60,15 @@ public class FSAdapter {
 
         private Object callCursorMethod(CursorWrapper cursor, FSColumn fsColumn, Type type)
                                                                         throws InvocationTargetException, IllegalAccessException {
-            return cursorMethodMap.get(type).invoke(cursor, cursor.getColumnIndex(fsColumn.value()));
+            // TODO: find out a better solution for translation methods
+            final Method cursorMethod = cursorMethodMap.get(type);
+            if (type.equals(BigDecimal.class)) {
+                return new BigDecimal((String) cursorMethod.invoke(cursor, cursor.getColumnIndex(fsColumn.value())));
+            } else if (type.equals(boolean.class)) {
+                final Object o = cursorMethod.invoke(cursor, cursor.getColumnIndex(fsColumn.value()));
+                return o != null && o == 1;
+            }
+            return cursorMethod.invoke(cursor, cursor.getColumnIndex(fsColumn.value()));
         }
     }
 }

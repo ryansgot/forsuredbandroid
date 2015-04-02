@@ -5,11 +5,26 @@
               android:layout_height="match_parent">
     <TextView
         android:id="@+id/user_id_text"
-        android:layout_weight="1"
+        android:layout_weight="0.5"
         android:layout_width="0dp"
         android:layout_height="wrap_content"/>
     <TextView
         android:id="@+id/user_global_id_text"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"/>
+    <TextView
+        android:id="@+id/login_count_text"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"/>
+    <TextView
+        android:id="@+id/app_rating_text"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"/>
+    <TextView
+        android:id="@+id/competitor_app_rating"
         android:layout_weight="1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"/>

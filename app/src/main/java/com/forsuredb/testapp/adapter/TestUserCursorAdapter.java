@@ -12,6 +12,8 @@ import com.forsuredb.ForSure;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.UserTableApi;
 
+import java.math.BigDecimal;
+
 public class TestUserCursorAdapter extends BaseAdapter {
 
     private final UserTableApi tableApi;
@@ -46,6 +48,9 @@ public class TestUserCursorAdapter extends BaseAdapter {
         }
         return new ViewBuilder().id(tableApi.id(cursor))
                                 .globalId(tableApi.globalId(cursor))
+                                .loginCount(tableApi.loginCount(cursor))
+                                .appRating(tableApi.appRating(cursor))
+                                .competitorAppRating(tableApi.competitorAppRating(cursor))
                                 .targetLayout(view)
                                 .build(context);
     }
@@ -62,6 +67,9 @@ public class TestUserCursorAdapter extends BaseAdapter {
 
         private long id;
         private long globalId;
+        private int loginCount;
+        private double appRating;
+        private BigDecimal competitorAppRating;
         private View targetLayout;
 
         public ViewBuilder id(long id) {
@@ -71,6 +79,21 @@ public class TestUserCursorAdapter extends BaseAdapter {
 
         public ViewBuilder globalId(long globalId) {
             this.globalId = globalId;
+            return this;
+        }
+
+        public ViewBuilder loginCount(int loginCount) {
+            this.loginCount = loginCount;
+            return this;
+        }
+
+        public ViewBuilder appRating(double appRating) {
+            this.appRating = appRating;
+            return this;
+        }
+
+        public ViewBuilder competitorAppRating(BigDecimal competitorAppRating) {
+            this.competitorAppRating = competitorAppRating;
             return this;
         }
 
@@ -94,6 +117,9 @@ public class TestUserCursorAdapter extends BaseAdapter {
         private void initializeView() {
             ((TextView) targetLayout.findViewById(R.id.user_id_text)).setText(Long.toString(id));
             ((TextView) targetLayout.findViewById(R.id.user_global_id_text)).setText(Long.toString(globalId));
+            ((TextView) targetLayout.findViewById(R.id.login_count_text)).setText(Integer.toString(loginCount));
+            ((TextView) targetLayout.findViewById(R.id.app_rating_text)).setText(Double.toString(appRating));
+            ((TextView) targetLayout.findViewById(R.id.competitor_app_rating)).setText(competitorAppRating.toString());
         }
     }
 }

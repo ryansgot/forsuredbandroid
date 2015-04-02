@@ -12,6 +12,8 @@ import com.forsuredb.ForSure;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.ProfileInfoTableApi;
 
+import java.util.Arrays;
+
 public class TestProfileInfoCursorAdapter extends BaseAdapter {
 
     private final ProfileInfoTableApi tableApi;
@@ -47,6 +49,7 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
         return new ViewBuilder().id(tableApi.id(cursor))
                                 .userId(tableApi.userId(cursor))
                                 .emalAddress(tableApi.emailAddress(cursor))
+                                .binaryData(tableApi.binaryData(cursor))
                                 .targetLayout(view)
                                 .build(context);
     }
@@ -64,6 +67,7 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
         private long id;
         private long userId;
         private String emailAddress;
+        private byte[] binaryData;
         private View targetLayout;
 
         public ViewBuilder id(long id) {
@@ -78,6 +82,11 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
 
         public ViewBuilder emalAddress(String emailAddress) {
             this.emailAddress = emailAddress;
+            return this;
+        }
+
+        public ViewBuilder binaryData(byte[] binaryData) {
+            this.binaryData = binaryData;
             return this;
         }
 
@@ -102,6 +111,7 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
             ((TextView) targetLayout.findViewById(R.id.profile_info_id_text)).setText(Long.toString(id));
             ((TextView) targetLayout.findViewById(R.id.foreign_user_id_text)).setText(Long.toString(userId));
             ((TextView) targetLayout.findViewById(R.id.email_address_text)).setText(emailAddress);
+            ((TextView) targetLayout.findViewById(R.id.binary_data_text)).setText(Arrays.toString(binaryData));
         }
     }
 }
