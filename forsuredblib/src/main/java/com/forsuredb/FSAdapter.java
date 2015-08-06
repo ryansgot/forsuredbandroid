@@ -2,6 +2,7 @@ package com.forsuredb;
 
 import android.database.Cursor;
 import android.database.CursorWrapper;
+import android.util.Log;
 
 import com.forsuredb.record.FSColumn;
 import com.google.common.collect.ImmutableMap;
@@ -15,6 +16,8 @@ import java.math.BigDecimal;
 
 public class FSAdapter {
 
+    private static final String LOG_TAG = FSAdapter.class.getSimpleName();
+
     /*package*/ static ImmutableMap<Type, Method> cursorMethodMap;
     static {
         try {
@@ -26,7 +29,9 @@ public class FSAdapter {
                                                                       .put(long.class, Cursor.class.getDeclaredMethod("getLong", int.class))
                                                                       .put(String.class, Cursor.class.getDeclaredMethod("getString", int.class))
                                                                       .build();
-        } catch (NoSuchMethodException nsme) {}
+        } catch (NoSuchMethodException nsme) {
+            Log.e(LOG_TAG, "error creating cursorMethodMap", nsme);
+        }
     }
 
     private static final Handler handler = new Handler();   // <-- there only needs to be one handler ever
@@ -63,12 +68,22 @@ public class FSAdapter {
             // TODO: find out a better solution for translation methods
             final Method cursorMethod = cursorMethodMap.get(type);
             if (type.equals(BigDecimal.class)) {
-                return new BigDecimal((String) cursorMethod.invoke(cursor, cursor.getColumnIndex(fsColumn.value())));
+                return getBigDecimalFrom(cursorMethod, cursor, cursor.getColumnIndex(fsColumn.value()));
             } else if (type.equals(boolean.class)) {
                 final Object o = cursorMethod.invoke(cursor, cursor.getColumnIndex(fsColumn.value()));
-                return o != null && o == 1;
+                return o != null && (Integer) o == 1;
             }
             return cursorMethod.invoke(cursor, cursor.getColumnIndex(fsColumn.value()));
+        }
+
+        private BigDecimal getBigDecimalFrom(Method cursorMethod, CursorWrapper cursor, int columnIndex)
+                                                                        throws InvocationTargetException, IllegalAccessException {
+            try {
+                return new BigDecimal((String) cursorMethod.invoke(cursor, columnIndex));
+            } catch (NumberFormatException nfe) {
+                Log.e(LOG_TAG, "number format exception when getting a BigDecimal from cursor at column: " + columnIndex, nfe);
+            }
+            return null;
         }
     }
 }
