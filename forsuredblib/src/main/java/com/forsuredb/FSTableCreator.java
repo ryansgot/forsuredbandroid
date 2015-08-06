@@ -1,7 +1,5 @@
 package com.forsuredb;
 
-import com.forsuredb.FSApi;
-
 public class FSTableCreator {
 
     private final String authority;
