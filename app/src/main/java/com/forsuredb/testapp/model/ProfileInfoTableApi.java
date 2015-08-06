@@ -2,11 +2,11 @@ package com.forsuredb.testapp.model;
 
 import android.database.Cursor;
 
-import com.forsuredb.record.FSColumn;
-import com.forsuredb.record.FSApi;
-import com.forsuredb.record.ForeignKey;
-import com.forsuredb.record.PrimaryKey;
-import com.forsuredb.FSTable;
+import com.forsuredb.annotation.FSColumn;
+import com.forsuredb.FSApi;
+import com.forsuredb.annotation.ForeignKey;
+import com.forsuredb.annotation.PrimaryKey;
+import com.forsuredb.annotation.FSTable;
 
 @FSTable("profile_info")
 public interface ProfileInfoTableApi extends FSApi {

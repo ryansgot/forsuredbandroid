@@ -3,7 +3,7 @@ package com.forsuredb;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 
-import com.forsuredb.record.FSColumn;
+import com.forsuredb.annotation.FSColumn;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;

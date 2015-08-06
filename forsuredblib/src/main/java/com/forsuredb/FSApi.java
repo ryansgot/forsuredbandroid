@@ -1,4 +1,4 @@
-package com.forsuredb.record;
+package com.forsuredb;
 
 /**
  * <p>

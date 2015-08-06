@@ -1,6 +1,6 @@
 package com.forsuredb;
 
-import com.forsuredb.record.FSApi;
+import com.forsuredb.FSApi;
 
 public class FSTableCreator {
 

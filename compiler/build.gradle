@@ -1,0 +1,17 @@
+apply plugin: 'java'
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java', '../forsuredblib/src/main/java']
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    compile 'org.apache.velocity:velocity:1.7'
+
+    compile project (':forsuredblib')
+}

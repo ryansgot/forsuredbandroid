@@ -3,7 +3,7 @@ package com.forsuredb;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 
-import com.forsuredb.record.FSColumn;
+import com.forsuredb.annotation.FSColumn;
 import com.google.common.collect.ImmutableMap;
 
 import java.lang.reflect.InvocationHandler;
