@@ -4,10 +4,11 @@ import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.net.Uri;
 
-import com.forsuredb.record.FSColumn;
-import com.forsuredb.record.FSApi;
-import com.forsuredb.record.ForeignKey;
-import com.forsuredb.record.PrimaryKey;
+import com.forsuredb.FSApi;
+import com.forsuredb.annotation.FSColumn;
+import com.forsuredb.annotation.FSTable;
+import com.forsuredb.annotation.ForeignKey;
+import com.forsuredb.annotation.PrimaryKey;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 

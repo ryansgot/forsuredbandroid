@@ -1,1 +1,1 @@
-include ':app', ':forsuredblib'
+include ':app', ':forsuredblib', ':compiler'

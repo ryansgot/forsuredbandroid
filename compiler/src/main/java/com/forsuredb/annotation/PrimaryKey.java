@@ -1,4 +1,4 @@
-package com.forsuredb.record;
+package com.forsuredb.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,7 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface ForeignKey {
-    Class<? extends FSApi> apiClass();
-    String columnName();
+public @interface PrimaryKey {
+    public String definitionText() default "PRIMARY KEY";
 }

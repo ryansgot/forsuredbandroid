@@ -3,7 +3,7 @@ package com.forsuredb;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.forsuredb.record.FSApi;
+import com.forsuredb.FSApi;
 
 import java.util.ArrayList;
 import java.util.HashMap;
