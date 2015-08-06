@@ -1,5 +1,8 @@
 apply plugin: 'java'
 
+group = 'com.fsryan.forsuredb'
+version = '0.0.1'
+
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
