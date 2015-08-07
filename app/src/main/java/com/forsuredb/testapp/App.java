@@ -7,7 +7,6 @@ import com.forsuredb.FSTableCreator;
 import com.forsuredb.testapp.contentprovider.TestContentProvider;
 import com.forsuredb.testapp.model.ProfileInfoTableApi;
 import com.forsuredb.testapp.model.UserTableApi;
-import com.forsuredb.testapp.model.UserTableApiSetter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +17,6 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
 
-        UserTableApiSetter utas;
         // initialize ForSure
         ForSure.init(this, "test.db", 1, createTableCreators());
     }

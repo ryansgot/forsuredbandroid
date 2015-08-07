@@ -1,8 +1,6 @@
 package com.forsuredb.annotationprocessor;
 
-import com.forsuredb.annotation.FSColumn;
 import com.forsuredb.annotation.FSTable;
-import com.forsuredb.annotation.PrimaryKey;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -54,70 +52,29 @@ public class FSAnnotationProcessor extends AbstractProcessor {
     }
 
     private void processFSTableAnnotations(RoundEnvironment roundEnv) {
+        VelocityEngine ve = createVelocityEngine();
+//        try {
+//            Template template = ve.getTemplate("setter_interface.vm");
+//        } catch (ResourceNotFoundException | ParseErrorException exception) {
+//            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "couldn't find template in outer method: " + );
+//        }
+
         for (Element e : roundEnv.getElementsAnnotatedWith(FSTable.class)) {
             if (e.getKind() != ElementKind.INTERFACE) {
                 continue;   // <-- only process interfaces
             }
 
-            TypeElement intf = (TypeElement) e;
-            PackageElement pkg = (PackageElement) intf.getEnclosingElement();
+            final TypeElement intf = (TypeElement) e;
+            final String intfName = intf.getSimpleName().toString();
+            final String pkgName = ((PackageElement) intf.getEnclosingElement()).getQualifiedName().toString();
 
-            String fqIntfName = intf.getQualifiedName().toString();
-            String intfName = intf.getSimpleName().toString();
-            String pkgName = pkg.getQualifiedName().toString();
             processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "annotated interface: " + intfName + " in package " + pkgName, e);
-
-            if (fqIntfName != null) {
-
-                Properties props = new Properties();
-                URL url = this.getClass().getClassLoader().getResource("velocity.properties");
-                InputStream in = null;
-                try {
-                    in = url.openStream();
-                    props.load(in);
-                } catch (IOException | NullPointerException exception) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Could not load velocity.properties:" + exception.getMessage(), e);
-                    return;
-                } finally {
-                    if (in != null) {
-                        try {
-                            in.close();
-                        } catch (IOException ioe) {
-                            // do nothing
-                        }
-                    }
-                }
-
-                VelocityEngine ve = new VelocityEngine(props);
-                ve.init();
-
-                VelocityContext vc = new VelocityContext();
-
-                vc.put("className", intfName + "Setter");
-                vc.put("packageName", pkgName);
-
-                Template vt = ve.getTemplate("setter_interface.vm");
-
-                Writer writer = null;
-                try {
-                    JavaFileObject jfo = processingEnv.getFiler().createSourceFile(fqIntfName + "Setter");
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "creating source file: " + fqIntfName + "Setter");
-                    writer = jfo.openWriter();
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "applying velocity template: " + vt.getName());
-                    vt.merge(vc, writer);
-                } catch (IOException | ResourceNotFoundException | ParseErrorException | MethodInvocationException exception) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Could not output to " + intfName + "Setter.java: " + exception.getMessage(), e);
-                    return;
-                } finally {
-                    if (writer != null) {
-                        try {
-                            writer.close();
-                        } catch (IOException ioe) {
-                            // do nothing
-                        }
-                    }
-                }
-            }
+            CodeGenerator generator = CodeGenerator.builder().processingEnv(processingEnv)
+                                                             .velocityEngine(ve)
+                                                             .className(intfName + "Setter")
+                                                             .pkgName(pkgName)
+                                                             .build();
+            generator.generate("setter_interface.vm");
         }
     }
 
@@ -165,48 +122,31 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-//    private void doit() {
-//        String fqClassName = null;
-//        String className = null;
-//        String packageName = null;
-//        Map<String, VariableElement> fields = new HashMap<String, VariableElement>();
-//        Map<String, ExecutableElement> methods = new HashMap<String, ExecutableElement>();
-//
-//        for (Element e : roundEnv.getElementsAnnotatedWith(BeanInfo.class)) {
-//
-//            if (e.getKind() == ElementKind.CLASS) {
-//
-//                TypeElement classElement = (TypeElement) e;
-//                PackageElement packageElement = (PackageElement) classElement.getEnclosingElement();
-//
-//                processingEnv.getMessager().printMessage(
-//                        Diagnostic.Kind.NOTE,
-//                        "annotated class: " + classElement.getQualifiedName(), e);
-//
-//                fqClassName = classElement.getQualifiedName().toString();
-//                className = classElement.getSimpleName().toString();
-//                packageName = packageElement.getQualifiedName().toString();
-//
-//            } else if (e.getKind() == ElementKind.FIELD) {
-//
-//                VariableElement varElement = (VariableElement) e;
-//
-//                processingEnv.getMessager().printMessage(
-//                        Diagnostic.Kind.NOTE,
-//                        "annotated field: " + varElement.getSimpleName(), e);
-//
-//                fields.put(varElement.getSimpleName().toString(), varElement);
-//
-//            } else if (e.getKind() == ElementKind.METHOD) {
-//
-//                ExecutableElement exeElement = (ExecutableElement) e;
-//
-//                processingEnv.getMessager().printMessage(
-//                        Diagnostic.Kind.NOTE,
-//                        "annotated method: " + exeElement.getSimpleName(), e);
-//
-//                methods.put(exeElement.getSimpleName().toString(), exeElement);
-//            }
-//        }
-//    }
+
+    private VelocityEngine createVelocityEngine() {
+        Properties props = new Properties();
+        URL url = this.getClass().getClassLoader().getResource("velocity.properties");
+
+        InputStream in = null;
+        try {
+            in = url.openStream();
+            props.load(in);
+        } catch (IOException | NullPointerException exception) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Could not load velocity.properties:" + exception.getMessage());
+            return null;
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException ioe) {
+                    // do nothing
+                }
+            }
+        }
+
+        VelocityEngine ve = new VelocityEngine(props);
+        ve.init();
+
+        return ve;
+    }
 }

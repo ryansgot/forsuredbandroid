@@ -10,8 +10,8 @@ import com.forsuredb.annotation.FSTable;
 
 @FSTable("profile_info")
 public interface ProfileInfoTableApi extends FSApi {
-    @FSColumn("_id") @PrimaryKey public long id(Cursor cursor);
-    @FSColumn("user_id") @ForeignKey(apiClass = UserTableApi.class, columnName = "_id") public long userId(Cursor cursor);
-    @FSColumn("email_address") public String emailAddress(Cursor cursor);
-    @FSColumn("binary_data") public byte[] binaryData(Cursor cursor);
+    @FSColumn("_id") @PrimaryKey long id(Cursor cursor);
+    @FSColumn("user_id") @ForeignKey(apiClass = UserTableApi.class, columnName = "_id") long userId(Cursor cursor);
+    @FSColumn("email_address") String emailAddress(Cursor cursor);
+    @FSColumn("binary_data") byte[] binaryData(Cursor cursor);
 }
