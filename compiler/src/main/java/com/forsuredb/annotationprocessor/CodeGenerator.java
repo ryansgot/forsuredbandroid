@@ -1,5 +1,7 @@
 package com.forsuredb.annotationprocessor;
 
+import com.forsuredb.annotation.FSColumn;
+
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -9,8 +11,16 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.element.ElementKind;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
@@ -24,11 +34,16 @@ import javax.tools.JavaFileObject;
     private CodeGenerator(ProcessingEnvironment processingEnv,
                           VelocityEngine velocityEngine,
                           String className,
-                          String pkgName) {
+                          String pkgName,
+                          List<? extends Element> enclosedElements) {
         this.processingEnv = processingEnv;
         this.velocityEngine = velocityEngine;
         this.fqClassName = pkgName + "." + className;
-        velocityContext = createVelocityContext(className, pkgName);
+        velocityContext = createVelocityContext(className, pkgName, enclosedElements);
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public void generate(String templateResource) {
@@ -69,15 +84,56 @@ import javax.tools.JavaFileObject;
         }
     }
 
-    private VelocityContext createVelocityContext(String className, String pkgName) {
+    private VelocityContext createVelocityContext(String className, String pkgName, List<? extends Element> enclosedElements) {
         VelocityContext vc = new VelocityContext();
         vc.put("className", className);
         vc.put("packageName", pkgName);
+        vc.put("methodDefinitions", getMethodDefinitions(enclosedElements));
         return vc;
     }
 
-    public static Builder builder() {
-        return new Builder();
+    private List<String> getMethodDefinitions(List<? extends Element> enclosedElements) {
+        List<MethodInfo> methodInfoList = createMethodInfoList(enclosedElements);
+        List<String> retList = new ArrayList<String>();
+        while (methodInfoList.size() > 0) {
+            MethodInfo m = methodInfoList.remove(0);
+            retList.add("void " + m.getName() + "(" + m.getReturnTypeStr() + " " + m.getName() + ");");
+        }
+        return retList;
+    }
+
+    private List<MethodInfo> createMethodInfoList(List<? extends Element> enclosedElements) {
+        if (enclosedElements == null) {
+            return Collections.EMPTY_LIST;
+        }
+
+        List<MethodInfo> retList = new LinkedList<>();
+        for (Element e : enclosedElements) {
+            if (e.getKind() != ElementKind.METHOD) {
+                continue;
+            }
+
+            final ExecutableElement methodElement = (ExecutableElement) e;
+            FSColumn column = methodElement.getAnnotation(FSColumn.class);
+            if (column == null ) {
+                continue;
+            }
+
+            retList.add(MethodInfo.builder().name(methodElement.getSimpleName().toString())
+                                            .returnType(methodElement.getReturnType())
+                                            .parameters(getParameters(methodElement))
+                                            .build());
+        }
+
+        return retList;
+    }
+
+    private ParameterInfo getParameters(ExecutableElement methodElement) {
+        ParameterInfo.Builder piBuilder = ParameterInfo.builder();
+        for (VariableElement parameter : methodElement.getParameters()) {
+            piBuilder.addParameter(parameter.asType(), parameter.getSimpleName().toString());
+        }
+        return piBuilder.build();
     }
 
     public static class Builder {
@@ -86,6 +142,7 @@ import javax.tools.JavaFileObject;
         private VelocityEngine velocityEngine;
         private String className;
         private String pkgName;
+        private List<? extends Element> enclosedElements;
 
         private Builder() {}
 
@@ -109,8 +166,13 @@ import javax.tools.JavaFileObject;
             return this;
         }
 
+        public Builder enclosedElements(List<? extends Element> enclosedElements) {
+            this.enclosedElements = enclosedElements;
+            return this;
+        }
+
         public CodeGenerator build() {
-            return new CodeGenerator(processingEnv, velocityEngine, className, pkgName);
+            return new CodeGenerator(processingEnv, velocityEngine, className, pkgName, enclosedElements == null ? Collections.EMPTY_LIST : enclosedElements);
         }
     }
 }

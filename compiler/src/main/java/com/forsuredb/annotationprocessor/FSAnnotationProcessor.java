@@ -72,6 +72,7 @@ public class FSAnnotationProcessor extends AbstractProcessor {
             CodeGenerator generator = CodeGenerator.builder().processingEnv(processingEnv)
                                                              .velocityEngine(ve)
                                                              .className(intfName + "Setter")
+                                                             .enclosedElements(intf.getEnclosedElements())
                                                              .pkgName(pkgName)
                                                              .build();
             generator.generate("setter_interface.vm");

@@ -1,16 +1,16 @@
 package com.forsuredb.annotationprocessor;
 
-import java.lang.reflect.Type;
+import javax.lang.model.type.TypeMirror;
 
 /*package*/ class MethodInfo {
 
     private final String name;
-    private final Type returnType;
+    private final String returnTypeStr;
     private final ParameterInfo parameters;
 
-    private MethodInfo(String name, Type returnType, ParameterInfo parameters) {
+    private MethodInfo(String name, TypeMirror returnType, ParameterInfo parameters) {
         this.name = name;
-        this.returnType = returnType;
+        this.returnTypeStr = returnType == null ? "void" : returnType.toString();
         this.parameters = parameters;
     }
 
@@ -22,17 +22,17 @@ import java.lang.reflect.Type;
         return name;
     }
 
-    public Type getReturnType() {
-        return returnType;
+    public String getReturnTypeStr() {
+        return returnTypeStr;
     }
 
     public ParameterInfo getParameters() {
         return parameters;
     }
 
-    private static class Builder {
+    /*package*/ static class Builder {
         private String name;
-        private Type returnType;
+        private TypeMirror returnType;
         private ParameterInfo parameters;
 
         public Builder name(String name) {
@@ -40,7 +40,7 @@ import java.lang.reflect.Type;
             return this;
         }
 
-        public Builder returnType(Type returnType) {
+        public Builder returnType(TypeMirror returnType) {
             this.returnType = returnType;
             return this;
         }
