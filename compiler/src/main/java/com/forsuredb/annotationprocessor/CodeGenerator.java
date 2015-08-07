@@ -172,7 +172,11 @@ import javax.tools.JavaFileObject;
         }
 
         public CodeGenerator build() {
-            return new CodeGenerator(processingEnv, velocityEngine, className, pkgName, enclosedElements == null ? Collections.EMPTY_LIST : enclosedElements);
+            return new CodeGenerator(processingEnv,
+                                     velocityEngine,
+                                     className,
+                                     pkgName,
+                                     enclosedElements == null ? Collections.EMPTY_LIST : enclosedElements);
         }
     }
 }
