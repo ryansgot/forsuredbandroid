@@ -3,6 +3,7 @@ package com.forsuredb;
 import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.net.Uri;
+import android.util.Log;
 
 import com.forsuredb.annotation.FSColumn;
 import com.forsuredb.annotation.FSTable;
@@ -24,25 +25,29 @@ public class FSTableDescriber {
 
     /*package*/ static final int NO_STATIC_DATA_RESOURCE_ID = -1;
 
+    private static final String LOG_TAG = FSTableDescriber.class.getSimpleName();
+
     private final String name;
-    private final Class<? extends FSGetApi> tableApiClass;
+    private final Class<? extends FSGetApi> getApiClass;
+    private Class<? extends FSSaveApi> saveApiClass;
     private final int staticDataResId;
     private final String staticDataRecordName;
     private final String mimeType;
     private final Uri allRecordsUri;
 
     private String tableCreateQuery;
-    private FSGetApi tableApi;
+    private FSGetApi getApi;
+    private FSSaveApi setApi;
 
     /*package*/ FSTableDescriber(FSTableCreator FSTableCreator) throws IllegalStateException {
         this(FSTableCreator.getAuthority(), FSTableCreator.getTableApiClass(), FSTableCreator.getStaticDataResId(), FSTableCreator.getStaticDataRecordName());
     }
 
-    private FSTableDescriber(String authority, Class<? extends FSGetApi> tableApiClass, int staticDataResId, String staticDataRecordName)
+    private FSTableDescriber(String authority, Class<? extends FSGetApi> getApiClass, int staticDataResId, String staticDataRecordName)
                                                                                                     throws IllegalStateException {
-        validate(authority, tableApiClass);
-        this.name = tableApiClass.getAnnotation(FSTable.class).value();
-        this.tableApiClass = tableApiClass;
+        validate(authority, getApiClass);
+        this.name = getApiClass.getAnnotation(FSTable.class).value();
+        this.getApiClass = getApiClass;
         this.staticDataResId = staticDataResId;
         this.staticDataRecordName = staticDataRecordName;
         mimeType = "vnd.android.cursor/" + name;
@@ -72,11 +77,18 @@ public class FSTableDescriber {
         return tableCreateQuery;
     }
 
-    public FSGetApi getTableApi() {
-        if (tableApi == null) {
-            tableApi = FSGetAdapter.create(tableApiClass);
+    public FSGetApi get() {
+        if (getApi == null) {
+            getApi = FSGetAdapter.create(getApiClass);
         }
-        return tableApi;
+        return getApi;
+    }
+
+    public FSSaveApi set(Context context) {
+        if (setApi == null) {
+            setApi = FSSaveAdapter.create(context, getSaveApiClass());
+        }
+        return setApi;
     }
 
     /**
@@ -111,8 +123,31 @@ public class FSTableDescriber {
         return insertionQueries;
     }
 
-    public Class<? extends FSGetApi> getTableApiClass() {
-        return tableApiClass;
+    public Class<? extends FSGetApi> getGetApiClass() {
+        return getApiClass;
+    }
+
+    public Class<? extends FSSaveApi> getSaveApiClass() {
+        if (saveApiClass == null) {
+            final String className = getApiClass.getName() + "Setter";
+            Class<?> loaded = null;
+            try {
+                loaded = this.getClass().getClassLoader().loadClass(className);
+            } catch (ClassNotFoundException cnfe) {
+                Log.e(LOG_TAG, "Could not find class: " + className, cnfe);
+                return null;
+            }
+
+            Class<? extends FSSaveApi> cls = null;
+            try {
+                cls = loaded.asSubclass(FSSaveApi.class);
+            } catch (ClassCastException cce) {
+                Log.e(LOG_TAG, "Could not cast " + className + " to: ? extends " + FSSaveApi.class.getSimpleName(), cce);
+                return null;
+            }
+            saveApiClass = cls;
+        }
+        return saveApiClass;
     }
 
     // Private methods to help with making the table create query
@@ -120,7 +155,7 @@ public class FSTableDescriber {
     private String buildTableCreateQuery() {
         StringBuffer queryBuffer = new StringBuffer("CREATE TABLE ").append(name).append("(");
 
-        for (Method method : tableApiClass.getDeclaredMethods()) {
+        for (Method method : getApiClass.getDeclaredMethods()) {
             if (!method.isAnnotationPresent(FSColumn.class)) {
                 continue;
             }
@@ -144,7 +179,7 @@ public class FSTableDescriber {
     }
 
     private void appendForeignKeysLineTo(StringBuffer queryBuffer) {
-        for (Method method : tableApiClass.getDeclaredMethods()) {
+        for (Method method : getApiClass.getDeclaredMethods()) {
             if (!method.isAnnotationPresent(FSColumn.class) || !isForeignKey(method)) {
                 continue;
             }
@@ -174,7 +209,7 @@ public class FSTableDescriber {
             throw new IllegalArgumentException("Cannot create table without a table name. Use the FSTable annotation on all FSDataModel extensions");
         }
         final String name = tableApiClass.getAnnotation(FSTable.class).value();
-        if (ForSure.getInstance().containsTable(name)) {
+        if (ForSure.inst().containsTable(name)) {
             throw new IllegalArgumentException("Cannot create table named " + name + "; that table already exists.");
         }
         if (authority == null) {
@@ -199,7 +234,7 @@ public class FSTableDescriber {
             throw new IllegalArgumentException("ForeignKey apiClass must be a class annotated with the FSTable annotation");
         }
         final String foreignTableName = foreignTableApiClass.getAnnotation(FSTable.class).value();
-        final ForSure forSure = ForSure.getInstance();
+        final ForSure forSure = ForSure.inst();
         if (!forSure.containsTable(foreignTableName)) {
             throw new IllegalStateException("Must create table " + foreignTableName + " prior to creating table " + name);
         }
@@ -234,7 +269,7 @@ public class FSTableDescriber {
     private String getInsertionQuery(XmlResourceParser parser, String queryPrefix) {
         final StringBuffer queryBuf = new StringBuffer(queryPrefix);
         final StringBuffer valueBuf = new StringBuffer();
-        for (Method method : tableApiClass.getDeclaredMethods()) {
+        for (Method method : getApiClass.getDeclaredMethods()) {
             if (!method.isAnnotationPresent(FSColumn.class)) {
                 continue;
             }
@@ -258,7 +293,6 @@ public class FSTableDescriber {
                 && parser.getAttributeCount() > 0
                 && staticDataRecordName.equals(parser.getName());
     }
-
 
     // Private classes
 

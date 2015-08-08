@@ -17,10 +17,10 @@ import java.util.List;
         final List<String> segments = uri.getPathSegments();
         try {
             Long.parseLong(uri.getLastPathSegment());
-            return ForSure.getInstance().getTable(segments.get(segments.size() - 2));
+            return ForSure.inst().getTable(segments.get(segments.size() - 2));
         } catch (NumberFormatException nfe) {
         }
-        return ForSure.getInstance().getTable(uri.getLastPathSegment());
+        return ForSure.inst().getTable(uri.getLastPathSegment());
     }
 
     public static boolean isSingleRecord(Uri uri) {

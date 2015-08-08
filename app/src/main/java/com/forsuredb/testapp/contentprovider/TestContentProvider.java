@@ -37,7 +37,7 @@ public class TestContentProvider extends ContentProvider {
             return null;
         }
 
-        final SQLiteDatabase db = ForSure.getInstance().getWritableDatabase();
+        final SQLiteDatabase db = ForSure.inst().getWritableDatabase();
         long rowId = db.insertWithOnConflict(fsTableDescriber.getName(), null, values, SQLiteDatabase.CONFLICT_IGNORE);
         if (rowId != -1) {
             final Uri insertedItemUri = ContentUris.withAppendedId(uri, rowId);
@@ -58,7 +58,7 @@ public class TestContentProvider extends ContentProvider {
         selection = singleRecord ? ContentProviderHelper.ensureIdInSelection(selection) : selection;
         selectionArgs = singleRecord ? ContentProviderHelper.ensureIdInSelectionArgs(uri, selection, selectionArgs) : selectionArgs;
 
-        final SQLiteDatabase db = ForSure.getInstance().getWritableDatabase();
+        final SQLiteDatabase db = ForSure.inst().getWritableDatabase();
         final int rowsAffected = db.update(fsTableDescriber.getName(), values, selection, selectionArgs);
         if (rowsAffected != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
@@ -77,7 +77,7 @@ public class TestContentProvider extends ContentProvider {
         selection = singleRecord ? ContentProviderHelper.ensureIdInSelection(selection) : selection;
         selectionArgs = singleRecord ? ContentProviderHelper.ensureIdInSelectionArgs(uri, selection, selectionArgs) : selectionArgs;
 
-        final SQLiteDatabase db = ForSure.getInstance().getWritableDatabase();
+        final SQLiteDatabase db = ForSure.inst().getWritableDatabase();
         final int rowsAffected = db.delete(fsTableDescriber.getName(), selection, selectionArgs);
         if (rowsAffected != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
@@ -96,7 +96,7 @@ public class TestContentProvider extends ContentProvider {
         selection = singleRecord ? ContentProviderHelper.ensureIdInSelection(selection) : selection;
         selectionArgs = singleRecord ? ContentProviderHelper.ensureIdInSelectionArgs(uri, selection, selectionArgs) : selectionArgs;
 
-        final SQLiteDatabase db = ForSure.getInstance().getReadableDatabase();
+        final SQLiteDatabase db = ForSure.inst().getReadableDatabase();
         final Cursor cursor = db.query(fsTableDescriber.getName(), projection, selection, selectionArgs, null, null, sortOrder);
         cursor.setNotificationUri(getContext().getContentResolver(), uri);  // <-- allows CursorLoader to auto reload
         return cursor;

@@ -10,10 +10,14 @@ import java.util.Map;
 
 public class ForSure {
 
-    private final Map<Class<? extends FSGetApi>, FSTableDescriber> tableDescriberByApi = new HashMap<Class<? extends FSGetApi>, FSTableDescriber>();
-    private final Map<String, FSTableDescriber> tableDescriberByName = new HashMap<String, FSTableDescriber>();
+    private final Context appContext;
+    private final Map<Class<? extends FSGetApi>, FSTableDescriber> tableDescriberByGetApi = new HashMap<>();
+    private final Map<Class<? extends FSSaveApi>, FSTableDescriber> tableDescriberBySaveApi = new HashMap<>();
+    private final Map<String, FSTableDescriber> tableDescriberByName = new HashMap<>();
 
-    private ForSure() {}
+    private ForSure(Context appContext) {
+        this.appContext = appContext;
+    }
 
     private static class Holder {
         public static ForSure instance;
@@ -28,12 +32,12 @@ public class ForSure {
      */
     public static void init(Context context, String dbName, int dbVersion, List<FSTableCreator> tableCreators) {
         if (Holder.instance == null) {
-            Holder.instance = new ForSure();
+            Holder.instance = new ForSure(context.getApplicationContext());
             FSDBHelper.init(context.getApplicationContext(), dbName, dbVersion, initializeTableDescribers(tableCreators));
         }
     }
 
-    public static ForSure getInstance() throws IllegalStateException {
+    public static ForSure inst() throws IllegalStateException {
         if (Holder.instance == null) {
             throw new IllegalStateException("Must call ForSure.init method prior to getting an instance");
         }
@@ -58,8 +62,12 @@ public class ForSure {
         return FSDBHelper.getInstance().getWritableDatabase();
     }
 
-    public <T> T getTableApi(Class<T> tableApiClass) {
-        return tableApiClass == null ? null : (T) tableDescriberByApi.get(tableApiClass).getTableApi();
+    public <T> T getApi(Class<T> getApiClass) {
+        return getApiClass == null ? null : (T) tableDescriberByGetApi.get(getApiClass).get();
+    }
+
+    public <T> T setApi(Class<T> saveApiClass) {
+        return saveApiClass == null ? null : (T) tableDescriberBySaveApi.get(saveApiClass).set(appContext);
     }
 
     public FSTableDescriber getTable(String tableName) {
@@ -71,7 +79,8 @@ public class ForSure {
     }
 
     private void addTable(FSTableDescriber fsTableDescriber) {
-        tableDescriberByApi.put(fsTableDescriber.getTableApiClass(), fsTableDescriber);
+        tableDescriberByGetApi.put(fsTableDescriber.getGetApiClass(), fsTableDescriber);
+        tableDescriberBySaveApi.put(fsTableDescriber.getSaveApiClass(), fsTableDescriber);
         tableDescriberByName.put(fsTableDescriber.getName(), fsTableDescriber);
     }
 }
