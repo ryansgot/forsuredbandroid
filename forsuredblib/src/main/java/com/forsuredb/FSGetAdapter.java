@@ -14,7 +14,7 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 
-public class FSGetAdapter {
+/*package*/ class FSGetAdapter {
 
     private static final String LOG_TAG = FSGetAdapter.class.getSimpleName();
 

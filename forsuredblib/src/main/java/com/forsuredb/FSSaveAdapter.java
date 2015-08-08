@@ -14,7 +14,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FSSaveAdapter {
+/*package*/ class FSSaveAdapter {
 
     private static final String LOG_TAG = FSSaveAdapter.class.getSimpleName();
     private static final Map<Class<? extends FSSaveApi<Uri>>, Handler> HANDLERS = new HashMap<>();
