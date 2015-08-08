@@ -8,7 +8,8 @@ import com.forsuredb.annotation.FSColumn;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
-/*package*/ class ApiValidator {
+// Only works for FSGetAdapter method calls
+/*package*/ class GetApiValidator {
 
     public static void validateCall(Method method, Object[] args) {
         if (args[0] == null || !(args[0] instanceof CursorWrapper)) {
@@ -27,8 +28,8 @@ import java.lang.reflect.Type;
     }
 
     private static void validateReturn(Method m) {
-        if (!FSAdapter.cursorMethodMap.containsKey(m.getGenericReturnType())) {
-            throw new IllegalArgumentException("method " + m.getName() + " has illegal return type, supported types are: " + FSAdapter.cursorMethodMap.keySet().toString());
+        if (!FSGetAdapter.cursorMethodMap.containsKey(m.getGenericReturnType())) {
+            throw new IllegalArgumentException("method " + m.getName() + " has illegal return type, supported types are: " + FSGetAdapter.cursorMethodMap.keySet().toString());
         }
     }
 

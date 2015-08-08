@@ -3,18 +3,18 @@ package com.forsuredb;
 public class FSTableCreator {
 
     private final String authority;
-    private final Class<? extends FSApi> tableApiClass;
+    private final Class<? extends FSGetApi> tableApiClass;
     private final int staticDataResId;
     private final String staticDataRecordName;
 
-    public FSTableCreator(String authority, Class<? extends FSApi> tableApiClass, int staticDataResId, String staticDataRecordName) {
+    public FSTableCreator(String authority, Class<? extends FSGetApi> tableApiClass, int staticDataResId, String staticDataRecordName) {
         this.authority = authority;
         this.tableApiClass = tableApiClass;
         this.staticDataResId = staticDataResId;
         this.staticDataRecordName = staticDataRecordName;
     }
 
-    public FSTableCreator(String authority, Class<? extends FSApi> tableApiClass) {
+    public FSTableCreator(String authority, Class<? extends FSGetApi> tableApiClass) {
         this(authority, tableApiClass, FSTableDescriber.NO_STATIC_DATA_RESOURCE_ID, "");
     }
 
@@ -22,7 +22,7 @@ public class FSTableCreator {
         return authority;
     }
 
-    public Class<? extends FSApi> getTableApiClass() {
+    public Class<? extends FSGetApi> getTableApiClass() {
         return tableApiClass;
     }
 

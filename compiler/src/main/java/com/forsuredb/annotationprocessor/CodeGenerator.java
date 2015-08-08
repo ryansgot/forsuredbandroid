@@ -88,16 +88,16 @@ import javax.tools.JavaFileObject;
         VelocityContext vc = new VelocityContext();
         vc.put("className", className);
         vc.put("packageName", pkgName);
-        vc.put("methodDefinitions", getMethodDefinitions(enclosedElements));
+        vc.put("methodDefinitions", getMethodDefinitions(className, enclosedElements));
         return vc;
     }
 
-    private List<String> getMethodDefinitions(List<? extends Element> enclosedElements) {
-        List<MethodInfo> methodInfoList = createMethodInfoList(enclosedElements);
-        List<String> retList = new ArrayList<String>();
+    private List<String> getMethodDefinitions(String className, List<? extends Element> enclosedElements) {
+        final List<MethodInfo> methodInfoList = createMethodInfoList(enclosedElements);
+        final List<String> retList = new ArrayList<String>();
         while (methodInfoList.size() > 0) {
-            MethodInfo m = methodInfoList.remove(0);
-            retList.add("void " + m.getName() + "(" + m.getReturnTypeStr() + " " + m.getName() + ");");
+            final MethodInfo m = methodInfoList.remove(0);
+            retList.add("@FSColumn(\"" + m.getColumnName() + "\") " + className + " " + m.getName() + "(" + m.getReturnType().toString() + " " + m.getName() + ");");
         }
         return retList;
     }
@@ -107,7 +107,7 @@ import javax.tools.JavaFileObject;
             return Collections.EMPTY_LIST;
         }
 
-        List<MethodInfo> retList = new LinkedList<>();
+        final List<MethodInfo> retList = new LinkedList<>();
         for (Element e : enclosedElements) {
             if (e.getKind() != ElementKind.METHOD) {
                 continue;
@@ -120,6 +120,7 @@ import javax.tools.JavaFileObject;
             }
 
             retList.add(MethodInfo.builder().name(methodElement.getSimpleName().toString())
+                                            .columnName(column.value())
                                             .returnType(methodElement.getReturnType())
                                             .parameters(getParameters(methodElement))
                                             .build());

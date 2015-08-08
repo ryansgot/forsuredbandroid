@@ -5,4 +5,4 @@ package com.forsuredb;
  *     This is only here to ensure that interfaces are used.
  * </p>
  */
-public interface FSApi {}
+public interface FSGetApi {}

@@ -14,9 +14,9 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 
-public class FSAdapter {
+public class FSGetAdapter {
 
-    private static final String LOG_TAG = FSAdapter.class.getSimpleName();
+    private static final String LOG_TAG = FSGetAdapter.class.getSimpleName();
 
     /*package*/ static ImmutableMap<Type, Method> cursorMethodMap;
     static {
@@ -37,7 +37,7 @@ public class FSAdapter {
     private static final Handler handler = new Handler();   // <-- there only needs to be one handler ever
 
     public static <T> T create(Class<T> tableApi) {
-        ApiValidator.validateClass(tableApi);
+        GetApiValidator.validateClass(tableApi);
         return (T) Proxy.newProxyInstance(tableApi.getClassLoader(), new Class<?>[] {tableApi}, handler);
     }
 
@@ -59,7 +59,7 @@ public class FSAdapter {
             if (method.getDeclaringClass() == Object.class) {
                 return method.invoke(this, args);
             }
-            ApiValidator.validateCall(method, args);
+            GetApiValidator.validateCall(method, args);
             return callCursorMethod((CursorWrapper) args[0], method.getAnnotation(FSColumn.class), method.getGenericReturnType());
         }
 

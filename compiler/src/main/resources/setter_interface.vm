@@ -1,6 +1,9 @@
 package ${packageName};
 
-public interface ${className} {
+import com.forsuredb.FSSaveApi;
+import com.forsuredb.annotation.FSColumn;
+
+public interface ${className} extends FSSaveApi {
 #foreach($methodDefinition in $methodDefinitions)
     $methodDefinition
 #end

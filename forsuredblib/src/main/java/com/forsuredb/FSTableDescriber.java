@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.net.Uri;
 
-import com.forsuredb.FSApi;
 import com.forsuredb.annotation.FSColumn;
 import com.forsuredb.annotation.FSTable;
 import com.forsuredb.annotation.ForeignKey;
@@ -26,20 +25,20 @@ public class FSTableDescriber {
     /*package*/ static final int NO_STATIC_DATA_RESOURCE_ID = -1;
 
     private final String name;
-    private final Class<? extends FSApi> tableApiClass;
+    private final Class<? extends FSGetApi> tableApiClass;
     private final int staticDataResId;
     private final String staticDataRecordName;
     private final String mimeType;
     private final Uri allRecordsUri;
 
     private String tableCreateQuery;
-    private FSApi tableApi;
+    private FSGetApi tableApi;
 
     /*package*/ FSTableDescriber(FSTableCreator FSTableCreator) throws IllegalStateException {
         this(FSTableCreator.getAuthority(), FSTableCreator.getTableApiClass(), FSTableCreator.getStaticDataResId(), FSTableCreator.getStaticDataRecordName());
     }
 
-    private FSTableDescriber(String authority, Class<? extends FSApi> tableApiClass, int staticDataResId, String staticDataRecordName)
+    private FSTableDescriber(String authority, Class<? extends FSGetApi> tableApiClass, int staticDataResId, String staticDataRecordName)
                                                                                                     throws IllegalStateException {
         validate(authority, tableApiClass);
         this.name = tableApiClass.getAnnotation(FSTable.class).value();
@@ -73,9 +72,9 @@ public class FSTableDescriber {
         return tableCreateQuery;
     }
 
-    public FSApi getTableApi() {
+    public FSGetApi getTableApi() {
         if (tableApi == null) {
-            tableApi = FSAdapter.create(tableApiClass);
+            tableApi = FSGetAdapter.create(tableApiClass);
         }
         return tableApi;
     }
@@ -112,7 +111,7 @@ public class FSTableDescriber {
         return insertionQueries;
     }
 
-    public Class<? extends FSApi> getTableApiClass() {
+    public Class<? extends FSGetApi> getTableApiClass() {
         return tableApiClass;
     }
 
@@ -170,7 +169,7 @@ public class FSTableDescriber {
      *     Validates the properties of this table to be correct
      * </p>
      */
-    private void validate(String authority, Class<? extends FSApi> tableApiClass) throws IllegalStateException, IllegalArgumentException {
+    private void validate(String authority, Class<? extends FSGetApi> tableApiClass) throws IllegalStateException, IllegalArgumentException {
         if (!tableApiClass.isAnnotationPresent(FSTable.class)) {
             throw new IllegalArgumentException("Cannot create table without a table name. Use the FSTable annotation on all FSDataModel extensions");
         }
@@ -195,7 +194,7 @@ public class FSTableDescriber {
         validateForeignKeyPresence(method, foreignKey);
     }
 
-    private void validateForeignKeyTable(Class<? extends FSApi> foreignTableApiClass) {
+    private void validateForeignKeyTable(Class<? extends FSGetApi> foreignTableApiClass) {
         if (!foreignTableApiClass.isAnnotationPresent(FSTable.class)) {
             throw new IllegalArgumentException("ForeignKey apiClass must be a class annotated with the FSTable annotation");
         }
@@ -207,7 +206,7 @@ public class FSTableDescriber {
     }
 
     private void validateForeignKeyPresence(Method method, ForeignKey foreignKey) {
-        final Class<? extends FSApi> foreignTableApiClass = foreignKey.apiClass();
+        final Class<? extends FSGetApi> foreignTableApiClass = foreignKey.apiClass();
         final String foreignTableName = foreignTableApiClass.getAnnotation(FSTable.class).value();
         boolean foreignKeyExists = false;
         Type foreignKeyType = null;

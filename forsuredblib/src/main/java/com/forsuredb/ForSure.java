@@ -3,8 +3,6 @@ package com.forsuredb;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.forsuredb.FSApi;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +10,7 @@ import java.util.Map;
 
 public class ForSure {
 
-    private final Map<Class<? extends FSApi>, FSTableDescriber> tableDescriberByApi = new HashMap<Class<? extends FSApi>, FSTableDescriber>();
+    private final Map<Class<? extends FSGetApi>, FSTableDescriber> tableDescriberByApi = new HashMap<Class<? extends FSGetApi>, FSTableDescriber>();
     private final Map<String, FSTableDescriber> tableDescriberByName = new HashMap<String, FSTableDescriber>();
 
     private ForSure() {}

@@ -10,18 +10,18 @@ import android.widget.TextView;
 
 import com.forsuredb.ForSure;
 import com.forsuredb.testapp.R;
-import com.forsuredb.testapp.model.UserTableApi;
+import com.forsuredb.testapp.model.UserTable;
 
 import java.math.BigDecimal;
 
 public class TestUserCursorAdapter extends BaseAdapter {
 
-    private final UserTableApi tableApi;
+    private final UserTable tableApi;
     private Context context;
     private Cursor cursor;
 
     public TestUserCursorAdapter(Context context) {
-        tableApi = ForSure.getInstance().getTableApi(UserTableApi.class);
+        tableApi = ForSure.getInstance().getTableApi(UserTable.class);
         this.context = context;
         cursor = null;
     }

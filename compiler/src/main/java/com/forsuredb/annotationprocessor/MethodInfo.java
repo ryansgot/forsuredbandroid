@@ -5,12 +5,14 @@ import javax.lang.model.type.TypeMirror;
 /*package*/ class MethodInfo {
 
     private final String name;
-    private final String returnTypeStr;
+    private final String columnName;
+    private final TypeMirror returnType;
     private final ParameterInfo parameters;
 
-    private MethodInfo(String name, TypeMirror returnType, ParameterInfo parameters) {
+    private MethodInfo(String name, String columnName, TypeMirror returnType, ParameterInfo parameters) {
         this.name = name;
-        this.returnTypeStr = returnType == null ? "void" : returnType.toString();
+        this.columnName = columnName;
+        this.returnType = returnType;
         this.parameters = parameters;
     }
 
@@ -22,8 +24,12 @@ import javax.lang.model.type.TypeMirror;
         return name;
     }
 
-    public String getReturnTypeStr() {
-        return returnTypeStr;
+    public String getColumnName() {
+        return columnName;
+    }
+
+    public TypeMirror getReturnType() {
+        return returnType;
     }
 
     public ParameterInfo getParameters() {
@@ -32,11 +38,17 @@ import javax.lang.model.type.TypeMirror;
 
     /*package*/ static class Builder {
         private String name;
+        private String columnName;
         private TypeMirror returnType;
         private ParameterInfo parameters;
 
         public Builder name(String name) {
             this.name = name;
+            return this;
+        }
+
+        public Builder columnName(String columnName) {
+            this.columnName = columnName;
             return this;
         }
 
@@ -51,7 +63,7 @@ import javax.lang.model.type.TypeMirror;
         }
 
         public MethodInfo build() {
-            return new MethodInfo(name, returnType, parameters);
+            return new MethodInfo(name, columnName, returnType, parameters);
         }
     }
 }

@@ -10,18 +10,18 @@ import android.widget.TextView;
 
 import com.forsuredb.ForSure;
 import com.forsuredb.testapp.R;
-import com.forsuredb.testapp.model.ProfileInfoTableApi;
+import com.forsuredb.testapp.model.ProfileInfoTable;
 
 import java.util.Arrays;
 
 public class TestProfileInfoCursorAdapter extends BaseAdapter {
 
-    private final ProfileInfoTableApi tableApi;
+    private final ProfileInfoTable tableApi;
     private Context context;
     private Cursor cursor;
 
     public TestProfileInfoCursorAdapter(Context context) {
-        tableApi = ForSure.getInstance().getTableApi(ProfileInfoTableApi.class);
+        tableApi = ForSure.getInstance().getTableApi(ProfileInfoTable.class);
         this.context = context;
         cursor = null;
     }
