@@ -38,3 +38,13 @@ dependencies {
     compile project(':forsuredblib')
     apt project(':compiler')
 }
+
+// Makes sure that setProperties task is run prior to compilation
+gradle.projectsEvaluated {
+    compileDebugJava.dependsOn(setProperties)
+}
+
+// Ensures that the property the CodeGenerator needs is set and accurate for an Android project
+task setProperties << {
+    System.properties.put("resultParameter", "android.net.Uri")
+}

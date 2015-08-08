@@ -2,6 +2,7 @@ package com.forsuredb.testapp.adapter;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.widget.TextView;
 
 import com.forsuredb.ForSure;
 import com.forsuredb.testapp.R;
+import com.forsuredb.testapp.contentprovider.TestContentProvider;
 import com.forsuredb.testapp.model.ProfileInfoTable;
 
 import java.util.Arrays;
@@ -21,7 +23,7 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
     private Cursor cursor;
 
     public TestProfileInfoCursorAdapter(Context context) {
-        tableApi = ForSure.inst().getApi(ProfileInfoTable.class);
+        tableApi = ForSure.inst().getApi(Uri.parse("content://" + TestContentProvider.AUTHORITY + "/profile_info"));
         this.context = context;
         cursor = null;
     }

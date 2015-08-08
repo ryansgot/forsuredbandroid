@@ -1,8 +1,7 @@
 package com.forsuredb;
 
-import java.util.List;
-
-public interface SaveResult {
-    List<Error> errors();
+public interface SaveResult<U> {
+    Exception exception();
+    U inserted();
     int rowsAffected();
 }

@@ -1,7 +1,9 @@
 package com.forsuredb;
 
 import android.content.ContentValues;
-import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+import android.util.Log;
 
 import com.forsuredb.annotation.FSColumn;
 
@@ -9,26 +11,25 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class FSSaveAdapter {
 
-    private static final Map<Class<? extends FSSaveApi>, Handler> handlers = new HashMap<>();
+    private static final String LOG_TAG = FSSaveAdapter.class.getSimpleName();
+    private static final Map<Class<? extends FSSaveApi<Uri>>, Handler> HANDLERS = new HashMap<>();
 
     /**
      * <p>
      *     Create an api object capable of saving a row.
      * </p>
-     * @param context
+     * @param q
      * @param api
      * @param <T>
      * @return
      */
-    public static <T extends FSSaveApi> T create(Context context, Class<T> api) {
-        final Handler handler = getOrCreateFor(context.getApplicationContext(), api);
+    public static <T extends FSSaveApi<Uri>> T create(ContentProviderQueryable q, Class<T> api) {
+        final Handler handler = getOrCreateFor(q, api);
         return (T) Proxy.newProxyInstance(api.getClassLoader(), new Class<?>[]{api}, handler);
     }
 
@@ -36,29 +37,29 @@ public class FSSaveAdapter {
      * <p>
      *     Lazily create the invocation handlers for the save API.
      * </p>
-     * @param appContext
+     * @param q
      * @param api
      * @return
      */
-    private static Handler getOrCreateFor(Context appContext, Class<? extends FSSaveApi> api) {
-        Handler handler = handlers.get(api);
+    private static Handler getOrCreateFor(ContentProviderQueryable q, Class<? extends FSSaveApi<Uri>> api) {
+        Handler handler = HANDLERS.get(api);
         if (handler == null) {
-            handler = new Handler(appContext, api);
-            handlers.put(api, handler);
+            handler = new Handler(q, api);
+            HANDLERS.put(api, handler);
         }
         return handler;
     }
 
     private static class Handler implements InvocationHandler {
 
-        private final Context context;
+        private final ContentProviderQueryable cpWrapper;
         private final Map<String, Integer> columnNameToIndexMap = new HashMap<>();
         private final ContentValues cv = new ContentValues();
         private String[] columns;
         private Type[] columnTypes;
 
-        public Handler(Context context, Class<? extends FSSaveApi> api) {
-            this.context = context;
+        public Handler(ContentProviderQueryable cpWrapper, Class<? extends FSSaveApi<Uri>> api) {
+            this.cpWrapper = cpWrapper;
             setColumnsAndTypes(api);
         }
 
@@ -76,23 +77,44 @@ public class FSSaveAdapter {
             return performSave();
         }
 
-        private SaveResult performSave() {
+        private SaveResult<Uri> performSave() {
             if (!idStored()) {  // <-- if no id has been stored, then this is almost assuredly an instertion . . . not necessarily true, but baby steps
                 return performInsert();
             }
             return performUpsert();
         }
 
-        private SaveResult performInsert() {
-            // perform insertion
-            cv.clear();
-            return new Result(0);
+        private SaveResult<Uri> performInsert() {
+            try {
+                final Uri insertedUri = cpWrapper.insert(cv);
+                return new ResultBuilder().insertedUri(insertedUri)
+                                          .rowsAffected(insertedUri == null ? 0 : 1)
+                                          .build();
+            } catch (Exception e) {
+                return new ResultBuilder().exception(e).build();
+            } finally {
+                cv.clear();
+            }
         }
 
-        private SaveResult performUpsert() {
-            // perform upsertion
-            cv.clear();
-            return new Result(0);
+        private SaveResult<Uri> performUpsert() {
+            FSSelection selection = new Selection("_id = ?", new String[]{(String) cv.get("_id")});
+            Cursor cursor = cpWrapper.query(null, selection, null);
+            try {
+                if (cursor == null || cursor.getCount() < 1) {
+                    return performInsert();
+                }
+                int rowsAffected = cpWrapper.update(cv, selection);
+                return new ResultBuilder().rowsAffected(rowsAffected).build();
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "exception while upserting: " + cv.toString(), e);
+                return new ResultBuilder().exception(e).build();
+            } finally {
+                cv.clear();
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
         }
 
         private void performSet(String column, Object arg) {
@@ -106,7 +128,7 @@ public class FSSaveAdapter {
             }
         }
 
-        private void setColumnsAndTypes(Class<? extends FSSaveApi> api) {
+        private void setColumnsAndTypes(Class<? extends FSSaveApi<Uri>> api) {
             final Method[] apiDeclaredMethods = api.getDeclaredMethods();
             columns = new String[apiDeclaredMethods.length];
             columnTypes = new Type[apiDeclaredMethods.length];
@@ -122,32 +144,64 @@ public class FSSaveAdapter {
         }
     }
 
-    private static class Result implements SaveResult {
+    private static class Selection implements FSSelection {
 
-        private final int rowsAffected;
-        private final List<Error> errors;
+        private final String where;
+        private final String[] replacements;
 
-        public Result(List<Error> errors) {
-            this(0, errors);
+        public Selection(String where, String[] replacements) {
+            this.where = where;
+            this.replacements = replacements;
         }
 
-        public Result(int rowsAffected) {
-            this(rowsAffected, null);
+        @Override
+        public String where() {
+            return where;
         }
 
-        public Result(int rowsAffected, List<Error> errors) {
+        @Override
+        public String[] replacements() {
+            return replacements;
+        }
+    }
+
+    private static class ResultBuilder {
+        private Uri insertedUri = null;
+        private int rowsAffected = 0;
+        private Exception e = null;
+
+        public ResultBuilder insertedUri(Uri insertedUri) {
+            this.insertedUri = insertedUri;
+            return this;
+        }
+
+        public ResultBuilder exception(Exception e) {
+            this.e = e;
+            return this;
+        }
+
+        public ResultBuilder rowsAffected(int rowsAffected) {
             this.rowsAffected = rowsAffected;
-            this.errors = errors == null ? Collections.EMPTY_LIST : errors;
+            return this;
         }
 
-        @Override
-        public List<Error> errors() {
-            return errors;
-        }
+        public SaveResult<Uri> build() {
+            return new SaveResult<Uri>() {
+                @Override
+                public Exception exception() {
+                    return e;
+                }
 
-        @Override
-        public int rowsAffected() {
-            return rowsAffected;
+                @Override
+                public Uri inserted() {
+                    return insertedUri;
+                }
+
+                @Override
+                public int rowsAffected() {
+                    return rowsAffected;
+                }
+            };
         }
     }
 }

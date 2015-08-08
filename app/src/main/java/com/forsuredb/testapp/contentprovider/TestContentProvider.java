@@ -12,7 +12,7 @@ import com.forsuredb.FSTableDescriber;
 
 public class TestContentProvider extends ContentProvider {
 
-    public static final String AUTHORITY ="com.forsuredb.testapp.content";
+    public static final String AUTHORITY = "com.forsuredb.testapp.content";
 
     public TestContentProvider() {}
 

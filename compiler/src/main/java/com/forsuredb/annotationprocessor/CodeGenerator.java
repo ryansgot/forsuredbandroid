@@ -86,6 +86,10 @@ import javax.tools.JavaFileObject;
 
     private VelocityContext createVelocityContext(String className, String pkgName, List<? extends Element> enclosedElements) {
         VelocityContext vc = new VelocityContext();
+        final String resultParameter = System.getProperty("resultParameter");
+        if (resultParameter != null) {
+            vc.put("resultParameter", resultParameter);
+        }
         vc.put("className", className);
         vc.put("packageName", pkgName);
         vc.put("methodDefinitions", getMethodDefinitions(className, enclosedElements));
@@ -120,10 +124,10 @@ import javax.tools.JavaFileObject;
             }
 
             retList.add(MethodInfo.builder().name(methodElement.getSimpleName().toString())
-                                            .columnName(column.value())
-                                            .returnType(methodElement.getReturnType())
-                                            .parameters(getParameters(methodElement))
-                                            .build());
+                    .columnName(column.value())
+                    .returnType(methodElement.getReturnType())
+                    .parameters(getParameters(methodElement))
+                    .build());
         }
 
         return retList;

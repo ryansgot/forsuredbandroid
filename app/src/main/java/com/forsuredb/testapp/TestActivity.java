@@ -1,7 +1,9 @@
 package com.forsuredb.testapp;
 
+import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ListView;
 
 import com.forsuredb.FSTableDescriber;
@@ -9,6 +11,7 @@ import com.forsuredb.ForSure;
 import com.forsuredb.SaveResult;
 import com.forsuredb.testapp.adapter.TestProfileInfoCursorAdapter;
 import com.forsuredb.testapp.adapter.TestUserCursorAdapter;
+import com.forsuredb.testapp.contentprovider.TestContentProvider;
 import com.forsuredb.testapp.model.UserTableSetter;
 
 import java.math.BigDecimal;
@@ -28,13 +31,30 @@ public class TestActivity extends ActionBarActivity {
         profileInfoCursorAdapter = new TestProfileInfoCursorAdapter(this);
         ((ListView) findViewById(R.id.profile_info_list_view)).setAdapter(profileInfoCursorAdapter);
 
-        UserTableSetter utSetter = ForSure.inst().setApi(UserTableSetter.class);
-        SaveResult res = utSetter.appRating(4.5D)
-                                 .competitorAppRating(new BigDecimal("4.55"))
-                                 .id(1L)
-                                 .globalId(2L)
-                                 .loginCount(42)
-                                 .save();
+        SaveResult<Uri> res = ForSure.inst().setApi(UserTableSetter.class).appRating(4.5D)
+                                                                          .competitorAppRating(new BigDecimal("4.55"))
+                                                                          .id(1L)
+                                                                          .globalId(2L)
+                                                                          .loginCount(42)
+                                                                          .save();
+        if (res != null) {
+            Log.i("RYAN", "res = SaveResult<Uri>{e=" + res.exception() + ", rowsAffected=" + res.rowsAffected() + ", insertedUri=" + res.inserted() + "}");
+        } else {
+            Log.i("RYAN", "res = null");
+        }
+
+        UserTableSetter setter = ForSure.inst().setApi(Uri.parse("content://" + TestContentProvider.AUTHORITY + "/user"));
+        res = setter.appRating(3.5D)
+                    .competitorAppRating(new BigDecimal("3.55"))
+                    .id(2L)
+                    .globalId(3L)
+                    .loginCount(43)
+                    .save();
+        if (res != null) {
+            Log.i("RYAN", "res = SaveResult<Uri>{e=" + res.exception() + ", rowsAffected=" + res.rowsAffected() + ", insertedUri=" + res.inserted() + "}");
+        } else {
+            Log.i("RYAN", "res = null");
+        }
     }
 
     @Override

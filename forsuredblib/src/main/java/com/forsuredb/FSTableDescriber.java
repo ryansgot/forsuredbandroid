@@ -29,7 +29,7 @@ public class FSTableDescriber {
 
     private final String name;
     private final Class<? extends FSGetApi> getApiClass;
-    private Class<? extends FSSaveApi> saveApiClass;
+    private Class<? extends FSSaveApi<Uri>> saveApiClass;
     private final int staticDataResId;
     private final String staticDataRecordName;
     private final String mimeType;
@@ -37,7 +37,7 @@ public class FSTableDescriber {
 
     private String tableCreateQuery;
     private FSGetApi getApi;
-    private FSSaveApi setApi;
+    private FSSaveApi<Uri> setApi;
 
     /*package*/ FSTableDescriber(FSTableCreator FSTableCreator) throws IllegalStateException {
         this(FSTableCreator.getAuthority(), FSTableCreator.getTableApiClass(), FSTableCreator.getStaticDataResId(), FSTableCreator.getStaticDataRecordName());
@@ -84,9 +84,9 @@ public class FSTableDescriber {
         return getApi;
     }
 
-    public FSSaveApi set(Context context) {
+    public FSSaveApi set(ContentProviderQueryable q) {
         if (setApi == null) {
-            setApi = FSSaveAdapter.create(context, getSaveApiClass());
+            setApi = FSSaveAdapter.create(q, getSaveApiClass());
         }
         return setApi;
     }
@@ -127,25 +127,21 @@ public class FSTableDescriber {
         return getApiClass;
     }
 
-    public Class<? extends FSSaveApi> getSaveApiClass() {
+    public Class<? extends FSSaveApi<Uri>> getSaveApiClass() {
         if (saveApiClass == null) {
             final String className = getApiClass.getName() + "Setter";
             Class<?> loaded = null;
             try {
-                loaded = this.getClass().getClassLoader().loadClass(className);
+                loaded = Class.forName(className);
             } catch (ClassNotFoundException cnfe) {
                 Log.e(LOG_TAG, "Could not find class: " + className, cnfe);
                 return null;
             }
-
-            Class<? extends FSSaveApi> cls = null;
             try {
-                cls = loaded.asSubclass(FSSaveApi.class);
+                saveApiClass = (Class<? extends FSSaveApi<Uri>>) loaded;
             } catch (ClassCastException cce) {
-                Log.e(LOG_TAG, "Could not cast " + className + " to: ? extends " + FSSaveApi.class.getSimpleName(), cce);
-                return null;
+                Log.e(LOG_TAG, "Could not cast: " + loaded.getName() + " to correct class", cce);
             }
-            saveApiClass = cls;
         }
         return saveApiClass;
     }
