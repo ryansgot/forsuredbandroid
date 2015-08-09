@@ -1,20 +1,26 @@
 package com.forsuredb.testapp;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import com.forsuredb.FSTableDescriber;
 import com.forsuredb.ForSure;
-import com.forsuredb.SaveResult;
 import com.forsuredb.testapp.adapter.TestProfileInfoCursorAdapter;
 import com.forsuredb.testapp.adapter.TestUserCursorAdapter;
 import com.forsuredb.testapp.contentprovider.TestContentProvider;
+import com.forsuredb.testapp.model.ProfileInfoTableSetter;
 import com.forsuredb.testapp.model.UserTableSetter;
 
 import java.math.BigDecimal;
+import java.util.Date;
+import java.util.Random;
 
 public class TestActivity extends ActionBarActivity {
 
@@ -30,31 +36,6 @@ public class TestActivity extends ActionBarActivity {
         ((ListView) findViewById(R.id.user_list_view)).setAdapter(userCursorAdapter);
         profileInfoCursorAdapter = new TestProfileInfoCursorAdapter(this);
         ((ListView) findViewById(R.id.profile_info_list_view)).setAdapter(profileInfoCursorAdapter);
-
-        SaveResult<Uri> res = ForSure.inst().setApi(UserTableSetter.class).appRating(4.5D)
-                                                                          .competitorAppRating(new BigDecimal("4.55"))
-                                                                          .id(1L)
-                                                                          .globalId(2L)
-                                                                          .loginCount(42)
-                                                                          .save();
-        if (res != null) {
-            Log.i("RYAN", "res = SaveResult<Uri>{e=" + res.exception() + ", rowsAffected=" + res.rowsAffected() + ", insertedUri=" + res.inserted() + "}");
-        } else {
-            Log.i("RYAN", "res = null");
-        }
-
-        UserTableSetter setter = ForSure.inst().setApi(Uri.parse("content://" + TestContentProvider.AUTHORITY + "/user"));
-        res = setter.appRating(3.5D)
-                    .competitorAppRating(new BigDecimal("3.55"))
-                    .id(2L)
-                    .globalId(3L)
-                    .loginCount(43)
-                    .save();
-        if (res != null) {
-            Log.i("RYAN", "res = SaveResult<Uri>{e=" + res.exception() + ", rowsAffected=" + res.rowsAffected() + ", insertedUri=" + res.inserted() + "}");
-        } else {
-            Log.i("RYAN", "res = null");
-        }
     }
 
     @Override
@@ -73,5 +54,82 @@ public class TestActivity extends ActionBarActivity {
         super.onPause();
         userCursorAdapter.changeCursor(null);
         profileInfoCursorAdapter.changeCursor(null);
+    }
+
+    public void onEditUserTableClicked(View v) {
+        showDialog("Randomize User", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                try {
+                    long id = getIdFromDialog(dialogInterface);
+                    inputRandomDataForUser(id);
+                } catch (NumberFormatException nfe) {
+                    return;
+                } finally {
+                    dialogInterface.dismiss();
+                }
+            }
+        });
+    }
+
+    public void onEditProfileInfoTableClicked(View v) {
+        showDialog("Randomize Profile Info", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                try {
+                    long id = getIdFromDialog(dialogInterface);
+                    inputRandomDataForProfileInfo(id);
+                } catch (NumberFormatException nfe) {
+                    return;
+                } finally {
+                    dialogInterface.dismiss();
+                }
+            }
+        });
+    }
+
+    private void inputRandomDataForUser(long id) {
+        Random generator = new Random(new Date().getTime());
+        UserTableSetter setter = ForSure.inst().setApi(Uri.parse("content://" + TestContentProvider.AUTHORITY + "/user"));
+        setter.appRating(generator.nextDouble())
+                .competitorAppRating(new BigDecimal(generator.nextFloat()))
+                .globalId(generator.nextLong())
+                .id(id)
+                .loginCount(generator.nextInt())
+                .save();
+        FSTableDescriber userTable = ForSure.inst().getTable("user");
+        userCursorAdapter.changeCursor(getContentResolver().query(userTable.getAllRecordsUri(), null, null, null, null));
+    }
+
+    private void inputRandomDataForProfileInfo(long id) {
+        Random generator = new Random(new Date().getTime());
+        ProfileInfoTableSetter setter = ForSure.inst().setApi(Uri.parse("content://" + TestContentProvider.AUTHORITY + "/profile_info"));
+        long userId = generator.nextLong();
+        setter.id(id)
+                .emailAddress("user" + userId + "@email.com")
+                .userId(userId)
+                .binaryData(new byte[] {(byte) (generator.nextInt() & 0xFF), (byte) (generator.nextInt() & 0xFF), (byte) 0})
+                .save();
+        FSTableDescriber profileTable = ForSure.inst().getTable("profile_info");
+        profileInfoCursorAdapter.changeCursor(getContentResolver().query(profileTable.getAllRecordsUri(), null, null, null, null));
+    }
+
+    private long getIdFromDialog(DialogInterface dialogInterface) throws NumberFormatException{
+        EditText idText = (EditText) ((AlertDialog) dialogInterface).findViewById(R.id.id_input_text);
+        return Long.parseLong(idText.getText().toString());
+    }
+
+    private void showDialog(String title, DialogInterface.OnClickListener positiveButtonClickListener) {
+        new AlertDialog.Builder(this).setTitle(title)
+                .setView(LayoutInflater.from(this).inflate(R.layout.enter_id_layout, null))
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .setPositiveButton("Save", positiveButtonClickListener)
+                .create()
+                .show();
     }
 }

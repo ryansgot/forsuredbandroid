@@ -108,5 +108,23 @@
         android:layout_weight="5"
         android:layout_width="match_parent"
         android:layout_height="0dp" />
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp">
+        <Button
+            android:text="Edit user Table"
+            android:onClick="onEditUserTableClicked"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"/>
+        <Button
+            android:text="Edit profile_info Table"
+            android:onClick="onEditProfileInfoTableClicked"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"/>
+    </LinearLayout>
 
 </LinearLayout>
