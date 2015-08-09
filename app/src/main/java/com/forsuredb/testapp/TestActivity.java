@@ -2,7 +2,6 @@ package com.forsuredb.testapp;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -14,7 +13,6 @@ import com.forsuredb.FSTableDescriber;
 import com.forsuredb.ForSure;
 import com.forsuredb.testapp.adapter.TestProfileInfoCursorAdapter;
 import com.forsuredb.testapp.adapter.TestUserCursorAdapter;
-import com.forsuredb.testapp.contentprovider.TestContentProvider;
 import com.forsuredb.testapp.model.ProfileInfoTableSetter;
 import com.forsuredb.testapp.model.UserTableSetter;
 
@@ -90,27 +88,45 @@ public class TestActivity extends ActionBarActivity {
 
     private void inputRandomDataForUser(long id) {
         Random generator = new Random(new Date().getTime());
-        UserTableSetter setter = ForSure.inst().setApi(Uri.parse("content://" + TestContentProvider.AUTHORITY + "/user"));
+
+        /*
+         * This block demonstrates saving a newly created record routed via the Uri.
+         */
+        FSTableDescriber userTable = ForSure.inst().getTable("user");
+        UserTableSetter setter = ForSure.inst().setApi(userTable.getAllRecordsUri());
         setter.appRating(generator.nextDouble())
                 .competitorAppRating(new BigDecimal(generator.nextFloat()))
                 .globalId(generator.nextLong())
                 .id(id)
                 .loginCount(generator.nextInt())
                 .save();
-        FSTableDescriber userTable = ForSure.inst().getTable("user");
+        /*
+         * The new record will be upserted--in other words, if a record with the specified id already exists, it will be
+         * overwritten. Otherwise, it will insert.
+         */
+
         userCursorAdapter.changeCursor(getContentResolver().query(userTable.getAllRecordsUri(), null, null, null, null));
     }
 
     private void inputRandomDataForProfileInfo(long id) {
         Random generator = new Random(new Date().getTime());
-        ProfileInfoTableSetter setter = ForSure.inst().setApi(Uri.parse("content://" + TestContentProvider.AUTHORITY + "/profile_info"));
         long userId = generator.nextLong();
+
+        /*
+         * This block demonstrates saving a newly created record routed via the Uri.
+         */
+        FSTableDescriber profileTable = ForSure.inst().getTable("profile_info");
+        ProfileInfoTableSetter setter = ForSure.inst().setApi(profileTable.getAllRecordsUri());
         setter.id(id)
                 .emailAddress("user" + userId + "@email.com")
                 .userId(userId)
                 .binaryData(new byte[] {(byte) (generator.nextInt() & 0xFF), (byte) (generator.nextInt() & 0xFF), (byte) 0})
                 .save();
-        FSTableDescriber profileTable = ForSure.inst().getTable("profile_info");
+        /*
+         * The new record will be upserted--in other words, if a record with the specified id already exists, it will be
+         * overwritten. Otherwise, it will insert.
+         */
+
         profileInfoCursorAdapter.changeCursor(getContentResolver().query(profileTable.getAllRecordsUri(), null, null, null, null));
     }
 
