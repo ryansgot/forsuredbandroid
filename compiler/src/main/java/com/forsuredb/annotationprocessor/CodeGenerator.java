@@ -46,18 +46,20 @@ import javax.tools.JavaFileObject;
         return new Builder();
     }
 
-    public void generate(String templateResource) {
+    public boolean generate(String templateResource) {
         if (templateResource == null || templateResource.isEmpty()) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Cannot generate class: " + fqClassName + " from resource: " + templateResource);
-            return;
+            return false;
         }
 
         try {
             applyTemplate(templateResource);
         } catch (ResourceNotFoundException | ParseErrorException | MethodInvocationException exception) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Could not output to " + fqClassName + ".java: " + exception.getMessage());
-            return;
+            return false;
         }
+
+        return true;
     }
 
     private void applyTemplate(String templateResource) throws ResourceNotFoundException, ParseErrorException, MethodInvocationException {

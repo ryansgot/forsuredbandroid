@@ -7,6 +7,8 @@ import org.apache.velocity.app.VelocityEngine;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -15,10 +17,10 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 
 
@@ -39,13 +41,34 @@ public class FSAnnotationProcessor extends AbstractProcessor {
     private void processFSTableAnnotations(RoundEnvironment roundEnv) {
         VelocityEngine ve = createVelocityEngine();
 
-        for (Element e : roundEnv.getElementsAnnotatedWith(FSTable.class)) {
-            if (e.getKind() != ElementKind.INTERFACE) {
+        for (TypeElement te : ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(FSTable.class))) {
+            if (te.getKind() != ElementKind.INTERFACE) {
                 continue;   // <-- only process interfaces
             }
 
-            createSetterApi((TypeElement) e, ve);
+            createSetterApi(te, ve);
         }
+
+        Map<String, String> foreignTableClassNameToTableNameMap = buildForeignTableClassNameToTableNameMap(roundEnv);
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "FSAnnotationProcessor: foreignTableClassNameToTableNameMap = " + foreignTableClassNameToTableNameMap.toString());
+
+        for (TypeElement te : ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(FSTable.class))) {
+            if (te.getKind() != ElementKind.INTERFACE) {
+                continue;   // <-- only process interfaces
+            }
+            createMigrations(te, ve, foreignTableClassNameToTableNameMap);
+        }
+    }
+
+    private void createMigrations(TypeElement intf, VelocityEngine ve, Map<String, String> foreignTableClassNameToTableNameMap) {
+        MigrationGenerator.Builder mGenBuilder = MigrationGenerator.builder().intf(intf)
+                .processingEnv(processingEnv)
+                .velocityEngine(ve);
+        for (Map.Entry<String, String> entry : foreignTableClassNameToTableNameMap.entrySet()) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "FSAnnotationProcessor: adding foreign table: " + entry.getKey() + "=" + entry.getValue());
+            mGenBuilder.addForeignTable(entry.getKey(), entry.getValue());
+        }
+        mGenBuilder.build().generate(foreignTableClassNameToTableNameMap, "migration.vm");
     }
 
     private void createSetterApi(TypeElement intf, VelocityEngine ve) {
@@ -87,5 +110,16 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         ve.init();
 
         return ve;
+    }
+
+    private Map<String, String> buildForeignTableClassNameToTableNameMap(RoundEnvironment roundEnv) {
+        Map<String, String> ret = new HashMap<>();
+
+        Set<? extends TypeElement> tableTypes = ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(FSTable.class));
+        for (TypeElement te : tableTypes) {
+            ret.put(te.getQualifiedName().toString(), te.getAnnotation(FSTable.class).value());
+        }
+
+        return ret;
     }
 }

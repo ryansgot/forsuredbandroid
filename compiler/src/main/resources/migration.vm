@@ -1,0 +1,16 @@
+package $packageName;
+
+import java.util.Date;
+
+import com.forsuredb.Migration;
+
+public class $className extends Migration {
+
+    public $className() {
+        super("$tableName", new Date(${dateInMillis}L));
+    }
+
+    public String getTableCreateQuery() {
+        return "$tableCreateQuery";
+    }
+}
