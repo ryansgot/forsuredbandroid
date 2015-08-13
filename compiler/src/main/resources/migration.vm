@@ -2,7 +2,7 @@ package $packageName;
 
 import java.util.Date;
 
-import com.forsuredb.Migration;
+import com.forsuredb.annotationprocessor.Migration;
 
 public class $className extends Migration {
 

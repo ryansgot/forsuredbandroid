@@ -1,5 +1,6 @@
 package com.forsuredb.annotationprocessor;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 
 /*package*/ class MethodInfo {

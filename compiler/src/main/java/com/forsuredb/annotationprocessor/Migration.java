@@ -1,4 +1,4 @@
-package com.forsuredb;
+package com.forsuredb.annotationprocessor;
 
 import java.util.Date;
 

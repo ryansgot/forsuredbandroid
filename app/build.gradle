@@ -41,10 +41,40 @@ dependencies {
 
 // Makes sure that setProperties task is run prior to compilation
 gradle.projectsEvaluated {
+    setProperties.shouldRunAfter(clean)
     compileDebugJava.dependsOn(setProperties)
+    dbmigrate.dependsOn(clean)
+    dbmigrate.dependsOn(compileDebugJava)
 }
 
-// Ensures that the property the CodeGenerator needs is set and accurate for an Android project
+boolean wasRequestedTask(String taskName) {
+    for (TaskExecutionRequest taskExecutionRequest : project.gradle.startParameter.taskRequests) {
+        for (String arg : taskExecutionRequest.args) {
+            if (arg.equals(taskName)) {
+                return true
+            }
+        }
+    }
+
+    return false
+}
+
 task setProperties << {
+    // Ensures that the property the CodeGenerator needs is set and accurate for an Android project
     System.properties.put("resultParameter", "android.net.Uri")
+    println("[setProperties]: set property resultParameter=" + System.properties.get("resultParameter"))
+    if (wasRequestedTask("dbmigrate")) {
+        System.properties.put("dbtype", "sqlite")
+        System.properties.put("createMigrations", "true")
+        System.properties.put("applicationPackageName", android.defaultConfig.applicationId)
+        println("[setProperties]: set property dbtype=" + System.properties.get("dbtype"))
+        println("[setProperties]: set property createMigrations=" + System.properties.get("createMigrations"))
+        println("[setProperties]: set property applicationPackageName=" + System.properties.get("applicationPackageName"))
+    }
+}
+
+task dbmigrate << {
+    if (Boolean.getBoolean("createMigrations")) {
+        println("[dbmigrate]: output migrations to default class path with package: " + System.getProperty("applicationPackageName"))
+    }
 }

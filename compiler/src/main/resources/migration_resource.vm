@@ -1,0 +1,5 @@
+<$baseTag>
+#foreach($migrationXml in $migrationXmlList)
+    $migrationXml
+#end
+</$baseTag>
