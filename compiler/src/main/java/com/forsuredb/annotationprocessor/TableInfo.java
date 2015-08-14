@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 
@@ -17,6 +18,7 @@ import javax.lang.model.util.ElementFilter;
     private final MetaData metaData;
     private final String qualifiedClassName;
     private final String simpleClassName;
+    private final String classPackageName;
     private final String tableName;
 
     /*package*/ TableInfo(TypeElement intf) {
@@ -26,6 +28,7 @@ import javax.lang.model.util.ElementFilter;
 
         metaData = new MetaData(intf.getAnnotationMirrors());
         appendColumns(intf);
+        classPackageName = createClassPackageName(intf);
         qualifiedClassName = intf.getQualifiedName().toString();
         simpleClassName = intf.getSimpleName().toString();
         tableName = createName();
@@ -47,6 +50,10 @@ import javax.lang.model.util.ElementFilter;
 
     public String getSimpleClassName() {
         return simpleClassName;
+    }
+
+    public String getPackageName() {
+        return classPackageName;
     }
 
     public String getTableName() {
@@ -83,5 +90,9 @@ import javax.lang.model.util.ElementFilter;
 
         final String tableName = metaData.get(FSTable.class).property("value").as(String.class);
         return tableName == null || tableName.isEmpty() ? simpleClassName : tableName;
+    }
+
+    private String createClassPackageName(TypeElement intf) {
+        return ((PackageElement) intf.getEnclosingElement()).getQualifiedName().toString();
     }
 }

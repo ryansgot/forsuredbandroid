@@ -18,7 +18,6 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
@@ -42,9 +41,8 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         Set<TypeElement> tableTypes = ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(FSTable.class));
         List<TableInfo> allTables = gatherTableInfo(tableTypes);
         VelocityEngine ve = createVelocityEngine();
-        createSetterApis(ve, tableTypes);
 
-
+        createSetterApis(ve, allTables);
         if (Boolean.getBoolean("createMigrations")) {
             createMigrations(ve, allTables);
         }
@@ -56,13 +54,10 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         }
     }
 
-    private void createSetterApis(VelocityEngine ve, Set<TypeElement> tableTypes) {
-        for (TypeElement te : tableTypes) {
-            if (te.getKind() != ElementKind.INTERFACE) {
-                continue;   // <-- only process interfaces
-            }
-
-            createSetterApi(te, ve);
+    private void createSetterApis(VelocityEngine ve, List<TableInfo> allTables) {
+        String resultParameter = System.getProperty("resultParameter");
+        for (TableInfo tableInfo : allTables) {
+            new SetterGenerator(tableInfo, resultParameter, processingEnv).generate("setter_interface.vm", ve);
         }
     }
 
@@ -79,19 +74,6 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         }
 
         return ret;
-    }
-
-    private void createSetterApi(TypeElement intf, VelocityEngine ve) {
-        final String intfName = intf.getSimpleName().toString();
-        final String pkgName = ((PackageElement) intf.getEnclosingElement()).getQualifiedName().toString();
-
-        CodeGenerator.builder().processingEnv(processingEnv)
-                .velocityEngine(ve)
-                .className(intfName + "Setter")
-                               .enclosedElements(intf.getEnclosedElements())
-                               .pkgName(pkgName)
-                               .build()
-                               .generate("setter_interface.vm");
     }
 
     private VelocityEngine createVelocityEngine() {
