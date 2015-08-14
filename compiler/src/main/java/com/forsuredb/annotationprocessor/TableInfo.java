@@ -12,7 +12,7 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 
-/*package*/ class TableInfo {
+public class TableInfo {
 
     private final Map<String, ColumnInfo> columnMap = new HashMap<>();
     private final MetaData metaData;

@@ -9,7 +9,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 
-/*package*/ class MetaData {
+public class MetaData {
 
     private final Map<String, Map<? extends ExecutableElement, ? extends AnnotationValue>> annotationMap = new HashMap<>();
 
@@ -42,7 +42,7 @@ import javax.lang.model.element.ExecutableElement;
         return annotationCls == null ? null : annotationMap.get(annotationCls.getName());
     }
 
-    /*package*/ static class AnnotationTranslator {
+    public static class AnnotationTranslator {
 
         private final Map<String, Object> annotation = new HashMap<>();
 

@@ -8,7 +8,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 
-/*package*/ class ColumnInfo {
+public class ColumnInfo {
 
     private final String methodName;
     private final MetaData metaData;

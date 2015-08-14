@@ -1,6 +1,6 @@
 package com.forsuredb.annotationprocessor;
 
-/*package*/ class Caster {
+public class Caster {
 
     private Object uncasted;
 

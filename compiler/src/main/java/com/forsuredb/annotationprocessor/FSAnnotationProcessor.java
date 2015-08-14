@@ -49,9 +49,7 @@ public class FSAnnotationProcessor extends AbstractProcessor {
     }
 
     private void createMigrations(VelocityEngine ve, List<TableInfo> allTables) {
-        for (TableInfo tableInfo : allTables) {
-            new MigrationGenerator(tableInfo, allTables, processingEnv).generate("migration_resource.vm", ve);
-        }
+        new MigrationGenerator(allTables, processingEnv).generate("migration_resource.vm", ve);
     }
 
     private void createSetterApis(VelocityEngine ve, List<TableInfo> allTables) {

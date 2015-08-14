@@ -1,26 +1,27 @@
 package com.forsuredb.annotationprocessor;
 
-import java.math.BigDecimal;
+import com.forsuredb.QueryGenerator;
+import com.forsuredb.annotation.ForeignKey;
+import com.forsuredb.sqlite.AddColumnGenerator;
+import com.forsuredb.sqlite.AddForeignKeyGenerator;
+import com.forsuredb.sqlite.CreateTableGenerator;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
 
-import javax.lang.model.type.TypeMirror;
-
-public abstract class XmlGenerator {
+public class XmlGenerator {
 
     private static final String TAG_NAME = "migration";
 
     private final int dbVersion;
-    private final String tableName;
-    private final Keyword keyword;
+    private final PriorityQueue<QueryGenerator> queryGenerators;
 
-    /*package*/ XmlGenerator(int dbVersion, String tableName, Keyword keyword) {
+    /*package*/ XmlGenerator(int dbVersion, List<TableInfo> allTables) {
         this.dbVersion = dbVersion;
-        this.tableName = tableName;
-        this.keyword = keyword;
-    }
-
-    public static Builder builder() {
-        return new Builder();
+        queryGenerators = createOrderedQueryGenerators(allTables);
     }
 
     /**
@@ -31,18 +32,25 @@ public abstract class XmlGenerator {
      * @param dbType
      * @return
      */
-    public final String generate(DBType dbType, List<TableInfo> allTables) {
+    public final List<String> generate(DBType dbType) {
         if (!canGenerate(dbType)) {
-            return "\n";
+            return Collections.EMPTY_LIST;
         }
-        return new StringBuffer("<").append(TAG_NAME).append(" db_version=\"").append(dbVersion)
-                                    .append("\" table_name=\"").append(tableName)
-                                    .append("\" keyword=\"").append(keyword.name())
-                                    .append("\" query=\"").append(performXmlReplacements(generateQuery(dbType, allTables)))
-                                    .append("\" />").toString();
-    }
 
-    protected abstract String generateQuery(DBType dbType, List<TableInfo> allTables);
+        List<String> retList = new ArrayList<>();
+        while (queryGenerators.size() > 0) {
+            QueryGenerator queryGenerator = queryGenerators.remove();
+            for (String query : queryGenerator.generate()) {
+                retList.add(new StringBuffer("<").append(TAG_NAME).append(" db_version=\"").append(dbVersion)
+                        .append("\" db_type=\"").append(dbType.asString())
+                        .append("\" table_name=\"").append(queryGenerator.getTableName())
+                        .append("\" query=\"").append(performXmlReplacements(query))
+                        .append("\" />").toString());
+            }
+        }
+
+        return retList;
+    }
 
     private String performXmlReplacements(String attribute) {
         if (attribute == null) {
@@ -56,77 +64,33 @@ public abstract class XmlGenerator {
     }
 
     private boolean canGenerate(DBType dbType) {
-        return dbVersion > 0 && tableName != null && !tableName.isEmpty() && keyword != null && dbType != null;
+        return dbVersion > 0 && dbType != null;
     }
 
-    public static class Builder {
-
-        private int dbVersion = 1;
-        private TableInfo tableInfo;
-        private Keyword keyword;
-
-        private Builder() {}
-
-        public Builder dbVersion(int dbVersion) {
-            this.dbVersion = dbVersion < 1 ? this.dbVersion : dbVersion;
-            return this;
+    private PriorityQueue<QueryGenerator> createOrderedQueryGenerators(List<TableInfo> allTables) {
+        PriorityQueue<QueryGenerator> queue = new PriorityQueue<>();
+        for (TableInfo table : allTables) {
+            queue.addAll(createQueryGenerators(table, allTables));
         }
+        return queue;
+    }
 
-        public Builder tableInfo(TableInfo tableInfo) {
-            this.tableInfo = tableInfo;
-            return this;
-        }
-
-        public Builder keyword(Keyword keyword) {
-            this.keyword = keyword;
-            return this;
-        }
-
-        public XmlGenerator build() {
-            if (keyword == null) {
-                return new EmptyLineGenerator();
+    private List<QueryGenerator> createQueryGenerators(TableInfo table, List<TableInfo> allTables) {
+        List<QueryGenerator> retList = new LinkedList<>();
+        retList.add(new CreateTableGenerator(table.getTableName()));
+        for (ColumnInfo column : table.getColumns()) {
+            if ("_id".equals(column.getColumnName())) {
+                continue;   // <-- don't ever add the _id column because it's on the table create
             }
 
-            switch (keyword) {
-                case CREATE:
-                    return new TableCreateGenerator(dbVersion, tableInfo, keyword);
-                // TODO: add more cases for the various keywords supported
+            if (column.isAnnotationPresent(ForeignKey.class)) {
+                retList.add(new AddForeignKeyGenerator(table, column, allTables));
+            } else {
+                retList.add(new AddColumnGenerator(table.getTableName(), column));
             }
-
-            return new EmptyLineGenerator();
-        }
-    }
-
-    public enum Keyword {
-        CREATE("CREATE TABLE");
-        // TODO: add support for more
-
-        private String sqlite;
-
-        Keyword(String sqlite) {
-            this.sqlite = sqlite;
         }
 
-        public String getSqlite() {
-            return sqlite;
-        }
-    }
-
-    public enum ColumnDescriptor {
-        AUTOINCREMENT("AUTOINCREMENT"),
-        PRIMARY_KEY("PRIMARY KEY"),
-        REFERENCES("REFERENCES"),
-        UNIQUE("UNIQUE");
-
-        private String sqliteDefinition;
-
-        ColumnDescriptor(String sqliteDefinition) {
-            this.sqliteDefinition = sqliteDefinition;
-        }
-
-        public String getSqliteDefinition() {
-            return sqliteDefinition;
-        }
+        return retList;
     }
 
     public enum DBType {
@@ -150,52 +114,6 @@ public abstract class XmlGenerator {
 
         public String asString() {
             return str;
-        }
-    }
-
-    public enum TypeTranslator {
-        BIG_DECIMAL(BigDecimal.class.getName(), "REAL"),
-        BOOLEAN("boolean", "INTEGER"),
-        BOOLEAN_WRAPPER(Boolean.class.getName(), "INTEGER"),
-        BYTE_ARRAY("byte[]", "BLOB"),
-        DOUBLE("double", "REAL"),
-        DOUBLE_WRAPPER(Double.class.getName(), "REAL"),
-        FLOAT("float", "REAL"),
-        FLOAT_WRAPPER(Float.class.getName(), "REAL"),
-        INT("int", "INTEGER"),
-        INT_WRAPPER(Integer.class.getName(), "INTEGER"),
-        LONG("long", "INTEGER"),
-        LOG_WRAPPER(Long.class.getName(), "INTEGER"),
-        STRING(String.class.getName(), "TEXT");
-
-        private String typeMirrorString;
-        private String sqliteTypeString;
-
-        TypeTranslator(String typeMirrorString, String sqliteTypeString) {
-            this.typeMirrorString = typeMirrorString;
-            this.sqliteTypeString = sqliteTypeString;
-        }
-
-        public static TypeTranslator getFrom(TypeMirror typeMirror) {
-            if (typeMirror == null) {
-                return null;
-            }
-
-            for (TypeTranslator typeTranslator : TypeTranslator.values()) {
-                if (typeTranslator.getTypeMirrorString().equals(typeMirror.toString())) {
-                    return typeTranslator;
-                }
-            }
-
-            return STRING;
-        }
-
-        public String getTypeMirrorString() {
-            return typeMirrorString;
-        }
-
-        public String getSQLiteTypeString() {
-            return sqliteTypeString;
         }
     }
 }
