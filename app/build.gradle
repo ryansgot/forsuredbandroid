@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'android-apt'
+import com.google.common.io.Files
+
 
 android {
     compileSdkVersion 21
@@ -59,6 +61,59 @@ boolean wasRequestedTask(String taskName) {
     return false
 }
 
+boolean copyFile(String input, String output) {
+    File inFile = new File(input)
+    if (!inFile.exists()) {
+        println("[copyFile]: input " + input + " did not exist")
+        return false
+    }
+
+    File outFile = new File(output)
+    if (!ensureFileExists(outFile)) {
+        println("[copyFile]: could not create " + outFile.path)
+        return false
+    }
+
+    FileInputStream inReader = new FileInputStream(inFile)
+    FileOutputStream outWriter = new FileOutputStream(outFile)
+
+    int read;
+    while (-1 != (read = inReader.read())) {
+        outWriter.write(read)
+    }
+    inReader.close();
+    outWriter.close();
+
+    return true;
+}
+
+boolean ensureFileExists(File file) {
+    Stack<File> fileStack = new Stack<File>()
+
+    File temp = file
+    while (temp != null && !temp.exists()) {
+        fileStack.push(temp)
+        temp = temp.getParentFile()
+    }
+
+    while (fileStack.size() > 0) {
+        File toCreate = fileStack.pop()
+        if (fileStack.size() == 0) {
+            println("[ensureFileExists]: creating file " + toCreate.path)
+            if (!toCreate.createNewFile()) {
+                return false
+            }
+        } else {
+            println("[ensureFileExists]: creating directory " + toCreate.path)
+            if (!toCreate.mkdir()) {
+                return false
+            }
+        }
+    }
+
+    return true
+}
+
 task setProperties << {
     // Ensures that the property the CodeGenerator needs is set and accurate for an Android project
     System.properties.put("resultParameter", "android.net.Uri")
@@ -74,7 +129,17 @@ task setProperties << {
 }
 
 task dbmigrate << {
-    if (Boolean.getBoolean("createMigrations")) {
-        println("[dbmigrate]: output migrations to default class path with package: " + System.getProperty("applicationPackageName"))
+    println("[dbmigrate]: output migrations to default class path with package: " + System.getProperty("applicationPackageName"))
+
+    String assetDir = "app/src/main/assets"
+    String generatedDir = "app/build/intermediates/classes/debug/" + android.defaultConfig.applicationId.replace(".", File.separator)
+
+    new File(generatedDir).eachFileRecurse { file ->
+        if (file.getName().endsWith("migration")) {
+            String outFile = assetDir + File.separator + file.getName() + ".xml";
+            println("[dbigrate]: copying " + file.getAbsolutePath() + " to " + outFile);
+            copyFile(file.getAbsolutePath(), outFile)
+        }
     }
+    println("[dbmigrate]: copied migrations from " + generatedDir + " into " + assetDir)
 }

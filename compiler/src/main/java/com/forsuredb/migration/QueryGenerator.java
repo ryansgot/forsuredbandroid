@@ -1,4 +1,4 @@
-package com.forsuredb;
+package com.forsuredb.migration;
 
 import java.util.List;
 

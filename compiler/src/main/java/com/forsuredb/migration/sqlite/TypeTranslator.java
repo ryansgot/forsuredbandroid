@@ -1,4 +1,4 @@
-package com.forsuredb.sqlite;
+package com.forsuredb.migration.sqlite;
 
 import java.math.BigDecimal;
 

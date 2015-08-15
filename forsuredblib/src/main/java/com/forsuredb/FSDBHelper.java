@@ -3,10 +3,15 @@ package com.forsuredb;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+import com.forsuredb.migration.Migration;
 
 import java.util.List;
 
 /*package*/ class FSDBHelper extends SQLiteOpenHelper {
+
+    private static final String LOG_TAG = FSDBHelper.class.getSimpleName();
 
     /**
      * Add the tables in the order that is necessary for proper SQL Execution. In other words, if ProfileInfoApi
@@ -14,22 +19,32 @@ import java.util.List;
      * FSTableDescriber first
      */
     private final List<FSTableDescriber> tables;
+    private final List<FSTableCreator> tableCreators;
 
     private final Context context;
 
-    private FSDBHelper(Context context, String dbName, int dbVersion, List<FSTableDescriber> tables) {
+    private FSDBHelper(Context context, String dbName, int dbVersion, List<FSTableDescriber> tables, List<FSTableCreator> tableCreators) {
         super(context, dbName, null, dbVersion);
         this.context = context;
         this.tables = tables;
+        this.tableCreators = tableCreators;
+        for (FSTableCreator creator : tableCreators) {
+            Log.i(LOG_TAG, "getting migration queries for: " + creator.getTableApiClass().getSimpleName());
+            List<Migration> migrations = creator.getMigrations(context);
+            Log.i(LOG_TAG, "total number of migration queries: " + migrations.size());
+            for (Migration migration : migrations) {
+                Log.i(LOG_TAG, "got query: " + migration.toString());
+            }
+        }
     }
 
     private static final class Holder {
         public static FSDBHelper instance;
     }
 
-    public static void init(Context context, String dbName, int dbVersion, List<FSTableDescriber> tables) {
+    public static void init(Context context, String dbName, int dbVersion, List<FSTableDescriber> tables, List<FSTableCreator> tableCreators) {
         if (Holder.instance == null) {
-            Holder.instance = new FSDBHelper(context, dbName, dbVersion, tables);
+            Holder.instance = new FSDBHelper(context, dbName, dbVersion, tables, tableCreators);
         }
     }
 

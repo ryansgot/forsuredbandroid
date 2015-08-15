@@ -1,10 +1,10 @@
 package com.forsuredb.annotationprocessor;
 
-import com.forsuredb.QueryGenerator;
+import com.forsuredb.migration.QueryGenerator;
 import com.forsuredb.annotation.ForeignKey;
-import com.forsuredb.sqlite.AddColumnGenerator;
-import com.forsuredb.sqlite.AddForeignKeyGenerator;
-import com.forsuredb.sqlite.CreateTableGenerator;
+import com.forsuredb.migration.sqlite.AddColumnGenerator;
+import com.forsuredb.migration.sqlite.AddForeignKeyGenerator;
+import com.forsuredb.migration.sqlite.CreateTableGenerator;
 
 import java.util.ArrayList;
 import java.util.Collections;

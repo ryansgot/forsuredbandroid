@@ -1,6 +1,6 @@
-package com.forsuredb.sqlite;
+package com.forsuredb.migration.sqlite;
 
-import com.forsuredb.QueryGenerator;
+import com.forsuredb.migration.QueryGenerator;
 import com.forsuredb.annotationprocessor.ColumnInfo;
 
 import java.util.LinkedList;

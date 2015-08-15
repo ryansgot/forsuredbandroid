@@ -22,7 +22,7 @@ public class App extends Application {
     }
 
     private List<FSTableCreator> createTableCreators() {
-        List<FSTableCreator> retList = new ArrayList<FSTableCreator>();
+        List<FSTableCreator> retList = new ArrayList<>();
         retList.add(new FSTableCreator(TestContentProvider.AUTHORITY, UserTable.class, R.xml.user, "user"));
         retList.add(new FSTableCreator(TestContentProvider.AUTHORITY, ProfileInfoTable.class, R.xml.profile_info, "profile_info"));
         return retList;

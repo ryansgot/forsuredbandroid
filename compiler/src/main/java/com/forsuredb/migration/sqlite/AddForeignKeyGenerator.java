@@ -1,6 +1,6 @@
-package com.forsuredb.sqlite;
+package com.forsuredb.migration.sqlite;
 
-import com.forsuredb.QueryGenerator;
+import com.forsuredb.migration.QueryGenerator;
 import com.forsuredb.annotation.ForeignKey;
 import com.forsuredb.annotationprocessor.ColumnInfo;
 import com.forsuredb.annotationprocessor.TableInfo;
@@ -26,7 +26,7 @@ public class AddForeignKeyGenerator extends QueryGenerator {
         List<String> retList = new LinkedList<>();
 
         retList.add(dropTempTableQuery());
-        retList.addAll(addNewColumnWithoutForeignKey());
+        retList.addAll(addNewColumnWithoutForeignKeyQuery());
         retList.add(createTempTableQuery());
         retList.add(dropThisTableQuery());
         retList.add(recreateThisTableWithForeignKey());
@@ -41,8 +41,8 @@ public class AddForeignKeyGenerator extends QueryGenerator {
         return "DROP TABLE IF EXISTS " + tempTableName() + ";";
     }
 
-    private List<String> addNewColumnWithoutForeignKey() {
-        return new AddColumnGenerator(table.getTableName(), column).generate();
+    private List<String> addNewColumnWithoutForeignKeyQuery() {
+        return new com.forsuredb.migration.sqlite.AddColumnGenerator(table.getTableName(), column).generate();
     }
 
     private String createTempTableQuery() {
@@ -59,7 +59,7 @@ public class AddForeignKeyGenerator extends QueryGenerator {
         StringBuffer buf = new StringBuffer(new CreateTableGenerator(getTableName()).generate().get(0));
         return buf.delete(buf.length() - 2, buf.length())   // <-- removes );
                   .append(", ").append(column.getColumnName())
-                  .append(" ").append(TypeTranslator.from(column.getType()).getSqlString())
+                  .append(" ").append(com.forsuredb.migration.sqlite.TypeTranslator.from(column.getType()).getSqlString())
                   .append(", FOREIGN KEY(").append(column.getColumnName())
                   .append(") REFERENCES ").append(getForeignTableName())
                   .append("(").append(getForeignColumnName())
@@ -74,7 +74,7 @@ public class AddForeignKeyGenerator extends QueryGenerator {
                 continue;
             }
 
-            retList.addAll(new AddColumnGenerator(getTableName(), columnInfo).generate());
+            retList.addAll(new com.forsuredb.migration.sqlite.AddColumnGenerator(getTableName(), columnInfo).generate());
         }
 
         return retList;
