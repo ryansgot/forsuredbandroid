@@ -20,7 +20,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 
-
 /**
  * <p>
  *     Currently, this only prints output to to the console at compile time. Eventually, it will generate classes at compile time.
@@ -29,20 +28,31 @@ import javax.tools.Diagnostic;
 @SupportedAnnotationTypes("com.forsuredb.annotation.*")
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class FSAnnotationProcessor extends AbstractProcessor {
+
+    private static boolean setterApisCreated = false;   // <-- maintain state so setter APIs don't have to be created more than once
+    private static boolean migrationsCreated = false;   // <-- maintain state so migrations don't have to be created more than once
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        processFSTableAnnotations(roundEnv);
+        Set<TypeElement> tableTypes = ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(FSTable.class));
+        if (tableTypes == null || tableTypes.size() == 0) {
+            return true;
+        }
+
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Running FSAnnotationProcessor.process");
+        processFSTableAnnotations(tableTypes);
         return true;
     }
 
-    private void processFSTableAnnotations(RoundEnvironment roundEnv) {
-        Set<TypeElement> tableTypes = ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(FSTable.class));
+    private void processFSTableAnnotations(Set<TypeElement> tableTypes) {
         List<TableInfo> allTables = new TableContextCreator(tableTypes).createTableInfo(processingEnv);
         VelocityEngine ve = createVelocityEngine();
 
-        createSetterApis(ve, allTables);
-        if (Boolean.getBoolean("createMigrations")) {
-            new MigrationGenerator(allTables, processingEnv).generate("migration_resource.vm", ve);
+        if (!setterApisCreated) {
+            createSetterApis(ve, allTables);
+        }
+        if (!migrationsCreated && Boolean.getBoolean("createMigrations")) {
+            createMigrations(ve, allTables);
         }
     }
 
@@ -51,6 +61,14 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         for (TableInfo tableInfo : allTables) {
             new SetterGenerator(tableInfo, resultParameter, processingEnv).generate("setter_interface.vm", ve);
         }
+        setterApisCreated = true;   // <-- maintain state so setter APIs don't have to be created more than once
+    }
+
+    private void createMigrations(VelocityEngine ve, List<TableInfo> allTables) {
+        String migrationDirectory = System.getProperty("migrationDirectory");
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "got migration directory: " + migrationDirectory);
+        new MigrationGenerator(allTables, migrationDirectory, processingEnv);//.generate("migration_resource.vm", ve);
+        migrationsCreated = true;   // <-- maintain state so migrations don't have to be created more than once
     }
 
     private VelocityEngine createVelocityEngine() {
