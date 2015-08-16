@@ -49,19 +49,6 @@ public class ForSure {
         return Holder.instance;
     }
 
-    private void createTableDescriberMaps(List<FSTableCreator> tableCreators) {
-        final ImmutableBiMap.Builder<Uri, Class<? extends FSGetApi>> uriToGetApiBuilder = ImmutableBiMap.builder();
-        final ImmutableBiMap.Builder<Uri, Class<? extends FSSaveApi<Uri>>> uriToSaveApiBuilder = ImmutableBiMap.builder();
-
-        for (FSTableCreator tableCreator : tableCreators) {
-            final FSTableDescriber table = new FSTableDescriber(tableCreator);
-            addTable(table, uriToGetApiBuilder, uriToSaveApiBuilder);
-        }
-
-        uriToGetApiMap = uriToGetApiBuilder.build();
-        uriToSaveApiMap = uriToSaveApiBuilder.build();
-    }
-
     public SQLiteDatabase getReadableDatabase() {
         return FSDBHelper.inst().getReadableDatabase();
     }
@@ -118,6 +105,18 @@ public class ForSure {
 
     public boolean containsTable(String tableName) {
         return tableDescriberByName.containsKey(tableName);
+    }
+
+    private void createTableDescriberMaps(List<FSTableCreator> tableCreators) {
+        final ImmutableBiMap.Builder<Uri, Class<? extends FSGetApi>> uriToGetApiBuilder = ImmutableBiMap.builder();
+        final ImmutableBiMap.Builder<Uri, Class<? extends FSSaveApi<Uri>>> uriToSaveApiBuilder = ImmutableBiMap.builder();
+
+        for (FSTableCreator tableCreator : tableCreators) {
+            addTable(new FSTableDescriber(tableCreator), uriToGetApiBuilder, uriToSaveApiBuilder);
+        }
+
+        uriToGetApiMap = uriToGetApiBuilder.build();
+        uriToSaveApiMap = uriToSaveApiBuilder.build();
     }
 
     private void addTable(FSTableDescriber fsTableDescriber,
