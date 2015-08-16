@@ -67,7 +67,7 @@ public class FSAnnotationProcessor extends AbstractProcessor {
     private void createMigrations(VelocityEngine ve, List<TableInfo> allTables) {
         String migrationDirectory = System.getProperty("migrationDirectory");
         processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "got migration directory: " + migrationDirectory);
-        new MigrationGenerator(allTables, migrationDirectory, processingEnv);//.generate("migration_resource.vm", ve);
+        new MigrationGenerator(allTables, migrationDirectory, processingEnv).generate("migration_resource.vm", ve);
         migrationsCreated = true;   // <-- maintain state so migrations don't have to be created more than once
     }
 
