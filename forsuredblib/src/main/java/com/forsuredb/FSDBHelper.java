@@ -20,22 +20,23 @@ import java.util.List;
      * FSTableDescriber first
      */
     private final List<FSTableDescriber> tables;
-
+    private final List<Migration> migrations;
     private final Context context;
 
-    private FSDBHelper(Context context, String dbName, int dbVersion, List<FSTableDescriber> tables) {
-        super(context, dbName, null, dbVersion);
+    private FSDBHelper(Context context, String dbName, List<FSTableDescriber> tables, List<Migration> migrations) {
+        super(context, dbName, null, identifyDbVersion(migrations));
         this.context = context;
         this.tables = tables;
+        this.migrations = migrations;
     }
 
     private static final class Holder {
         public static FSDBHelper instance;
     }
 
-    public static void init(Context context, String dbName, int dbVersion, List<FSTableDescriber> tables) {
+    public static void init(Context context, String dbName, List<FSTableDescriber> tables) {
         if (Holder.instance == null) {
-            Holder.instance = new FSDBHelper(context, dbName, dbVersion, tables);
+            Holder.instance = new FSDBHelper(context, dbName, tables, new Migrator(context).getMigrations());
         }
     }
 
@@ -49,8 +50,6 @@ import java.util.List;
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        List<Migration> migrations = new Migrator(context).getMigrations();
-        Log.i(LOG_TAG, "total number of migration queries: " + migrations.size());
         for (Migration migration : migrations) {
             Log.i(LOG_TAG, "running migration: " + migration.toString());
             db.execSQL(migration.getQuery());
@@ -72,6 +71,22 @@ import java.util.List;
     }
 
     // Private methods
+
+    /**
+     * @param migrations
+     * @return either 1 or the largest dbVersion in the migrations list
+     */
+    private static int identifyDbVersion(List<Migration> migrations) {
+        if (migrations == null || migrations.size() == 0) {
+            return 1;
+        }
+
+        int version = 1;
+        for (Migration migration : migrations) {
+            version = migration.getDbVersion() > version ? migration.getDbVersion() : version;
+        }
+        return version;
+    }
 
     /**
      * <p>

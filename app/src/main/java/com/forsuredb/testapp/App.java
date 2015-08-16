@@ -18,7 +18,7 @@ public class App extends Application {
         super.onCreate();
 
         // initialize ForSure
-        ForSure.init(this, "test.db", 1, createTableCreators());
+        ForSure.init(this, "test.db", createTableCreators());
     }
 
     private List<FSTableCreator> createTableCreators() {
