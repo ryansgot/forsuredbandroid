@@ -1,10 +1,14 @@
 package com.forsuredb.annotationprocessor;
 
+import com.forsuredb.migration.Migration;
+import com.forsuredb.migration.MigrationRetriever;
+
 import org.apache.velocity.VelocityContext;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -14,11 +18,14 @@ import javax.tools.FileObject;
 
     private final Date date;
     private final List<TableInfo> allTables;
+    private final List<Migration> previousMigrations = new LinkedList<>();
 
-    public MigrationGenerator(List<TableInfo> allTables, ProcessingEnvironment processingEnv)  {
+    public MigrationGenerator(List<TableInfo> allTables, String migrationDirectory, ProcessingEnvironment processingEnv)  {
         super(processingEnv);
         date = new Date();
         this.allTables = allTables;
+        final MigrationRetriever mr = new MigrationRetriever(migrationDirectory, new MigrationReadLog(processingEnv));
+        previousMigrations.addAll(mr.orderedMigrations());
     }
 
     @Override

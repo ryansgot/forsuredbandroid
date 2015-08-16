@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'android-apt'
-import com.google.common.io.Files
 
 
 android {
@@ -122,9 +121,11 @@ task setProperties << {
         System.properties.put("dbtype", "sqlite")
         System.properties.put("createMigrations", "true")
         System.properties.put("applicationPackageName", android.defaultConfig.applicationId)
+        System.properties.put("migrationDirectory", "app/src/main/assets")
         println("[setProperties]: set property dbtype=" + System.properties.get("dbtype"))
         println("[setProperties]: set property createMigrations=" + System.properties.get("createMigrations"))
         println("[setProperties]: set property applicationPackageName=" + System.properties.get("applicationPackageName"))
+        println("[setProperties]: set property migrationDirectory=" + System.properties.get("migrationDirectory"))
     }
 }
 

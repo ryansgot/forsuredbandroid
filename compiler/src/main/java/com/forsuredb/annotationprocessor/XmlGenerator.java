@@ -44,6 +44,7 @@ public class XmlGenerator {
                 retList.add(new StringBuffer("<").append(TAG_NAME).append(" db_version=\"").append(dbVersion)
                         .append("\" db_type=\"").append(dbType.asString())
                         .append("\" table_name=\"").append(queryGenerator.getTableName())
+                        .append("\" migration_type=\"").append(queryGenerator.getMigrationType().toString())
                         .append("\" query=\"").append(performXmlReplacements(query))
                         .append("\" />").toString());
             }
@@ -70,12 +71,12 @@ public class XmlGenerator {
     private PriorityQueue<QueryGenerator> createOrderedQueryGenerators(List<TableInfo> allTables) {
         PriorityQueue<QueryGenerator> queue = new PriorityQueue<>();
         for (TableInfo table : allTables) {
-            queue.addAll(createQueryGenerators(table, allTables));
+            queue.addAll(createQueryGenerators(table));
         }
         return queue;
     }
 
-    private List<QueryGenerator> createQueryGenerators(TableInfo table, List<TableInfo> allTables) {
+    private List<QueryGenerator> createQueryGenerators(TableInfo table) {
         List<QueryGenerator> retList = new LinkedList<>();
         retList.add(new CreateTableGenerator(table.getTableName()));
         for (ColumnInfo column : table.getColumns()) {
@@ -84,7 +85,7 @@ public class XmlGenerator {
             }
 
             if (column.isAnnotationPresent(ForeignKey.class)) {
-                retList.add(new AddForeignKeyGenerator(table, column, allTables));
+                retList.add(new AddForeignKeyGenerator(table, column));
             } else {
                 retList.add(new AddColumnGenerator(table.getTableName(), column));
             }

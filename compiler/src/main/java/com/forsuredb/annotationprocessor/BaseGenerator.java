@@ -10,7 +10,11 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import java.io.IOException;
 import java.io.Writer;
 
+import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 
@@ -65,4 +69,22 @@ public abstract class BaseGenerator<F extends FileObject> implements Generator {
 
     protected abstract F createFileObject(ProcessingEnvironment processingEnv) throws IOException;
     protected abstract VelocityContext createVelocityContext();
+
+    // Wrap the processing environment for the purpose of making the printing code more readable.
+
+    protected void printMessage(Diagnostic.Kind kind, String message) {
+        processingEnv.getMessager().printMessage(kind, message);
+    }
+
+    protected void printMessage(Diagnostic.Kind kind, String message, Element e) {
+        processingEnv.getMessager().printMessage(kind, message, e);
+    }
+
+    protected void printMessage(Diagnostic.Kind kind, String message, Element e, AnnotationMirror am) {
+        processingEnv.getMessager().printMessage(kind, message, e, am);
+    }
+
+    protected void printMessage(Diagnostic.Kind kind, String message, Element e, AnnotationMirror am, AnnotationValue av) {
+        processingEnv.getMessager().printMessage(kind, message, e, am, av);
+    }
 }

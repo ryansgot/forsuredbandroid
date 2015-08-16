@@ -60,7 +60,14 @@ public class Migration {
         }
 
         public Migration build() {
-            return new Migration(dbVersion, tableName == null ? "" : tableName, query == null ? "" : query);
+            if (!canBuild()) {
+                throw new IllegalStateException("Cannot build migration with null or empty table name or query");
+            }
+            return new Migration(dbVersion, tableName, query);
+        }
+
+        private boolean canBuild() {
+            return tableName != null && !tableName.isEmpty() && query != null && !query.isEmpty();
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.forsuredb.migration.sqlite;
 
 import com.forsuredb.migration.QueryGenerator;
-import com.forsuredb.annotation.ForeignKey;
 import com.forsuredb.annotationprocessor.ColumnInfo;
 import com.forsuredb.annotationprocessor.TableInfo;
 
@@ -12,13 +11,11 @@ public class AddForeignKeyGenerator extends QueryGenerator {
 
     private final TableInfo table;
     private final ColumnInfo column;
-    private final List<TableInfo> allTables;
 
-    public AddForeignKeyGenerator(TableInfo table, ColumnInfo column, List<TableInfo> allTables) {
+    public AddForeignKeyGenerator(TableInfo table, ColumnInfo column) {
         super(table.getTableName(), MigrationType.ADD_FOREIGN_KEY_REFERENCE);
         this.table = table;
         this.column = column;
-        this.allTables = allTables;
     }
 
     @Override
@@ -29,7 +26,7 @@ public class AddForeignKeyGenerator extends QueryGenerator {
         retList.addAll(addNewColumnWithoutForeignKeyQuery());
         retList.add(createTempTableQuery());
         retList.add(dropThisTableQuery());
-        retList.add(recreateThisTableWithForeignKey());
+        retList.add(recreateTableWithAllForeignKeysQuery());
         retList.addAll(allColumnAdditionQueries());
         retList.add(reinsertDataQuery());
         retList.add(dropTempTableQuery());
@@ -55,21 +52,29 @@ public class AddForeignKeyGenerator extends QueryGenerator {
         return "DROP TABLE IF EXISTS " + getTableName();
     }
 
-    private String recreateThisTableWithForeignKey() {
+    private String recreateTableWithAllForeignKeysQuery() {
         StringBuffer buf = new StringBuffer(new CreateTableGenerator(getTableName()).generate().get(0));
-        return buf.delete(buf.length() - 2, buf.length())   // <-- removes );
-                  .append(", ").append(column.getColumnName())
-                  .append(" ").append(com.forsuredb.migration.sqlite.TypeTranslator.from(column.getType()).getSqlString())
-                  .append(", FOREIGN KEY(").append(column.getColumnName())
-                  .append(") REFERENCES ").append(getForeignTableName())
-                  .append("(").append(getForeignColumnName())
-                  .append("));")
-                  .toString();
+        buf.delete(buf.length() - 2, buf.length());   // <-- removes );
+
+        List<ColumnInfo> foreignKeyColumns = table.getForeignKeyColumns();
+        for (ColumnInfo foreignKeyColumn : foreignKeyColumns) {
+            buf.append(", ").append(foreignKeyColumn.getColumnName())
+                    .append(" ").append(TypeTranslator.from(column.getType()).getSqlString());
+        }
+
+        for (ColumnInfo foreignKeyColumn : foreignKeyColumns) {
+            buf.append(", FOREIGN KEY(").append(foreignKeyColumn.getColumnName())
+                    .append(") REFERENCES ").append(foreignKeyColumn.getForeignKeyTableName())
+                    .append("(").append(foreignKeyColumn.getForeignKeyColumnName())
+                    .append(")");
+        }
+
+        return buf.append(");").toString();
     }
 
     private List<String> allColumnAdditionQueries() {
         List<String> retList = new LinkedList<>();
-        for (ColumnInfo columnInfo : table.getColumns()) {
+        for (ColumnInfo columnInfo : table.getNonForeignKeyColumns()) {
             if (idFieldOrThisColumn(columnInfo)) {
                 continue;
             }
@@ -88,32 +93,26 @@ public class AddForeignKeyGenerator extends QueryGenerator {
 
     private void appendCommaSeparatedColumnNames(StringBuffer buf) {
         buf.append("_id, ").append(column.getColumnName());
-        for (ColumnInfo columnInfo : table.getColumns()) {
+
+        // foreign keys will get lumped into the TABLE CREATE query, so they need to be first
+        for (ColumnInfo columnInfo : table.getForeignKeyColumns()) {
             if (idFieldOrThisColumn(columnInfo)) {
                 continue;
             }
+            buf.append(", ").append(columnInfo.getColumnName());
+        }
 
+        // non foreign keys will get added back in this same order, after all the foreign keys are added
+        for (ColumnInfo columnInfo : table.getNonForeignKeyColumns()) {
+            if (idFieldOrThisColumn(columnInfo)) {
+                continue;
+            }
             buf.append(", ").append(columnInfo.getColumnName());
         }
     }
 
     private String tempTableName() {
         return "temp_" + getTableName();
-    }
-
-    private String getForeignTableName() {
-        Object uncasted = column.getAnnotation(ForeignKey.class).property("apiClass").uncasted();
-        for (TableInfo table : allTables) {
-            if (table.getQualifiedClassName().equals(uncasted.toString())) {
-                return table.getTableName();
-            }
-        }
-
-        return "";
-    }
-
-    private String getForeignColumnName() {
-        return column.getAnnotation(ForeignKey.class).property("columnName").as(String.class);
     }
 
     private boolean idFieldOrThisColumn(ColumnInfo columnInfo) {
