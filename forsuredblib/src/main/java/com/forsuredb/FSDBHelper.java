@@ -19,11 +19,11 @@ import java.util.List;
      * has an @FSColumn that is a foreign key reference to an @FSColumn in UserApi, then UserApi must be used to create an
      * FSTableDescriber first
      */
-    private final List<FSTableDescriber> tables;
+    private final List<FSTableCreator> tables;
     private final List<Migration> migrations;
     private final Context context;
 
-    private FSDBHelper(Context context, String dbName, List<FSTableDescriber> tables, List<Migration> migrations) {
+    private FSDBHelper(Context context, String dbName, List<FSTableCreator> tables, List<Migration> migrations) {
         super(context, dbName, null, identifyDbVersion(migrations));
         this.context = context;
         this.tables = tables;
@@ -34,43 +34,32 @@ import java.util.List;
         public static FSDBHelper instance;
     }
 
-    public static void init(Context context, String dbName, List<FSTableDescriber> tables) {
+    public static void init(Context context, String dbName, List<FSTableCreator> tables) {
         if (Holder.instance == null) {
             Holder.instance = new FSDBHelper(context, dbName, tables, new Migrator(context).getMigrations());
         }
     }
 
-    public static FSDBHelper getInstance() {
+    public static FSDBHelper inst() {
         if (Holder.instance == null) {
             throw new IllegalStateException("Must call FSDBHelper.init prior to getting instance");
         }
         return Holder.instance;
     }
 
-
     @Override
     public void onCreate(SQLiteDatabase db) {
-        for (Migration migration : migrations) {
-            Log.i(LOG_TAG, "running migration: " + migration.toString());
-            db.execSQL(migration.getQuery());
-        }
+        applyMigrations(db, 0);
 
-        // All tables must be created before inserting any data
-        for (FSTableDescriber table : tables) {
+        for (FSTableCreator table : tables) {
             performStaticDataInsertion(db, table);
         }
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // traverse the tables list in reverse order to drop them all without blowing up
-        for (int i = tables.size() - 1; i >= 0; i--) {
-            db.execSQL("DROP TABLE IF EXISTS " + tables.get(i).getName());
-        }
-        onCreate(db);
+        applyMigrations(db, oldVersion);
     }
-
-    // Private methods
 
     /**
      * @param migrations
@@ -88,19 +77,17 @@ import java.util.List;
         return version;
     }
 
-    /**
-     * <p>
-     *     Insert the static data from the table into the db
-     * </p>
-     *
-     * @param db
-     * @param table
-     */
-    private void performStaticDataInsertion(SQLiteDatabase db, FSTableDescriber table) {
-        final List<String> insertionSqlStringList = table.getStaticInsertsSQL(context);
-        if (insertionSqlStringList != null && insertionSqlStringList.size() != 0) {
-            for (String insertionSqlString : insertionSqlStringList) {
-                db.execSQL(insertionSqlString);
+    private void performStaticDataInsertion(SQLiteDatabase db, FSTableCreator table) {
+        for (String insertionSqlString : table.getStaticInsertsSQL(context)) {
+            db.execSQL(insertionSqlString);
+        }
+    }
+
+    private void applyMigrations(SQLiteDatabase db, int previousVersion) {
+        for (Migration migration : migrations) {
+            if (previousVersion < migration.getDbVersion()) {
+                Log.i(LOG_TAG, "running migration: " + migration.toString());
+                db.execSQL(migration.getQuery());
             }
         }
     }

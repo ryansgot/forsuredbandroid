@@ -6,7 +6,6 @@ import android.net.Uri;
 
 import com.google.common.collect.ImmutableBiMap;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +19,9 @@ public class ForSure {
     private ImmutableBiMap<Uri, Class<? extends FSSaveApi<Uri>>> uriToSaveApiMap;
     private final Map<String, FSTableDescriber> tableDescriberByName = new HashMap<>();
 
-    private ForSure(Context appContext) {
+    private ForSure(Context appContext, List<FSTableCreator> tableCreators) {
         this.appContext = appContext;
+        createTableDescriberMaps(tableCreators);
     }
 
     private static class Holder {
@@ -37,8 +37,8 @@ public class ForSure {
      */
     public static void init(Context context, String dbName, List<FSTableCreator> tableCreators) {
         if (Holder.instance == null) {
-            Holder.instance = new ForSure(context.getApplicationContext());
-            FSDBHelper.init(context.getApplicationContext(), dbName, initializeTableDescribers(tableCreators));
+            Holder.instance = new ForSure(context.getApplicationContext(), tableCreators);
+            FSDBHelper.init(context.getApplicationContext(), dbName, tableCreators);
         }
     }
 
@@ -49,31 +49,26 @@ public class ForSure {
         return Holder.instance;
     }
 
-    private static List<FSTableDescriber> initializeTableDescribers(List<FSTableCreator> tableCreators) {
-        final List<FSTableDescriber> retList = new ArrayList<>();
+    private void createTableDescriberMaps(List<FSTableCreator> tableCreators) {
         final ImmutableBiMap.Builder<Uri, Class<? extends FSGetApi>> uriToGetApiBuilder = ImmutableBiMap.builder();
         final ImmutableBiMap.Builder<Uri, Class<? extends FSSaveApi<Uri>>> uriToSaveApiBuilder = ImmutableBiMap.builder();
 
         for (FSTableCreator tableCreator : tableCreators) {
             final FSTableDescriber table = new FSTableDescriber(tableCreator);
-            Holder.instance.addTable(table, uriToGetApiBuilder, uriToSaveApiBuilder);
-            retList.add(table);
+            addTable(table, uriToGetApiBuilder, uriToSaveApiBuilder);
         }
 
-        Holder.instance.uriToGetApiMap = uriToGetApiBuilder.build();
-        Holder.instance.uriToSaveApiMap = uriToSaveApiBuilder.build();
-
-        return retList;
+        uriToGetApiMap = uriToGetApiBuilder.build();
+        uriToSaveApiMap = uriToSaveApiBuilder.build();
     }
 
     public SQLiteDatabase getReadableDatabase() {
-        return FSDBHelper.getInstance().getReadableDatabase();
+        return FSDBHelper.inst().getReadableDatabase();
     }
 
     public SQLiteDatabase getWritableDatabase() {
-        return FSDBHelper.getInstance().getWritableDatabase();
+        return FSDBHelper.inst().getWritableDatabase();
     }
-
 
     /**
      * <p>
