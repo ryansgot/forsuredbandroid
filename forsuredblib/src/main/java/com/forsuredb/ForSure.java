@@ -38,7 +38,7 @@ public class ForSure {
     public static void init(Context context, String dbName, int dbVersion, List<FSTableCreator> tableCreators) {
         if (Holder.instance == null) {
             Holder.instance = new ForSure(context.getApplicationContext());
-            FSDBHelper.init(context.getApplicationContext(), dbName, dbVersion, initializeTableDescribers(tableCreators), tableCreators);
+            FSDBHelper.init(context.getApplicationContext(), dbName, dbVersion, initializeTableDescribers(tableCreators));
         }
     }
 
