@@ -27,9 +27,9 @@ public class TableContextCreator {
         for (TableInfo table : allTables) {
             for (ColumnInfo column : table.getColumns()) {
                 column.enrichWithForeignTableInfo(allTables);
-                if (processingEnv != null) {
-                    processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, table.toString());
-                }
+            }
+            if (processingEnv != null) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, table.toString());
             }
         }
         return allTables;
