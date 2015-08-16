@@ -7,7 +7,6 @@ import org.apache.velocity.app.VelocityEngine;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -17,7 +16,6 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
@@ -39,17 +37,13 @@ public class FSAnnotationProcessor extends AbstractProcessor {
 
     private void processFSTableAnnotations(RoundEnvironment roundEnv) {
         Set<TypeElement> tableTypes = ElementFilter.typesIn(roundEnv.getElementsAnnotatedWith(FSTable.class));
-        List<TableInfo> allTables = gatherTableInfo(tableTypes);
+        List<TableInfo> allTables = new TableContextCreator(tableTypes).createTableInfo(processingEnv);
         VelocityEngine ve = createVelocityEngine();
 
         createSetterApis(ve, allTables);
         if (Boolean.getBoolean("createMigrations")) {
-            createMigrations(ve, allTables);
+            new MigrationGenerator(allTables, processingEnv).generate("migration_resource.vm", ve);
         }
-    }
-
-    private void createMigrations(VelocityEngine ve, List<TableInfo> allTables) {
-        new MigrationGenerator(allTables, processingEnv).generate("migration_resource.vm", ve);
     }
 
     private void createSetterApis(VelocityEngine ve, List<TableInfo> allTables) {
@@ -57,21 +51,6 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         for (TableInfo tableInfo : allTables) {
             new SetterGenerator(tableInfo, resultParameter, processingEnv).generate("setter_interface.vm", ve);
         }
-    }
-
-    private List<TableInfo> gatherTableInfo(Set<TypeElement> tableTypes) {
-        List<TableInfo> ret = new ArrayList<>();
-        for (TypeElement te : tableTypes) {
-            if (te.getKind() != ElementKind.INTERFACE) {
-                continue;   // <-- only process interfaces
-            }
-
-            final TableInfo table = new TableInfo(te);
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, table.toString());
-            ret.add(table);
-        }
-
-        return ret;
     }
 
     private VelocityEngine createVelocityEngine() {

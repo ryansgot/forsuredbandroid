@@ -5,6 +5,8 @@ import com.forsuredb.annotation.FSTable;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import javax.lang.model.element.ExecutableElement;
@@ -37,11 +39,11 @@ public class TableInfo {
     @Override
     public String toString() {
         return new StringBuffer("TableInfo {\n\ttableName=").append(tableName)
-                                                        .append("\n\tqualifiedClassName=").append(qualifiedClassName)
-                                                        .append("\n\tsimpleClassName=").append(simpleClassName)
-                                                        .append("\n\tmetaData=").append(metaData.toString())
-                                                        .append("\n\tcolumns=").append(columnMap.toString())
-                                                        .append("\n}").toString();
+                                                            .append("\n\tqualifiedClassName=").append(qualifiedClassName)
+                                                            .append("\n\tsimpleClassName=").append(simpleClassName)
+                                                            .append("\n\tmetaData=").append(metaData.toString())
+                                                            .append("\n\tcolumns=").append(columnMap.toString())
+                                                            .append("\n}").toString();
     }
 
     public String getQualifiedClassName() {
@@ -68,12 +70,36 @@ public class TableInfo {
         return columnMap.values();
     }
 
+    public List<ColumnInfo> getForeignKeyColumns() {
+        List<ColumnInfo> retList = new LinkedList<>();
+        for (ColumnInfo column : getColumns()) {
+            if (column.isForeignKey()) {
+                retList.add(column);
+            }
+        }
+        return retList;
+    }
+
+    public List<ColumnInfo> getNonForeignKeyColumns() {
+        List<ColumnInfo> retList = new LinkedList<>();
+        for (ColumnInfo column : getColumns()) {
+            if (!column.isForeignKey()) {
+                retList.add(column);
+            }
+        }
+        return retList;
+    }
+
     public boolean hasAnnotation(Class<? extends Annotation> annotationCls) {
         return metaData.isAnnotationPresent(annotationCls);
     }
 
     public MetaData.AnnotationTranslator getAnnotation(Class<? extends Annotation> annotationCls) {
         return metaData.get(annotationCls);
+    }
+
+    /*package*/ void enrichWithForeignTableInfo(List<TableInfo> allTables) {
+
     }
 
     private void appendColumns(TypeElement intf) {
