@@ -1,30 +1,41 @@
-package com.forsuredb.annotationprocessor;
+package com.forsuredb.migration;
 
-import com.forsuredb.migration.Migration;
-import com.forsuredb.migration.MigrationRetriever;
+import com.forsuredb.annotationprocessor.ColumnInfo;
+import com.forsuredb.annotationprocessor.TableContext;
+import com.forsuredb.annotationprocessor.TableInfo;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
-public class MigrationContext {
+public class MigrationContext implements TableContext {
 
     private final MigrationRetriever mr;
-    private List<TableInfo> allTables;
+    private Map<String, TableInfo> tableMap;
 
     public MigrationContext(MigrationRetriever mr) {
         this.mr = mr;
     }
 
-    public List<TableInfo> allTables() {
-        if (allTables == null) {
-            allTables = createTables();
-        }
-        return allTables;
+    @Override
+    public boolean hasTable(String tableName) {
+        createTableMapIfNull();
+        return tableMap.containsKey(tableName);
     }
 
-    private List<TableInfo> createTables() {
+    @Override
+    public TableInfo getTable(String tableName) {
+        createTableMapIfNull();
+        return tableMap.get(tableName);
+    }
+
+    @Override
+    public Collection<TableInfo> allTables() {
+        createTableMapIfNull();
+        return tableMap.values();
+    }
+
+    private Map<String, TableInfo> createTables() {
         Map<String, TableInfo.Builder> tableBuilderMap = new HashMap<>();
         Map<String, ColumnInfo.Builder> columnBuilderMap = new HashMap<>();
         for (Migration m : mr.orderedMigrations()) {
@@ -38,12 +49,12 @@ public class MigrationContext {
             TableInfo.Builder tb = tableBuilderMap.get(tableKeyFromColumnKey(entry.getKey()));
             tb.addColumn(entry.getValue().build());
         }
-        List<TableInfo> retList = new LinkedList<>();
-        for (TableInfo.Builder tb : tableBuilderMap.values()) {
-            TableInfo table = tb.build();
-            retList.add(table);
+
+        Map<String, TableInfo> retMap = new HashMap<>();
+        for (Map.Entry<String, TableInfo.Builder> entry : tableBuilderMap.entrySet()) {
+            retMap.put(entry.getKey(), entry.getValue().build());
         }
-        return retList;
+        return retMap;
 
     }
 
@@ -101,5 +112,11 @@ public class MigrationContext {
 
     private String tableKeyFromColumnKey(String columnBuilderMapKey) {
         return columnBuilderMapKey.split("\\.")[0];
+    }
+
+    private void createTableMapIfNull() {
+        if (tableMap == null) {
+            tableMap = createTables();
+        }
     }
 }

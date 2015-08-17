@@ -1,13 +1,9 @@
 package com.forsuredb.annotationprocessor;
 
 import com.forsuredb.migration.QueryGenerator;
-import com.forsuredb.migration.sqlite.AddColumnGenerator;
-import com.forsuredb.migration.sqlite.AddForeignKeyGenerator;
-import com.forsuredb.migration.sqlite.CreateTableGenerator;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -19,9 +15,9 @@ public class XmlGenerator {
     private final int dbVersion;
     private final PriorityQueue<QueryGenerator> queryGenerators;
 
-    /*package*/ XmlGenerator(int dbVersion, List<TableInfo> allTables) {
+    /*package*/ XmlGenerator(int dbVersion, PriorityQueue<QueryGenerator> queryGenerators) {
         this.dbVersion = dbVersion;
-        queryGenerators = createOrderedQueryGenerators(allTables);
+        this.queryGenerators = queryGenerators;
     }
 
     /**
@@ -82,32 +78,6 @@ public class XmlGenerator {
 
     private boolean canGenerate(DBType dbType) {
         return dbVersion > 0 && dbType != null;
-    }
-
-    private PriorityQueue<QueryGenerator> createOrderedQueryGenerators(List<TableInfo> allTables) {
-        PriorityQueue<QueryGenerator> queue = new PriorityQueue<>();
-        for (TableInfo table : allTables) {
-            queue.addAll(createQueryGenerators(table));
-        }
-        return queue;
-    }
-
-    private List<QueryGenerator> createQueryGenerators(TableInfo table) {
-        List<QueryGenerator> retList = new LinkedList<>();
-        retList.add(new CreateTableGenerator(table.getTableName()));
-        for (ColumnInfo column : table.getColumns()) {
-            if ("_id".equals(column.getColumnName())) {
-                continue;   // <-- don't ever add the _id column because it's on the table create
-            }
-
-            if (column.isForeignKey()) {
-                retList.add(new AddForeignKeyGenerator(table, column));
-            } else {
-                retList.add(new AddColumnGenerator(table.getTableName(), column));
-            }
-        }
-
-        return retList;
     }
 
     public enum DBType {

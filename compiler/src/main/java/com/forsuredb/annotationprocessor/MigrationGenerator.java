@@ -1,7 +1,12 @@
 package com.forsuredb.annotationprocessor;
 
 import com.forsuredb.migration.Migration;
+import com.forsuredb.migration.MigrationContext;
 import com.forsuredb.migration.MigrationRetriever;
+import com.forsuredb.migration.QueryGenerator;
+import com.forsuredb.migration.sqlite.AddColumnGenerator;
+import com.forsuredb.migration.sqlite.AddForeignKeyGenerator;
+import com.forsuredb.migration.sqlite.CreateTableGenerator;
 
 import org.apache.velocity.VelocityContext;
 
@@ -12,6 +17,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.Diagnostic;
@@ -21,14 +27,13 @@ import javax.tools.FileObject;
 
     private final Date date;
     private final List<TableInfo> allTables;
-    private final MigrationContext mc;
+    private final MigrationRetriever mr;
 
     public MigrationGenerator(List<TableInfo> allTables, String migrationDirectory, ProcessingEnvironment processingEnv)  {
         super(processingEnv);
         date = new Date();
         this.allTables = allTables;
-        final MigrationRetriever mr = new MigrationRetriever(new MigrationFileRetriever(migrationDirectory));
-        mc = new MigrationContext(mr);
+        mr = new MigrationRetriever(new MigrationFileRetriever(migrationDirectory));
     }
 
     @Override
@@ -39,11 +44,14 @@ import javax.tools.FileObject;
     @Override
     protected VelocityContext createVelocityContext() {
         // TODO: do something with the diff between the migration context and the current table context
-        analyzeDiff();
+        PriorityQueue<QueryGenerator> queryGenerators = analyzeDiff();
+        if (queryGenerators.size() == 0) {
+            return null;
+        }
 
         final XmlGenerator.DBType dbtype = XmlGenerator.DBType.fromString(System.getProperty("dbtype"));
         // TODO: make it dbVersion-dependent and perform more than just creates
-        List<String> migrationXmlList = new ArrayList<>(new XmlGenerator(1, allTables).generate(dbtype));
+        List<String> migrationXmlList = new ArrayList<>(new XmlGenerator(determineVersion(), queryGenerators).generate(dbtype));
 
         VelocityContext vc = new VelocityContext();
         vc.put("baseTag", "migrations");
@@ -51,16 +59,58 @@ import javax.tools.FileObject;
         return vc;
     }
 
+    private int determineVersion() {
+        int version = 1;
+
+        for (Migration m : mr.orderedMigrations()) {
+            if (m.getDbVersion() >= version) {
+                version = m.getDbVersion() + 1;
+            }
+        }
+
+        return version;
+    }
+
     private String getRelativeFileName() {
         return date.getTime() + ".migration";
     }
 
-    private void analyzeDiff() {
-        List<TableInfo> mcTables = mc.allTables();
+    private PriorityQueue<QueryGenerator> analyzeDiff() {
+        MigrationContext mc = new MigrationContext(mr);
         printMessage(Diagnostic.Kind.NOTE, "size of mc.allTables() = " + mc.allTables().size());
-        for (TableInfo table : mcTables) {
+        for (TableInfo table : mc.allTables()) {
             printMessage(Diagnostic.Kind.NOTE, "analyzeDiff table: " + table.toString());
         }
+
+        PriorityQueue<QueryGenerator> retQueue = new PriorityQueue<>();
+        for (TableInfo table : allTables) {
+            if (!mc.hasTable(table.getTableName())) {
+                printMessage(Diagnostic.Kind.NOTE, table.getTableName() + " table did not previously exist. Creating migration for it");
+                retQueue.add(new CreateTableGenerator(table.getTableName()));
+                for (ColumnInfo column : table.getForeignKeyColumns()) {
+                    retQueue.add(new AddForeignKeyGenerator(table, column));
+                }
+                for (ColumnInfo column : table.getNonForeignKeyColumns()) {
+                    retQueue.add(new AddColumnGenerator(table.getTableName(), column));
+                }
+                continue;
+            }
+            TableInfo mcTable = mc.getTable(table.getTableName());
+            for (ColumnInfo column : table.getNonForeignKeyColumns()) {
+                if (!mcTable.hasColumn(column.getColumnName())) {
+                    printMessage(Diagnostic.Kind.NOTE, table.getTableName() + "." + column.getColumnName() +" column did not previously exist. Creating migration for it");
+                    retQueue.add(new AddColumnGenerator(table.getTableName(), column));
+                }
+            }
+            for (ColumnInfo column : table.getForeignKeyColumns()) {
+                if (!mcTable.hasColumn(column.getColumnName())) {
+                    printMessage(Diagnostic.Kind.NOTE, table.getTableName() + "." + column.getColumnName() +" foreign key column did not previously exist. Creating foreign key migration for it");
+                    retQueue.add(new AddForeignKeyGenerator(table, column));
+                }
+            }
+        }
+
+        return retQueue;
     }
 
     private static final class MigrationFileRetriever implements MigrationRetriever.FileRetriever {

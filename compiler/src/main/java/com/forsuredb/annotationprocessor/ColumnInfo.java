@@ -151,7 +151,7 @@ public class ColumnInfo {
         }
     }
 
-    /*package*/ static class Builder {
+    public static class Builder {
 
         private String methodName;
         private String columnName;

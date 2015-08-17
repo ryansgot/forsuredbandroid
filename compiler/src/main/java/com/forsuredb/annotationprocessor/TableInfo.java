@@ -55,6 +55,7 @@ public class TableInfo {
         return new StringBuffer("TableInfo {\n\ttableName=").append(tableName)
                                                             .append("\n\tqualifiedClassName=").append(qualifiedClassName)
                                                             .append("\n\tsimpleClassName=").append(simpleClassName)
+                                                            .append("\n\tclassPackageName=").append(classPackageName)
                                                             .append("\n\tcolumns=").append(columnMap.toString())
                                                             .append("\n}").toString();
     }
@@ -73,6 +74,10 @@ public class TableInfo {
 
     public String getTableName() {
         return tableName;
+    }
+
+    public boolean hasColumn(String columnName) {
+        return columnMap.containsKey(columnName);
     }
 
     public ColumnInfo getColumn(String columnName) {

@@ -10,7 +10,6 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import java.io.IOException;
 import java.io.Writer;
 
-import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -29,14 +28,14 @@ public abstract class BaseGenerator<F extends FileObject> implements Generator {
     @Override
     public boolean generate(String templateResource, VelocityEngine ve) {
         if (templateResource == null || templateResource.isEmpty()) {
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "error creating from resource: " + templateResource);
+            printMessage(Diagnostic.Kind.ERROR, "error creating from resource: " + templateResource);
             return false;
         }
 
         try {
             applyTemplate(templateResource, ve);
         } catch (ResourceNotFoundException | ParseErrorException | MethodInvocationException exception) {
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "error creating from resource: " + templateResource + ": " + exception.getMessage());
+            printMessage(Diagnostic.Kind.ERROR, "error creating from resource: " + templateResource + ": " + exception.getMessage());
             return false;
         }
 
@@ -46,16 +45,20 @@ public abstract class BaseGenerator<F extends FileObject> implements Generator {
     private void applyTemplate(String templateResource, VelocityEngine ve) throws ResourceNotFoundException, ParseErrorException, MethodInvocationException {
         Writer writer = null;
         VelocityContext vc = createVelocityContext();
+        if (vc == null) {
+            return;
+        }
+
         try {
             final Template template = ve.getTemplate(templateResource);
             F fo = createFileObject(processingEnv);
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "creating source file: " + fo.getName());
+            printMessage(Diagnostic.Kind.NOTE, "creating source file: " + fo.getName());
             writer = fo.openWriter();
 
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "applying velocity template: " + template.getName());
+            printMessage(Diagnostic.Kind.NOTE, "applying velocity template: " + template.getName());
             template.merge(vc, writer);
         } catch (IOException ioe) {
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "Could not output to file: " + ioe.getMessage());
+            printMessage(Diagnostic.Kind.ERROR, "Could not output to file: " + ioe.getMessage());
         } finally {
             if (writer != null) {
                 try {
