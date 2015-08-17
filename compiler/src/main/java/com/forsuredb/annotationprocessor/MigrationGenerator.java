@@ -14,20 +14,21 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 
 /*package*/ class MigrationGenerator extends BaseGenerator<FileObject> {
 
     private final Date date;
     private final List<TableInfo> allTables;
-    private final List<Migration> previousMigrations = new LinkedList<>();
+    private final MigrationContext mc;
 
     public MigrationGenerator(List<TableInfo> allTables, String migrationDirectory, ProcessingEnvironment processingEnv)  {
         super(processingEnv);
         date = new Date();
         this.allTables = allTables;
-        final MigrationRetriever mr = new MigrationRetriever(new MigrationFileRetriever(migrationDirectory), new MigrationReadLog(processingEnv));
-        previousMigrations.addAll(mr.orderedMigrations());
+        final MigrationRetriever mr = new MigrationRetriever(new MigrationFileRetriever(migrationDirectory));
+        mc = new MigrationContext(mr);
     }
 
     @Override
@@ -49,6 +50,15 @@ import javax.tools.FileObject;
 
     private String getRelativeFileName() {
         return date.getTime() + ".migration";
+    }
+
+    private void analyzeDiff(ProcessingEnvironment processingEnv) {
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "analyzing diff");
+        List<TableInfo> mcTables = mc.allTables();
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "size of mc.allTables() = " + mc.allTables().size());
+        for (TableInfo table : mcTables) {
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "analyzeDiff table: " + table.toString());
+        }
     }
 
     private static final class MigrationFileRetriever implements MigrationRetriever.FileRetriever {

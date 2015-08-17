@@ -20,6 +20,7 @@ import javax.xml.parsers.SAXParserFactory;
     }
 
     public final void parseMigrationFile(File migrationFile) {
+        log.i("parsing: " + migrationFile.getName());
         try {
             SAXParser saxParser = SAXParserFactory.newInstance().newSAXParser();
             saxParser.parse(migrationFile, new ParseHandler(listener, log));

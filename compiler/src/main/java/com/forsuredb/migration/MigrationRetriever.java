@@ -20,9 +20,8 @@ public class MigrationRetriever {
     }
 
     private final FileRetriever fr;
-    private final Parser parser;
     private final MigrationParseLogger log;
-    private final List<Migration> migrations = new LinkedList<>();
+    private List<Migration> migrations;
 
     /**
      * <p>
@@ -47,12 +46,6 @@ public class MigrationRetriever {
         }
         this.fr = fr;
         this.log = log == null ? new MigrationParseLogger.SilentLog() : log;
-        this.parser = new Parser(new Parser.OnMigrationLineListener() {
-            @Override
-            public void onMigrationLine(Migration migration) {
-                migrations.add(migration);
-            }
-        }, log);
     }
 
     public static MigrationRetriever defaultRetriever(FileRetriever fr) {
@@ -60,15 +53,26 @@ public class MigrationRetriever {
     }
 
     public List<Migration> orderedMigrations() {
+        if (migrations == null) {
+            createMigrations();
+        }
+        return migrations;
+    }
+
+    private void createMigrations() {
         log.i("Looking for migrations in " + fr.migrationDirectory());
+        migrations = new LinkedList<>();
+        Parser parser = new Parser(new Parser.OnMigrationLineListener() {
+            @Override
+            public void onMigrationLine(Migration migration) {
+                migrations.add(migration);
+            }
+        }, log);
 
         final PriorityQueue<File> orderedMigrationFiles = new PriorityQueue<>(filterMigrations(fr.files()));
-        final List<Migration> retList = new LinkedList<>();
         while (orderedMigrationFiles.size() > 0) {
             parser.parseMigrationFile(orderedMigrationFiles.remove());
         }
-
-        return retList;
     }
 
     private List<File> filterMigrations(List<File> files) {

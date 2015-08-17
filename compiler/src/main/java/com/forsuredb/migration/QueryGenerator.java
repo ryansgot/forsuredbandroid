@@ -1,6 +1,8 @@
 package com.forsuredb.migration;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public abstract class QueryGenerator implements Comparable<QueryGenerator> {
 
@@ -19,7 +21,7 @@ public abstract class QueryGenerator implements Comparable<QueryGenerator> {
     }
 
     @Override
-    public int compareTo(QueryGenerator other) {
+    public final int compareTo(QueryGenerator other) {
         if (other == null) {
             return -1;
         }
@@ -28,12 +30,16 @@ public abstract class QueryGenerator implements Comparable<QueryGenerator> {
 
     public abstract List<String> generate();
 
-    public MigrationType getMigrationType() {
+    public final MigrationType getMigrationType() {
         return type;
     }
 
-    public String getTableName() {
+    public final String getTableName() {
         return tableName;
+    }
+
+    public Map<String, String> getAdditionalAttributes() {
+        return Collections.EMPTY_MAP;
     }
 
     public enum MigrationType {
@@ -49,6 +55,15 @@ public abstract class QueryGenerator implements Comparable<QueryGenerator> {
 
         public int getPriority() {
             return priority;
+        }
+
+        public static MigrationType from(String name) {
+            for (MigrationType type : MigrationType.values()) {
+                if (type.name().equals(name)) {
+                    return type;
+                }
+            }
+            return null;
         }
     }
 }

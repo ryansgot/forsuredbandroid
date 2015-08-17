@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 
 public class XmlGenerator {
@@ -39,17 +40,33 @@ public class XmlGenerator {
         List<String> retList = new ArrayList<>();
         while (queryGenerators.size() > 0) {
             QueryGenerator queryGenerator = queryGenerators.remove();
-            for (String query : queryGenerator.generate()) {
-                retList.add(new StringBuffer("<").append(TAG_NAME).append(" db_version=\"").append(dbVersion)
-                        .append("\" db_type=\"").append(dbType.asString())
-                        .append("\" table_name=\"").append(queryGenerator.getTableName())
-                        .append("\" migration_type=\"").append(queryGenerator.getMigrationType().toString())
-                        .append("\" query=\"").append(performXmlReplacements(query))
-                        .append("\" />").toString());
+            List<String> queries = queryGenerator.generate();
+            while (queries.size() > 0) {
+                String query = queries.remove(0);
+                StringBuffer lineBuf = beginLine(dbType, queryGenerator, query);
+                if (queries.size() == 0) {
+                    appendAdditionalAttributes(lineBuf, queryGenerator);
+                    lineBuf.append("\" is_last_in_set=\"true");
+                }
+                retList.add(lineBuf.append("\" />").toString());
             }
         }
 
         return retList;
+    }
+
+    private StringBuffer beginLine(DBType dbType, QueryGenerator queryGenerator, String query) {
+        return new StringBuffer("<").append(TAG_NAME).append(" db_version=\"").append(dbVersion)
+                .append("\" db_type=\"").append(dbType.asString())
+                .append("\" table_name=\"").append(queryGenerator.getTableName())
+                .append("\" migration_type=\"").append(queryGenerator.getMigrationType().toString())
+                .append("\" query=\"").append(performXmlReplacements(query));
+    }
+
+    private void appendAdditionalAttributes(StringBuffer lineBuf, QueryGenerator queryGenerator) {
+        for (Map.Entry<String, String> entry : queryGenerator.getAdditionalAttributes().entrySet()) {
+            lineBuf.append("\" ").append(entry.getKey()).append("=\"").append(performXmlReplacements(entry.getValue()));
+        }
     }
 
     private String performXmlReplacements(String attribute) {

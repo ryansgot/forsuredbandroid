@@ -62,34 +62,28 @@ import org.xml.sax.helpers.DefaultHandler;
                 case "query":
                     mb.query(attributes.getValue(i));
                     break;
+                case "migration_type":
+                    mb.migrationType(QueryGenerator.MigrationType.from(attributes.getValue(i)));
+                    break;
+                case "column":
+                    mb.columnName(attributes.getValue(i));
+                    break;
+                case "column_type":
+                    mb.columnQualifiedType(attributes.getValue(i));
+                    break;
+                case "foreign_key_table":
+                    mb.foreignKeyTable(attributes.getValue(i));
+                    break;
+                case "foreign_key_column":
+                    mb.foreignKeyColumn(attributes.getValue(i));
+                    break;
+                case "is_last_in_set":
+                    mb.isLastInSet(Boolean.valueOf(attributes.getValue(i)));
+                    break;
                 default:
                     log.i("ParseHandler not using: " + attributes.getQName(i) + "=" + attributes.getValue(i));
             }
         }
         return mb.build();
-    }
-
-    private void logInfo(String message) {
-        if (log != null) {
-            log.i(message);
-        }
-    }
-
-    private void logError(String message) {
-        if (log != null) {
-            log.e(message);
-        }
-    }
-
-    private void logWarning(String message) {
-        if (log != null) {
-            log.w(message);
-        }
-    }
-
-    private void logOther(String message) {
-        if (log != null) {
-            log.o(message);
-        }
     }
 }

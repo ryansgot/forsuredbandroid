@@ -4,8 +4,10 @@ import com.forsuredb.migration.QueryGenerator;
 import com.forsuredb.annotationprocessor.ColumnInfo;
 import com.forsuredb.annotationprocessor.TableInfo;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class AddForeignKeyGenerator extends QueryGenerator {
 
@@ -32,6 +34,16 @@ public class AddForeignKeyGenerator extends QueryGenerator {
         retList.add(dropTempTableQuery());
 
         return retList;
+    }
+
+    @Override
+    public Map<String, String> getAdditionalAttributes() {
+        Map<String, String> ret = new HashMap<>();
+        ret.put("column", column.getColumnName());
+        ret.put("column_type", column.getQualifiedType());
+        ret.put("foreign_key_table", column.getForeignKeyTableName());
+        ret.put("foreign_key_column", column.getForeignKeyColumnName());
+        return ret;
     }
 
     private String dropTempTableQuery() {

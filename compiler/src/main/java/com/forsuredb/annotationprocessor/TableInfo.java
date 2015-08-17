@@ -104,6 +104,9 @@ public class TableInfo {
     }
 
     private String createSimpleClassName(String qualifiedClassName) {
+        if (qualifiedClassName == null || qualifiedClassName.isEmpty()) {
+            return null;
+        }
         String[] split = qualifiedClassName.split("\\.");
         return split[split.length - 1];
     }
@@ -122,6 +125,9 @@ public class TableInfo {
     }
 
     private String createPackageName(String qualifiedClassName) {
+        if (qualifiedClassName == null || qualifiedClassName.isEmpty()) {
+            return null;
+        }
         String[] split = qualifiedClassName.split("\\.");
         StringBuffer buf = new StringBuffer(split[0]);
         for (int i = 1; i < split.length - 1; i++) {
@@ -153,10 +159,14 @@ public class TableInfo {
         }
 
         public TableInfo build() {
-            if (qualifiedClassName == null || qualifiedClassName.isEmpty()) {
-                throw new IllegalStateException("Cannot build TableInfo with null or empty qualifiedClassName");
+            if (!canBuild()) {
+                throw new IllegalStateException("Cannot build TableInfo with both qualifiedClassName and tableName null/empty");
             }
             return new TableInfo(tableName, qualifiedClassName, columnMap);
+        }
+
+        private boolean canBuild() {
+            return (qualifiedClassName != null && !qualifiedClassName.isEmpty()) || (tableName != null && !tableName.isEmpty());
         }
     }
 }

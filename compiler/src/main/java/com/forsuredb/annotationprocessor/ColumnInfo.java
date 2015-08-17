@@ -217,7 +217,7 @@ public class ColumnInfo {
 
         public ColumnInfo build() {
             if (!canBuild()) {
-                return null;
+                throw new IllegalStateException("Cannot build ColumnInfo if both methodName and columnName are null/empty");
             }
             return new ColumnInfo(methodName,
                     columnName,
@@ -231,7 +231,8 @@ public class ColumnInfo {
         }
 
         private boolean canBuild() {
-            return methodName != null && !methodName.isEmpty();
+            return (methodName != null && !methodName.isEmpty())
+                    || (columnName != null && !columnName.isEmpty());
         }
     }
 }
