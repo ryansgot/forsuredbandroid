@@ -38,6 +38,9 @@ import javax.tools.FileObject;
 
     @Override
     protected VelocityContext createVelocityContext() {
+        // TODO: do something with the diff between the migration context and the current table context
+        analyzeDiff();
+
         final XmlGenerator.DBType dbtype = XmlGenerator.DBType.fromString(System.getProperty("dbtype"));
         // TODO: make it dbVersion-dependent and perform more than just creates
         List<String> migrationXmlList = new ArrayList<>(new XmlGenerator(1, allTables).generate(dbtype));
@@ -52,12 +55,11 @@ import javax.tools.FileObject;
         return date.getTime() + ".migration";
     }
 
-    private void analyzeDiff(ProcessingEnvironment processingEnv) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "analyzing diff");
+    private void analyzeDiff() {
         List<TableInfo> mcTables = mc.allTables();
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "size of mc.allTables() = " + mc.allTables().size());
+        printMessage(Diagnostic.Kind.NOTE, "size of mc.allTables() = " + mc.allTables().size());
         for (TableInfo table : mcTables) {
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "analyzeDiff table: " + table.toString());
+            printMessage(Diagnostic.Kind.NOTE, "analyzeDiff table: " + table.toString());
         }
     }
 
