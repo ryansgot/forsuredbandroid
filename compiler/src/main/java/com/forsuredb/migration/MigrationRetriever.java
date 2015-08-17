@@ -14,7 +14,12 @@ import java.util.PriorityQueue;
  */
 public class MigrationRetriever {
 
-    private final String migrationDirectory;
+    public interface FileRetriever {
+        List<File> files();
+        File migrationDirectory();
+    }
+
+    private final FileRetriever fr;
     private final Parser parser;
     private final MigrationParseLogger log;
     private final List<Migration> migrations = new LinkedList<>();
@@ -23,21 +28,24 @@ public class MigrationRetriever {
      * <p>
      *     MigrationRetriever which performs no logging
      * </p>
-     * @param migrationDirectory
+     * @param fr
      */
-    public MigrationRetriever(String migrationDirectory) {
-        this(migrationDirectory, null);
+    public MigrationRetriever(FileRetriever fr) {
+        this(fr, null);
     }
 
     /**
      * <p>
      *     MigrationRetriever which performs logging if log is not null
      * </p>
-     * @param migrationDirectory
+     * @param fr
      * @param log
      */
-    public MigrationRetriever(String migrationDirectory, MigrationParseLogger log) {
-        this.migrationDirectory = migrationDirectory;
+    public MigrationRetriever(FileRetriever fr, MigrationParseLogger log) {
+        if (fr == null) {
+            throw new IllegalStateException("FileRetriever cannot be null");
+        }
+        this.fr = fr;
         this.log = log == null ? new MigrationParseLogger.SilentLog() : log;
         this.parser = new Parser(new Parser.OnMigrationLineListener() {
             @Override
@@ -47,23 +55,14 @@ public class MigrationRetriever {
         }, log);
     }
 
-    public static MigrationRetriever defaultRetriever(String migrationDirectory) {
-        return new MigrationRetriever(migrationDirectory, new MigrationParseLogger.DefaultLogger());
+    public static MigrationRetriever defaultRetriever(FileRetriever fr) {
+        return new MigrationRetriever(fr, new MigrationParseLogger.DefaultLogger());
     }
 
     public List<Migration> orderedMigrations() {
-        log.i("Looking for migrations in " + migrationDirectory);
-        File migrationDir = new File(migrationDirectory);
-        if (!migrationDir.exists()) {
-            log.e("Input migration directory did not exist--cannot use old migrations!");
-            return Collections.EMPTY_LIST;
-        }
-        if (!migrationDir.isDirectory()) {
-            log.e("Input migration directory is not a directory--cannot use old migrations!");
-            return Collections.EMPTY_LIST;
-        }
+        log.i("Looking for migrations in " + fr.migrationDirectory());
 
-        final PriorityQueue<File> orderedMigrationFiles = createOrderedMigrationFiles(migrationDir);
+        final PriorityQueue<File> orderedMigrationFiles = new PriorityQueue<>(filterMigrations(fr.files()));
         final List<Migration> retList = new LinkedList<>();
         while (orderedMigrationFiles.size() > 0) {
             parser.parseMigrationFile(orderedMigrationFiles.remove());
@@ -72,20 +71,22 @@ public class MigrationRetriever {
         return retList;
     }
 
-    private PriorityQueue<File> createOrderedMigrationFiles(File migrationDir) {
-        PriorityQueue<File> retQueue = new PriorityQueue<>();
-        for (File f : migrationDir.listFiles()) {
-            if (!isMigration(f)) {
-                continue;
-            }
-
-            log.i("found migration: " + f.getName());
-            retQueue.add(f);
+    private List<File> filterMigrations(List<File> files) {
+        if (files == null) {
+            return Collections.EMPTY_LIST;
         }
-        return retQueue;
+
+        List<File> retList = new LinkedList<>();
+        for (File f : files) {
+            if (isMigration(f)) {
+                retList.add(f);
+            }
+        }
+
+        return retList;
     }
 
     private boolean isMigration(File f) {
-        return f.exists() && f.isFile() && f.getPath().endsWith("migration.xml");
+        return f != null && f.exists() && f.isFile() && f.getPath().endsWith("migration.xml");
     }
 }

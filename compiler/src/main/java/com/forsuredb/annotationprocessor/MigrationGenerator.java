@@ -5,8 +5,10 @@ import com.forsuredb.migration.MigrationRetriever;
 
 import org.apache.velocity.VelocityContext;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,7 +26,7 @@ import javax.tools.FileObject;
         super(processingEnv);
         date = new Date();
         this.allTables = allTables;
-        final MigrationRetriever mr = new MigrationRetriever(migrationDirectory, new MigrationReadLog(processingEnv));
+        final MigrationRetriever mr = new MigrationRetriever(new MigrationFileRetriever(migrationDirectory), new MigrationReadLog(processingEnv));
         previousMigrations.addAll(mr.orderedMigrations());
     }
 
@@ -47,5 +49,36 @@ import javax.tools.FileObject;
 
     private String getRelativeFileName() {
         return date.getTime() + ".migration";
+    }
+
+    private static final class MigrationFileRetriever implements MigrationRetriever.FileRetriever {
+
+        private final File migrationDirectory;
+
+        public MigrationFileRetriever(String migrationDirectory) {
+            this.migrationDirectory = new File(migrationDirectory);
+        }
+
+        @Override
+        public List<File> files() {
+            if (!migrationDirectory.exists()) {
+                return Collections.EMPTY_LIST;
+            }
+            if (!migrationDirectory.isDirectory()) {
+                return Collections.EMPTY_LIST;
+            }
+
+            List<File> retList = new LinkedList<>();
+            for (File f : migrationDirectory.listFiles()) {
+                retList.add(f);
+            }
+
+            return retList;
+        }
+
+        @Override
+        public File migrationDirectory() {
+            return migrationDirectory;
+        }
     }
 }
