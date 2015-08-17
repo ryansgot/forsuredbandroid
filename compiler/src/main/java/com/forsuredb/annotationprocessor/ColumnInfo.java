@@ -2,10 +2,12 @@ package com.forsuredb.annotationprocessor;
 
 import com.forsuredb.annotation.FSColumn;
 import com.forsuredb.annotation.ForeignKey;
+import com.forsuredb.annotation.PrimaryKey;
+import com.forsuredb.annotation.Unique;
 
-import java.lang.annotation.Annotation;
 import java.util.List;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
@@ -13,26 +15,48 @@ import javax.lang.model.type.TypeMirror;
 public class ColumnInfo {
 
     private final String methodName;
-    private final MetaData metaData;
     private final String columnName;
-    private final TypeMirror type;
-    private String foreignKeyTableName;   // <-- cannot be known at creation time
+    private final String qualifiedType;
+    private final boolean foreignKey;
+    private final boolean unique;
+    private final boolean primaryKey;
+    private String foreignKeyTableName;   // <-- cannot be known at creation time in some cases
+    private String foreignKeyColumnName;  // <-- cannot be known at creation time in some cases
+    private String foreignKeyApiClassName;
 
-    private ColumnInfo(String methodName, MetaData metaData, TypeMirror type) {
+    private ColumnInfo(String methodName,
+                       String columnName,
+                       String qualifiedType,
+                       boolean foreignKey,
+                       boolean unique,
+                       boolean primaryKey,
+                       String foreignKeyTableName,
+                       String foreignKeyColumnName,
+                       String foreignKeyApiClassName) {
         this.methodName = methodName;
-        this.metaData = metaData;
-        this.type = type;
-        columnName = createColumnName();
+        this.columnName = columnName == null || columnName.isEmpty() ? methodName : columnName;
+        this.qualifiedType = qualifiedType == null || qualifiedType.isEmpty() ? "java.lang.String" : qualifiedType;
+        this.foreignKey = foreignKey;
+        this.unique = unique;
+        this.primaryKey = primaryKey;
+        this.foreignKeyTableName = foreignKeyTableName;
+        this.foreignKeyColumnName = foreignKeyColumnName;
+        this.foreignKeyApiClassName = foreignKeyApiClassName;
     }
 
     public static ColumnInfo from(ExecutableElement ee) {
         if (ee.getKind() != ElementKind.METHOD) {
             return null;
         }
-        return builder().metaData(new MetaData(ee.getAnnotationMirrors()))
-                        .methodName(ee.getSimpleName().toString())
-                        .type(ee.getReturnType())
-                        .build();
+
+        Builder builder = new Builder();
+        for (AnnotationMirror am : ee.getAnnotationMirrors()) {
+            appendAnnotationInfo(builder, am);
+        }
+
+        return builder.methodName(ee.getSimpleName().toString())
+                      .qualifiedType(ee.getReturnType().toString())
+                      .build();
     }
 
     public static Builder builder() {
@@ -42,12 +66,15 @@ public class ColumnInfo {
     @Override
     public String toString() {
         return new StringBuffer("ColumnInfo{columnName=").append(columnName)
-                                                         .append("; methodName=").append(methodName)
-                                                         .append("; type=").append(type.toString())
-                                                         .append("; foreignKeyTableName=").append(foreignKeyTableName)
-                                                         .append("; foreignKeyColumnName=").append(getForeignKeyColumnName())
-                                                         .append("; metaData=").append(metaData.toString())
-                                                         .append("}").toString();
+                .append(", methodName=").append(methodName)
+                .append(", qualifiedType=").append(qualifiedType)
+                .append(", foreignKey=").append(foreignKey)
+                .append(", unique=").append(unique)
+                .append(", primaryKey=").append(primaryKey)
+                .append(", foreignKeyTableName=").append(foreignKeyTableName)
+                .append(", foreignKeyColumnName=").append(getForeignKeyColumnName())
+                .append(", foreignKeyApiClassName=").append(foreignKeyApiClassName)
+                .append("}").toString();
     }
 
     public String getMethodName() {
@@ -58,40 +85,28 @@ public class ColumnInfo {
         return columnName;
     }
 
-    public TypeMirror getType() {
-        return type;
+    public String getQualifiedType() {
+        return qualifiedType;
     }
 
     public boolean isForeignKey() {
-        return metaData.isAnnotationPresent(ForeignKey.class);
+        return foreignKey;
     }
 
-    /**
-     * @return the name of the table containing the foreign key column or null if not a foreign key
-     */
-    public String getForeignKeyColumnName() {
-        if (!isForeignKey()) {
-            return null;
-        }
-        return getAnnotation(ForeignKey.class).property("columnName").as(String.class);
+    public boolean isPrimaryKey() {
+        return primaryKey;
     }
 
-    /**
-     * @return the name of foreign key column contained within the foreign key table or null if not a foreign key
-     */
+    public boolean isUnique() {
+        return unique;
+    }
+
     public String getForeignKeyTableName() {
-        if (!isForeignKey()) {
-            return null;
-        }
         return foreignKeyTableName;
     }
 
-    public boolean isAnnotationPresent(Class<? extends Annotation> annotationCls) {
-        return metaData.isAnnotationPresent(annotationCls);
-    }
-
-    public MetaData.AnnotationTranslator getAnnotation(Class<? extends Annotation> annotationCls) {
-        return metaData.get(annotationCls);
+    public String getForeignKeyColumnName() {
+        return foreignKeyColumnName;
     }
 
     /**
@@ -105,49 +120,98 @@ public class ColumnInfo {
         if (!isForeignKey()) {
             return;
         }
-        foreignKeyTableName = createForeignKeyTableName(allTables);
+        setForeignKeyTableName(allTables);
     }
 
-    private String createForeignKeyTableName(List<TableInfo> allTables) {
-        Object uncasted = getAnnotation(ForeignKey.class).property("apiClass").uncasted();
+    private String setForeignKeyTableName(List<TableInfo> allTables) {
         for (TableInfo table : allTables) {
-            if (table.getQualifiedClassName().equals(uncasted.toString())) {
-                return table.getTableName();
+            if (table.getQualifiedClassName().equals(foreignKeyApiClassName)) {
+                foreignKeyTableName = table.getTableName();
+                break;
             }
         }
 
         return null;
     }
 
-    private String createColumnName() {
-        if (!metaData.isAnnotationPresent(FSColumn.class)) {
-            return methodName;
-        }
+    private static void appendAnnotationInfo(Builder builder, AnnotationMirror am) {
+        AnnotationTranslator at = new AnnotationTranslator(am.getElementValues());
 
-        String columnName = metaData.get(FSColumn.class).property("value").as(String.class);
-        return columnName == null || columnName.isEmpty() ? methodName : columnName;
+        String annotationClass = am.getAnnotationType().toString();
+        if (annotationClass.equals(FSColumn.class.getName())) {
+            builder.columnName(at.property("value").as(String.class));
+        } else if (annotationClass.equals(ForeignKey.class.getName())) {
+            builder.foreignKeyColumnName(at.property("columnName").as(String.class))
+                    .foreignKeyApiClassName(at.property("apiClass").uncasted().toString())
+                    .foreignKey(true);
+        } else if (annotationClass.equals(PrimaryKey.class.getName())) {
+            builder.primaryKey(true);
+        } else if (annotationClass.equals(Unique.class.getName())) {
+            builder.unique(true);
+        }
     }
 
     /*package*/ static class Builder {
 
-        private MetaData metaData;
         private String methodName;
-        private TypeMirror type;
+        private String columnName;
+        private String qualifiedType;
+        private boolean foreignKey = false;
+        private boolean unique = false;
+        private boolean primaryKey = false;
+        private String foreignKeyTableName;
+        private String foreignKeyColumnName;
+        private String foreignKeyApiClassName;
 
         private Builder() {}
-
-        public Builder metaData(MetaData metaData) {
-            this.metaData = metaData;
-            return this;
-        }
 
         public Builder methodName(String methodName) {
             this.methodName = methodName;
             return this;
         }
 
-        public Builder type(TypeMirror type) {
-            this.type = type;
+        public Builder columnName(String columnName) {
+            this.columnName = columnName;
+            return this;
+        }
+
+        public Builder qualifiedType(TypeMirror typeMirror) {
+            qualifiedType = typeMirror.toString();
+            return this;
+        }
+
+        public Builder qualifiedType(String qualifiedType) {
+            this.qualifiedType = qualifiedType;
+            return this;
+        }
+
+        public Builder foreignKeyTableName(String foreignKeyTableName) {
+            this.foreignKeyTableName = foreignKeyTableName;
+            return this;
+        }
+
+        public Builder foreignKeyColumnName(String foreignKeyColumnName) {
+            this.foreignKeyColumnName = foreignKeyColumnName;
+            return this;
+        }
+
+        public Builder foreignKeyApiClassName(String foreignKeyApiClassName) {
+            this.foreignKeyApiClassName = foreignKeyApiClassName;
+            return this;
+        }
+
+        public Builder foreignKey(boolean foreignKey) {
+            this.foreignKey = foreignKey;
+            return this;
+        }
+
+        public Builder primaryKey(boolean primaryKey) {
+            this.primaryKey = primaryKey;
+            return this;
+        }
+
+        public Builder unique(boolean unique) {
+            this.unique = unique;
             return this;
         }
 
@@ -155,7 +219,15 @@ public class ColumnInfo {
             if (!canBuild()) {
                 return null;
             }
-            return new ColumnInfo(methodName, metaData, type);
+            return new ColumnInfo(methodName,
+                    columnName,
+                    qualifiedType,
+                    foreignKey,
+                    unique,
+                    primaryKey,
+                    foreignKeyTableName,
+                    foreignKeyColumnName,
+                    foreignKeyApiClassName);
         }
 
         private boolean canBuild() {

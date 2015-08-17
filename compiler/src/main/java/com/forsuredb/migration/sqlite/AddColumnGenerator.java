@@ -22,7 +22,7 @@ public class AddColumnGenerator extends QueryGenerator {
                                                     .append(" ADD COLUMN ")
                                                     .append(column.getColumnName())
                                                     .append(" ")
-                                                    .append(TypeTranslator.from(column.getType()).getSqlString())
+                                                    .append(TypeTranslator.from(column.getQualifiedType()).getSqlString())
                                                     .append(";")
                                                     .toString());
         return queries;

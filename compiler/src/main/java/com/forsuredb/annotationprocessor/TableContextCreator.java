@@ -43,8 +43,7 @@ public class TableContextCreator {
                 continue;   // <-- only process interfaces
             }
 
-            final TableInfo table = new TableInfo(te);
-            ret.add(table);
+            ret.add(TableInfo.from(te));
         }
 
         return ret;

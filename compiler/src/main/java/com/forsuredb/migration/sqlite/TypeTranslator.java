@@ -41,6 +41,20 @@ public enum TypeTranslator {
         return STRING;
     }
 
+    public static TypeTranslator from(String qualifiedTypeString) {
+        if (qualifiedTypeString == null) {
+            return null;
+        }
+
+        for (TypeTranslator typeTranslator : TypeTranslator.values()) {
+            if (typeTranslator.getTypeMirrorString().equals(qualifiedTypeString)) {
+                return typeTranslator;
+            }
+        }
+
+        return STRING;
+    }
+
     public String getTypeMirrorString() {
         return typeMirrorString;
     }

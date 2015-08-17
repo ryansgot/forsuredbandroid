@@ -1,7 +1,6 @@
 package com.forsuredb.annotationprocessor;
 
 import com.forsuredb.migration.QueryGenerator;
-import com.forsuredb.annotation.ForeignKey;
 import com.forsuredb.migration.sqlite.AddColumnGenerator;
 import com.forsuredb.migration.sqlite.AddForeignKeyGenerator;
 import com.forsuredb.migration.sqlite.CreateTableGenerator;
@@ -84,7 +83,7 @@ public class XmlGenerator {
                 continue;   // <-- don't ever add the _id column because it's on the table create
             }
 
-            if (column.isAnnotationPresent(ForeignKey.class)) {
+            if (column.isForeignKey()) {
                 retList.add(new AddForeignKeyGenerator(table, column));
             } else {
                 retList.add(new AddColumnGenerator(table.getTableName(), column));

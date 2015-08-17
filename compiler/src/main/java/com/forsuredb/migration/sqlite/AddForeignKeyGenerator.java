@@ -59,7 +59,7 @@ public class AddForeignKeyGenerator extends QueryGenerator {
         List<ColumnInfo> foreignKeyColumns = table.getForeignKeyColumns();
         for (ColumnInfo foreignKeyColumn : foreignKeyColumns) {
             buf.append(", ").append(foreignKeyColumn.getColumnName())
-                    .append(" ").append(TypeTranslator.from(column.getType()).getSqlString());
+                    .append(" ").append(TypeTranslator.from(column.getQualifiedType()).getSqlString());
         }
 
         for (ColumnInfo foreignKeyColumn : foreignKeyColumns) {

@@ -43,7 +43,7 @@ import javax.tools.JavaFileObject;
             retList.add(new StringBuilder("@FSColumn(\"").append(column.getColumnName())
                                                          .append("\") ") .append(getOutputClassName(false))
                                                          .append(" ") .append(column.getMethodName())
-                                                         .append("(").append(column.getType().toString())
+                                                         .append("(").append(column.getQualifiedType().toString())
                                                          .append(" ").append(column.getMethodName()).append(");")
                                                          .toString());
         }
