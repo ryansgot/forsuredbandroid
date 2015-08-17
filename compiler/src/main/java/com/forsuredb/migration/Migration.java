@@ -36,7 +36,7 @@ public class Migration {
     public String toString() {
         return new StringBuffer(Migration.class.getSimpleName()).append("{dbVerison=").append(dbVersion)
                                                                 .append(", tableName=").append(tableName)
-                                                                .append(", migrationType=").append(migrationType.name())
+                                                                .append(", migrationType=").append(migrationType == null ? "null" : migrationType.name())
                                                                 .append(", columnName=").append(columnName)
                                                                 .append(", columnQualifiedType=").append(columnQualifiedType)
                                                                 .append(", foreignKeyTable=").append(foreignKeyTable)
