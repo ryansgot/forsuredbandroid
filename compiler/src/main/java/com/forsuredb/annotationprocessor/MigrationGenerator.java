@@ -43,14 +43,12 @@ import javax.tools.FileObject;
 
     @Override
     protected VelocityContext createVelocityContext() {
-        // TODO: do something with the diff between the migration context and the current table context
         PriorityQueue<QueryGenerator> queryGenerators = analyzeDiff();
         if (queryGenerators.size() == 0) {
             return null;
         }
 
         final XmlGenerator.DBType dbtype = XmlGenerator.DBType.fromString(System.getProperty("dbtype"));
-        // TODO: make it dbVersion-dependent and perform more than just creates
         List<String> migrationXmlList = new ArrayList<>(new XmlGenerator(determineVersion(), queryGenerators).generate(dbtype));
 
         VelocityContext vc = new VelocityContext();
@@ -88,21 +86,33 @@ import javax.tools.FileObject;
                 printMessage(Diagnostic.Kind.NOTE, table.getTableName() + " table did not previously exist. Creating migration for it");
                 retQueue.add(new CreateTableGenerator(table.getTableName()));
                 for (ColumnInfo column : table.getForeignKeyColumns()) {
+                    if ("_id".equals(column.getColumnName())) {
+                        continue;
+                    }
                     retQueue.add(new AddForeignKeyGenerator(table, column));
                 }
                 for (ColumnInfo column : table.getNonForeignKeyColumns()) {
+                    if ("_id".equals(column.getColumnName())) {
+                        continue;
+                    }
                     retQueue.add(new AddColumnGenerator(table.getTableName(), column));
                 }
                 continue;
             }
             TableInfo mcTable = mc.getTable(table.getTableName());
             for (ColumnInfo column : table.getNonForeignKeyColumns()) {
+                if ("_id".equals(column.getColumnName())) {
+                    continue;
+                }
                 if (!mcTable.hasColumn(column.getColumnName())) {
                     printMessage(Diagnostic.Kind.NOTE, table.getTableName() + "." + column.getColumnName() +" column did not previously exist. Creating migration for it");
                     retQueue.add(new AddColumnGenerator(table.getTableName(), column));
                 }
             }
             for (ColumnInfo column : table.getForeignKeyColumns()) {
+                if ("_id".equals(column.getColumnName())) {
+                    continue;
+                }
                 if (!mcTable.hasColumn(column.getColumnName())) {
                     printMessage(Diagnostic.Kind.NOTE, table.getTableName() + "." + column.getColumnName() +" foreign key column did not previously exist. Creating foreign key migration for it");
                     retQueue.add(new AddForeignKeyGenerator(table, column));
