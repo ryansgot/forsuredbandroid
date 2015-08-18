@@ -45,29 +45,29 @@ public class FSAnnotationProcessor extends AbstractProcessor {
     }
 
     private void processFSTableAnnotations(Set<TypeElement> tableTypes) {
-        List<TableInfo> allTables = new TableContextCreator(tableTypes).createTableInfo(processingEnv);
+        ProcessingContext pc = new ProcessingContext(tableTypes, processingEnv);
         VelocityEngine ve = createVelocityEngine();
 
         if (!setterApisCreated) {
-            createSetterApis(ve, allTables);
+            createSetterApis(ve, pc);
         }
         if (!migrationsCreated && Boolean.getBoolean("createMigrations")) {
-            createMigrations(ve, allTables);
+            createMigrations(ve, pc);
         }
     }
 
-    private void createSetterApis(VelocityEngine ve, List<TableInfo> allTables) {
+    private void createSetterApis(VelocityEngine ve, ProcessingContext pc) {
         String resultParameter = System.getProperty("resultParameter");
-        for (TableInfo tableInfo : allTables) {
+        for (TableInfo tableInfo : pc.allTables()) {
             new SetterGenerator(tableInfo, resultParameter, processingEnv).generate("setter_interface.vm", ve);
         }
         setterApisCreated = true;   // <-- maintain state so setter APIs don't have to be created more than once
     }
 
-    private void createMigrations(VelocityEngine ve, List<TableInfo> allTables) {
+    private void createMigrations(VelocityEngine ve, ProcessingContext pc) {
         String migrationDirectory = System.getProperty("migrationDirectory");
         processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "got migration directory: " + migrationDirectory);
-        new MigrationGenerator(allTables, migrationDirectory, processingEnv).generate("migration_resource.vm", ve);
+        new MigrationGenerator(pc, migrationDirectory, processingEnv).generate("migration_resource.vm", ve);
         migrationsCreated = true;   // <-- maintain state so migrations don't have to be created more than once
     }
 
