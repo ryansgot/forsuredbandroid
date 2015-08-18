@@ -32,12 +32,12 @@ public class DiffGenerator {
      *     allow you to migrate a database from the schema of this instance's TableContext to that
      *     of the argument.
      * </p>
-     * @param otherContext
+     * @param targetContext
      * @return
      */
-    public PriorityQueue<QueryGenerator> analyzeDiff(TableContext otherContext) {
+    public PriorityQueue<QueryGenerator> analyzeDiff(TableContext targetContext) {
         PriorityQueue<QueryGenerator> retQueue = new PriorityQueue<>();
-        for (TableInfo table : otherContext.allTables()) {
+        for (TableInfo table : targetContext.allTables()) {
             if (tableCreateQueryAppended(retQueue, table)) {
                 continue;
             }
