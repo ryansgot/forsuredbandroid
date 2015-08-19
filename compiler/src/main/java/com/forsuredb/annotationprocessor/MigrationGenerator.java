@@ -42,8 +42,7 @@ import javax.tools.FileObject;
             return null;
         }
 
-        final XmlGenerator.DBType dbtype = XmlGenerator.DBType.fromString(System.getProperty("dbtype"));
-        List<String> migrationXmlList = new ArrayList<>(new XmlGenerator(determineVersion(), queryGenerators).generate(dbtype));
+        List<String> migrationXmlList = new ArrayList<>(new XmlGenerator(determineVersion(), queryGenerators).generate());
 
         VelocityContext vc = new VelocityContext();
         vc.put("baseTag", "migrations");
