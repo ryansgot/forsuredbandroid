@@ -6,7 +6,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.forsuredb.migration.Migration;
-import com.forsuredb.migrator.Migrator;
 
 import java.util.List;
 
