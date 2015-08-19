@@ -19,6 +19,7 @@ public class Migrator {
     private static final String LOG_TAG = Migrator.class.getSimpleName();
 
     private final Context context;
+    private List<Migration> migrations;
 
     public Migrator(Context context) {
         this.context = context;
@@ -28,30 +29,39 @@ public class Migrator {
      * @return a sorted list of Migration
      */
     public List<Migration> getMigrations() {
+        if (migrations == null) {
+            createMigrations();
+        }
+        return migrations;
+    }
+
+    private void createMigrations() {
         final AssetManager assetManager = context.getResources().getAssets();
         final PriorityQueue<String> sortedPaths = createSortedMigrationFilenames(assetManager);
 
         FSLogger log = new ADBFSLogger();
-        List<Migration> retList = new LinkedList<>();
+        migrations = new LinkedList<>();
         while (sortedPaths.size() > 0) {
-            InputStream in = null;
-            try {
-                in = assetManager.open(sortedPaths.remove());
-                retList.addAll(new MigrationRetrieverFactory(log).fromStream(in).getMigrations());
-            } catch (IOException ioe) {
-                throw new IllegalStateException(ioe);
-            } finally {
-                if (in != null) {
-                    try {
-                        in.close();
-                    } catch (IOException ioe) {
-                        // can't do anything about this
-                    }
+            addMigrationsFromFile(assetManager, sortedPaths.remove(), log);
+        }
+    }
+
+    private void addMigrationsFromFile(AssetManager assetManager, String filename, FSLogger log) {
+        InputStream in = null;
+        try {
+            in = assetManager.open(filename);
+            migrations.addAll(new MigrationRetrieverFactory(log).fromStream(in).getMigrations());
+        } catch (IOException ioe) {
+            throw new IllegalStateException(ioe);
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException ioe) {
+                    // can't do anything about this
                 }
             }
         }
-
-        return retList;
     }
 
     private PriorityQueue<String> createSortedMigrationFilenames(AssetManager assetManager) {

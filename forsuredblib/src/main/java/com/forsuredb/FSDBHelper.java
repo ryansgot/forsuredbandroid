@@ -13,11 +13,6 @@ import java.util.List;
 
     private static final String LOG_TAG = FSDBHelper.class.getSimpleName();
 
-    /**
-     * Add the tables in the order that is necessary for proper SQL Execution. In other words, if ProfileInfoApi
-     * has an @FSColumn that is a foreign key reference to an @FSColumn in UserApi, then UserApi must be used to create an
-     * FSTableDescriber first
-     */
     private final List<FSTableCreator> tables;
     private final List<Migration> migrations;
     private final Context context;
