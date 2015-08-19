@@ -1,11 +1,11 @@
 package com.forsuredb.annotationprocessor;
 
-import com.forsuredb.migration.MigrationParseLogger;
+import com.forsuredb.FSLogger;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.Diagnostic;
 
-/*package*/ class MigrationReadLog implements MigrationParseLogger {
+/*package*/ class MigrationReadLog implements FSLogger {
 
     private ProcessingEnvironment processingEnv;
 

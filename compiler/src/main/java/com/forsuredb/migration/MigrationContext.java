@@ -38,7 +38,7 @@ public class MigrationContext implements TableContext {
     private Map<String, TableInfo> createTables() {
         Map<String, TableInfo.Builder> tableBuilderMap = new HashMap<>();
         Map<String, ColumnInfo.Builder> columnBuilderMap = new HashMap<>();
-        for (Migration m : mr.orderedMigrations()) {
+        for (Migration m : mr.getMigrations()) {
             if (!m.isLastInSet()) { // <-- only process for migrations that are last in a set of migrations because the last in a set contains the extra information
                 continue;
             }

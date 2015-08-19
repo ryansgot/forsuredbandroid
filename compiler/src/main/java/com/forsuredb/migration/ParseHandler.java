@@ -1,15 +1,17 @@
 package com.forsuredb.migration;
 
+import com.forsuredb.FSLogger;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /*package*/ class ParseHandler extends DefaultHandler {
 
-    private final MigrationParseLogger log;
+    private final FSLogger log;
     private final Parser.OnMigrationLineListener listener;
 
-    /*package*/ ParseHandler(Parser.OnMigrationLineListener listener, MigrationParseLogger log) {
+    /*package*/ ParseHandler(Parser.OnMigrationLineListener listener, FSLogger log) {
         if (listener == null) {
             throw new IllegalArgumentException("OnMigrationListener cannot be null");
         }

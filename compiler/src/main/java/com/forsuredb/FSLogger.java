@@ -1,19 +1,19 @@
-package com.forsuredb.migration;
+package com.forsuredb;
 
-public interface MigrationParseLogger {
+public interface FSLogger {
     void e(String message);
     void i(String message);
     void w(String message);
     void o(String message);
 
-    class SilentLog implements MigrationParseLogger {
+    class SilentLog implements FSLogger {
         public void e(String message) {}
         public void i(String message) {}
         public void w(String message) {}
         public void o(String message) {}
     }
 
-    class DefaultLogger implements MigrationParseLogger {
+    class DefaultFSLogger implements FSLogger {
 
         @Override
         public void e(String message) {

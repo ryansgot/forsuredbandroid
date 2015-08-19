@@ -1,6 +1,12 @@
 package com.forsuredb.migration;
 
+import com.forsuredb.FSLogger;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -12,24 +18,37 @@ import javax.xml.parsers.SAXParserFactory;
     }
 
     private final OnMigrationLineListener listener;
-    private final MigrationParseLogger log;
+    private final FSLogger log;
 
-    public Parser(OnMigrationLineListener listener, MigrationParseLogger log) {
+    public Parser(OnMigrationLineListener listener, FSLogger log) {
         this.listener = listener;
         this.log = log;
     }
 
-    public final void parseMigrationFile(File migrationFile) {
+    public final void parseMigration(File migrationFile) throws FileNotFoundException {
         log.i("parsing: " + migrationFile.getName());
+        FileInputStream fis = new FileInputStream(migrationFile);
         try {
-            SAXParser saxParser = SAXParserFactory.newInstance().newSAXParser();
-            saxParser.parse(migrationFile, new ParseHandler(listener, log));
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
+            parseMigration(fis);
+        } finally {
+            try {
+                fis.close();
+            } catch (IOException ioe) {
+                // can't do anything about this
+            }
         }
     }
 
-    public final void parseMigrationFile(String migrationFilePath) {
-        parseMigrationFile(new File(migrationFilePath));
+    public final void parseMigration(String migrationFilePath) throws FileNotFoundException {
+        parseMigration(new File(migrationFilePath));
+    }
+
+    public final void parseMigration(InputStream migrationInputStream) {
+        try {
+            SAXParser saxParser = SAXParserFactory.newInstance().newSAXParser();
+            saxParser.parse(migrationInputStream, new ParseHandler(listener, log));
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 }
