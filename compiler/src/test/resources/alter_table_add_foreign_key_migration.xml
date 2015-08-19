@@ -1,0 +1,11 @@
+<migrations>
+    <migration db_version="1" db_type="sqlite" table_name="profile_info" migration_type="ADD_FOREIGN_KEY_REFERENCE" query="DROP TABLE IF EXISTS temp_profile_info;" />
+    <migration db_version="1" db_type="sqlite" table_name="profile_info" migration_type="ADD_FOREIGN_KEY_REFERENCE" query="ALTER TABLE profile_info ADD COLUMN user_id INTEGER;" />
+    <migration db_version="1" db_type="sqlite" table_name="profile_info" migration_type="ADD_FOREIGN_KEY_REFERENCE" query="CREATE TEMP TABLE temp_profile_info AS SELECT _id, user_id, email_address, binary_data FROM profile_info;" />
+    <migration db_version="1" db_type="sqlite" table_name="profile_info" migration_type="ADD_FOREIGN_KEY_REFERENCE" query="DROP TABLE IF EXISTS profile_info" />
+    <migration db_version="1" db_type="sqlite" table_name="profile_info" migration_type="ADD_FOREIGN_KEY_REFERENCE" query="CREATE TABLE profile_info(_id INTEGER PRIMARY KEY, user_id INTEGER, FOREIGN KEY(user_id) REFERENCES user(_id));" />
+    <migration db_version="1" db_type="sqlite" table_name="profile_info" migration_type="ADD_FOREIGN_KEY_REFERENCE" query="ALTER TABLE profile_info ADD COLUMN email_address TEXT;" />
+    <migration db_version="1" db_type="sqlite" table_name="profile_info" migration_type="ADD_FOREIGN_KEY_REFERENCE" query="ALTER TABLE profile_info ADD COLUMN binary_data BLOB;" />
+    <migration db_version="1" db_type="sqlite" table_name="profile_info" migration_type="ADD_FOREIGN_KEY_REFERENCE" query="INSERT INTO profile_info SELECT _id, user_id, email_address, binary_data FROM temp_profile_info;" />
+    <migration db_version="1" db_type="sqlite" table_name="profile_info" migration_type="ADD_FOREIGN_KEY_REFERENCE" query="DROP TABLE IF EXISTS temp_profile_info;" foreign_key_table="user" column="user_id" column_type="long" foreign_key_column="_id" is_last_in_set="true" />
+</migrations>
