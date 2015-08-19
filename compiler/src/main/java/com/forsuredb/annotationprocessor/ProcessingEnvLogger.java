@@ -5,11 +5,11 @@ import com.forsuredb.FSLogger;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.Diagnostic;
 
-/*package*/ class MigrationReadLog implements FSLogger {
+/*package*/ class ProcessingEnvLogger implements FSLogger {
 
     private ProcessingEnvironment processingEnv;
 
-    /*package*/ MigrationReadLog(ProcessingEnvironment processingEnv) {
+    /*package*/ ProcessingEnvLogger(ProcessingEnvironment processingEnv) {
         this.processingEnv = processingEnv;
     }
 
@@ -26,7 +26,6 @@ import javax.tools.Diagnostic;
     @Override
     public void w(String message) {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, message);
-
     }
 
     @Override
