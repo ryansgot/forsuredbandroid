@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 
 /*package*/ class MigrationGenerator extends BaseGenerator<FileObject> {
@@ -37,7 +38,8 @@ import javax.tools.FileObject;
 
     @Override
     protected VelocityContext createVelocityContext() {
-        PriorityQueue<QueryGenerator> queryGenerators = new DiffGenerator(new MigrationContext(mr)).analyzeDiff(pContext);
+        PriorityQueue<QueryGenerator> queryGenerators = new DiffGenerator(new MigrationContext(mr), getProcessingEnv()).analyzeDiff(pContext);
+        printMessage(Diagnostic.Kind.NOTE, "queryGenrators.size() = " + queryGenerators.size());
         if (queryGenerators.size() == 0) {
             return null;
         }

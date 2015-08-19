@@ -73,6 +73,10 @@ public abstract class BaseGenerator<F extends FileObject> implements Generator {
     protected abstract F createFileObject(ProcessingEnvironment processingEnv) throws IOException;
     protected abstract VelocityContext createVelocityContext();
 
+    protected ProcessingEnvironment getProcessingEnv() {
+        return processingEnv;
+    }
+
     // Wrap the processing environment for the purpose of making the printing code more readable.
 
     protected void printMessage(Diagnostic.Kind kind, String message) {

@@ -39,9 +39,11 @@ public class DiffGenerator {
      * @return
      */
     public PriorityQueue<QueryGenerator> analyzeDiff(TableContext targetContext) {
+        printMessage(Diagnostic.Kind.NOTE, "analyzing diff: targetContext.allTables().size() = " + targetContext.allTables().size());
         PriorityQueue<QueryGenerator> retQueue = new PriorityQueue<>();
         for (TableInfo targetTable : targetContext.allTables()) {
             if (tableCreateQueryAppended(retQueue, targetTable)) {
+                printMessage(Diagnostic.Kind.NOTE, "Not checking column diffs for table: " + targetTable.getTableName());
                 continue;
             }
             retQueue.addAll(getColumnChangeQueryGenerators(targetTable));
@@ -51,24 +53,28 @@ public class DiffGenerator {
     }
 
     private Collection<? extends QueryGenerator> getColumnChangeQueryGenerators(TableInfo targetTable) {
-        TableInfo table = context.getTable(targetTable.getTableName());
+        TableInfo sourceTable = context.getTable(targetTable.getTableName());
         List<QueryGenerator> retList = new LinkedList<>();
-        for (ColumnInfo column : table.getNonForeignKeyColumns()) {
+        for (ColumnInfo column : targetTable.getNonForeignKeyColumns()) {
             if ("_id".equals(column.getColumnName())) {
                 continue;
             }
-            if (!table.hasColumn(column.getColumnName())) {
-                printMessage(Diagnostic.Kind.NOTE, table.getTableName() + "." + column.getColumnName() + " column did not previously exist. Creating migration for it");
-                retList.add(new AddColumnGenerator(table.getTableName(), column));
+            if (!sourceTable.hasColumn(column.getColumnName())) {
+                printMessage(Diagnostic.Kind.NOTE, sourceTable.getTableName() + "." + column.getColumnName() + " column did not previously exist. Creating migration for it");
+                retList.add(new AddColumnGenerator(sourceTable.getTableName(), column));
+            } else {
+                printMessage(Diagnostic.Kind.NOTE, sourceTable.getTableName() + "." + column.getColumnName() + " column PREVIOUSLY EXISTED. NOT creating migration for it");
             }
         }
-        for (ColumnInfo column : table.getForeignKeyColumns()) {
+        for (ColumnInfo column : targetTable.getForeignKeyColumns()) {
             if ("_id".equals(column.getColumnName())) {
                 continue;
             }
-            if (!table.hasColumn(column.getColumnName())) {
-                printMessage(Diagnostic.Kind.NOTE, table.getTableName() + "." + column.getColumnName() + " foreign key column did not previously exist. Creating foreign key migration for it");
-                retList.add(new AddForeignKeyGenerator(table, column));
+            if (!sourceTable.hasColumn(column.getColumnName())) {
+                printMessage(Diagnostic.Kind.NOTE, sourceTable.getTableName() + "." + column.getColumnName() + " foreign key column did not previously exist. Creating foreign key migration for it");
+                retList.add(new AddForeignKeyGenerator(sourceTable, column));
+            } else {
+                printMessage(Diagnostic.Kind.NOTE, sourceTable.getTableName() + "." + column.getColumnName() + " foreign key column PREVIOUSLY EXISTED. NOT creating migration for it");
             }
         }
 
@@ -76,7 +82,9 @@ public class DiffGenerator {
     }
 
     private boolean tableCreateQueryAppended(PriorityQueue<QueryGenerator> retQueue, TableInfo table) {
+        printMessage(Diagnostic.Kind.NOTE, "checking whether migration context has table: " + table.getTableName());
         if (context.hasTable(table.getTableName())) {
+            printMessage(Diagnostic.Kind.NOTE, table.getTableName() + " table PREVIOUSLY EXISTED. NOT creating a migration for it");
             return false;
         }
 
