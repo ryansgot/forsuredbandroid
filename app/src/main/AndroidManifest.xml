@@ -16,12 +16,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <provider
-            android:name=".contentprovider.TestContentProvider"
-            android:authorities="com.forsuredb.testapp.content"
-            android:enabled="true"
-            android:exported="false" />
     </application>
 
 </manifest>
