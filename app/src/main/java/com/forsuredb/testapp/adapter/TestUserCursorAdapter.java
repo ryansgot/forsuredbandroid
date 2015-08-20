@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import com.forsuredb.FSTableDescriber;
 import com.forsuredb.ForSure;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.UserTable;
@@ -16,12 +17,12 @@ import java.math.BigDecimal;
 
 public class TestUserCursorAdapter extends BaseAdapter {
 
-    private final UserTable tableApi;
+    private final FSTableDescriber table;
     private Context context;
     private Cursor cursor;
 
     public TestUserCursorAdapter(Context context) {
-        tableApi = ForSure.inst().getApi(UserTable.class);
+        table = ForSure.inst().getTable("user");
         this.context = context;
         cursor = null;
     }
@@ -46,11 +47,12 @@ public class TestUserCursorAdapter extends BaseAdapter {
         if (cursor == null || !cursor.moveToPosition(position)) {
             return null;
         }
-        return new ViewBuilder().id(tableApi.id(cursor))
-                                .globalId(tableApi.globalId(cursor))
-                                .loginCount(tableApi.loginCount(cursor))
-                                .appRating(tableApi.appRating(cursor))
-                                .competitorAppRating(tableApi.competitorAppRating(cursor))
+        UserTable api = ForSure.inst().getApi(table.getAllRecordsUri());
+        return new ViewBuilder().id(api.id(cursor))
+                                .globalId(api.globalId(cursor))
+                                .loginCount(api.loginCount(cursor))
+                                .appRating(api.appRating(cursor))
+                                .competitorAppRating(api.competitorAppRating(cursor))
                                 .targetLayout(view)
                                 .build(context);
     }

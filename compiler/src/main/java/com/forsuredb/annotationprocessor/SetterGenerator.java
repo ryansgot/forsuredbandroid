@@ -40,12 +40,7 @@ import javax.tools.JavaFileObject;
     private List<String> createMethodDefinitions() {
         List<String> retList = new ArrayList<>();
         for (ColumnInfo column : tableInfo.getColumns()) {
-            retList.add(new StringBuilder("@FSColumn(\"").append(column.getColumnName())
-                                                         .append("\") ") .append(getOutputClassName(false))
-                                                         .append(" ") .append(column.getMethodName())
-                                                         .append("(").append(column.getQualifiedType().toString())
-                                                         .append(" ").append(column.getMethodName()).append(");")
-                                                         .toString());
+            retList.add(createMethodDefinition(column));
         }
 
         return retList;
@@ -53,5 +48,14 @@ import javax.tools.JavaFileObject;
 
     private String getOutputClassName(boolean fullyQualified) {
         return (fullyQualified ? tableInfo.getQualifiedClassName() : tableInfo.getSimpleClassName()) + "Setter";
+    }
+
+    private String createMethodDefinition(ColumnInfo column) {
+        return new StringBuilder("@FSColumn(\"").append(column.getColumnName())
+                .append("\") ") .append(getOutputClassName(false))
+                .append(" ") .append(column.getMethodName())
+                .append("(").append(column.getQualifiedType().toString())
+                .append(" ").append(column.getMethodName()).append(");")
+                .toString();
     }
 }

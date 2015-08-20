@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import com.forsuredb.FSTableDescriber;
 import com.forsuredb.ForSure;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.contentprovider.TestContentProvider;
@@ -18,12 +19,12 @@ import java.util.Arrays;
 
 public class TestProfileInfoCursorAdapter extends BaseAdapter {
 
-    private final ProfileInfoTable tableApi;
+    private final FSTableDescriber table;
     private Context context;
     private Cursor cursor;
 
     public TestProfileInfoCursorAdapter(Context context) {
-        tableApi = ForSure.inst().getApi(Uri.parse("content://" + TestContentProvider.AUTHORITY + "/profile_info"));
+        table = ForSure.inst().getTable("profile_info");
         this.context = context;
         cursor = null;
     }
@@ -48,10 +49,11 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
         if (cursor == null || !cursor.moveToPosition(position)) {
             return null;
         }
-        return new ViewBuilder().id(tableApi.id(cursor))
-                                .userId(tableApi.userId(cursor))
-                                .emalAddress(tableApi.emailAddress(cursor))
-                                .binaryData(tableApi.binaryData(cursor))
+        final ProfileInfoTable api = ForSure.inst().getApi(table.getAllRecordsUri());
+        return new ViewBuilder().id(api.id(cursor))
+                                .userId(api.userId(cursor))
+                                .emalAddress(api.emailAddress(cursor))
+                                .binaryData(api.binaryData(cursor))
                                 .targetLayout(view)
                                 .build(context);
     }

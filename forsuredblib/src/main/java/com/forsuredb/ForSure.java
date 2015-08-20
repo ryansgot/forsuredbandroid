@@ -12,6 +12,8 @@ import java.util.Map;
 
 public class ForSure {
 
+    private static final String DEFAULT_DB_NAME = "forsuredb_default.db";
+
     private final Context appContext;
     private final Map<Class<? extends FSGetApi>, FSTableDescriber> tableDescriberByGetApi = new HashMap<>();
     private final Map<Class<? extends FSSaveApi<Uri>>, FSTableDescriber> tableDescriberBySaveApi = new HashMap<>();
@@ -30,7 +32,7 @@ public class ForSure {
 
     /**
      * <p>
-     *     Initializes the underlying database tables and
+     *     Initializes the underlying database tables and sets up the apis
      * </p>
      * @param context
      * @param tableCreators
@@ -40,6 +42,17 @@ public class ForSure {
             Holder.instance = new ForSure(context.getApplicationContext(), tableCreators);
             FSDBHelper.init(context.getApplicationContext(), dbName, tableCreators);
         }
+    }
+
+    /**
+     * <p>
+     *     Initializes the underlying database tables and maps their respective apis.
+     * </p>
+     * @param context
+     * @param tableCreators
+     */
+    public static void init(Context context, List<FSTableCreator> tableCreators) {
+        init(context, DEFAULT_DB_NAME, tableCreators);
     }
 
     public static ForSure inst() throws IllegalStateException {

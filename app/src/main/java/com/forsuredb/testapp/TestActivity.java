@@ -92,9 +92,7 @@ public class TestActivity extends ActionBarActivity {
         /*
          * This block demonstrates saving a newly created record routed via the Uri.
          */
-        FSTableDescriber userTable = ForSure.inst().getTable("user");
-        UserTableSetter setter = ForSure.inst().setApi(userTable.getAllRecordsUri());
-        setter.appRating(generator.nextDouble())
+        ForSure.inst().setApi(UserTableSetter.class).appRating(generator.nextDouble())
                 .competitorAppRating(new BigDecimal(generator.nextFloat()))
                 .globalId(generator.nextLong())
                 .id(id)
@@ -105,6 +103,7 @@ public class TestActivity extends ActionBarActivity {
          * overwritten. Otherwise, it will insert.
          */
 
+        FSTableDescriber userTable = ForSure.inst().getTable("user");
         userCursorAdapter.changeCursor(getContentResolver().query(userTable.getAllRecordsUri(), null, null, null, null));
     }
 
@@ -115,9 +114,7 @@ public class TestActivity extends ActionBarActivity {
         /*
          * This block demonstrates saving a newly created record routed via the Uri.
          */
-        FSTableDescriber profileTable = ForSure.inst().getTable("profile_info");
-        ProfileInfoTableSetter setter = ForSure.inst().setApi(profileTable.getAllRecordsUri());
-        setter.id(id)
+        ForSure.inst().setApi(ProfileInfoTableSetter.class).id(id)
                 .emailAddress("user" + userId + "@email.com")
                 .userId(userId)
                 .binaryData(new byte[] {(byte) (generator.nextInt() & 0xFF), (byte) (generator.nextInt() & 0xFF), (byte) 0})
@@ -127,6 +124,7 @@ public class TestActivity extends ActionBarActivity {
          * overwritten. Otherwise, it will insert.
          */
 
+        FSTableDescriber profileTable = ForSure.inst().getTable("profile_info");
         profileInfoCursorAdapter.changeCursor(getContentResolver().query(profileTable.getAllRecordsUri(), null, null, null, null));
     }
 

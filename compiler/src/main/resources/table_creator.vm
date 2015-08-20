@@ -1,0 +1,16 @@
+package ${packageName};
+
+import java.util.List;
+import java.util.LinkedList;
+
+import com.forsuredb.FSTableCreator;
+
+public class ${className} {
+    public static List<FSTableCreator> ${methodName}() {
+        final List<FSTableCreator> ${listVariableName} = new LinkedList<>();
+#foreach($addFSTableCreatorLine in $addFSTableCreatorLines)
+        $addFSTableCreatorLine
+#end
+        return ${listVariableName};
+    }
+}

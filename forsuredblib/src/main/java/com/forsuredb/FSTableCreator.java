@@ -5,6 +5,7 @@ import android.content.res.XmlResourceParser;
 
 import com.forsuredb.annotation.FSColumn;
 import com.forsuredb.annotation.FSTable;
+import com.forsuredb.provider.DefaultProvider;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
@@ -35,6 +36,10 @@ public class FSTableCreator {
 
     public FSTableCreator(String authority, Class<? extends FSGetApi> tableApiClass) {
         this(authority, tableApiClass, NO_STATIC_DATA_RESOURCE_ID, "");
+    }
+
+    public FSTableCreator(Class<? extends FSGetApi> tableApiClass) {
+        this(DefaultProvider.AUTHORITY, tableApiClass);
     }
 
     public String getTableName() {

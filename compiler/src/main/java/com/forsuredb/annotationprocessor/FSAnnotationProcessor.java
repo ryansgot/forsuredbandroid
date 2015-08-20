@@ -29,8 +29,9 @@ import javax.tools.Diagnostic;
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class FSAnnotationProcessor extends AbstractProcessor {
 
-    private static boolean setterApisCreated = false;   // <-- maintain state so setter APIs don't have to be created more than once
-    private static boolean migrationsCreated = false;   // <-- maintain state so migrations don't have to be created more than once
+    private static boolean setterApisCreated = false;          // <-- maintain state so setter APIs don't have to be created more than once
+    private static boolean migrationsCreated = false;          // <-- maintain state so migrations don't have to be created more than once
+    private static boolean tableCreatorClassCreated = false;   // <-- maintain state so TableCreator class does not have to be created more than once
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
@@ -54,6 +55,9 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         if (!migrationsCreated && Boolean.getBoolean("createMigrations")) {
             createMigrations(ve, pc);
         }
+        if (!tableCreatorClassCreated) {
+            createTableCreatorClass(ve, pc);
+        }
     }
 
     private void createSetterApis(VelocityEngine ve, ProcessingContext pc) {
@@ -69,6 +73,12 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "got migration directory: " + migrationDirectory);
         new MigrationGenerator(pc, migrationDirectory, processingEnv).generate("migration_resource.vm", ve);
         migrationsCreated = true;   // <-- maintain state so migrations don't have to be created more than once
+    }
+
+    private void createTableCreatorClass(VelocityEngine ve, ProcessingContext pc) {
+        String applicationPackageName = System.getProperty("applicationPackageName");
+        new TableCreatorGenerator(processingEnv, applicationPackageName, pc).generate("table_creator.vm", ve);
+        tableCreatorClassCreated = true;    // <-- maintain state so TableCreator class does not have to be created more than once
     }
 
     private VelocityEngine createVelocityEngine() {
