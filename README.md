@@ -13,7 +13,6 @@ I can't give clear instructions on how to do this right now. Every interface you
 
 ## Using forsuredb in Android
 - Create a new Android project
-- Create a ContentProvider (with ```"my.provider.authority"``` as the authority--or whatever you want)
 - Define an interface
 ```java
 @FSTable("user")
@@ -25,7 +24,7 @@ public interface UserTable extends FSGetApi {
     @FSColumn("competitor_app_rating") BigDecimal competitorAppRating(Cursor cursor);
 }
 ```
-- Initialize ForSure in your Application
+- Initialize ForSure in your Application (note that your Application class must be defined in your application's root package at the moment). The TableGenerator class is generated at compile time, so your IDE may give you a compilation error--ignore it. Maybe someday I'll make an Android Studio plugin.
 ```java
 public class App extends Application {
 
@@ -33,9 +32,8 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
 
-        // initialize ForSure
-        FSTableCreator userTable = new FSTableCreator("my.provider.authority", UserTable.class);
-        ForSure.init(this, "test.db", Lists.newArrayList(userTable));
+        // initialize ForSure. You can choose to pass in a database name or not.
+        ForSure.init(this, TableGenerator.generate());
     }
 }
 ```
@@ -76,22 +74,6 @@ public interface ProfileInfoTable extends FSGetApi {
     @FSColumn("email_address") String emailAddress(Cursor cursor);
     @FSColumn("binary_data") byte[] binaryData(Cursor cursor);
 }
-```
-- Create a new FSTableCreator object to initialize ForSure with:
-```java
-public class App extends Application {
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-        // initialize ForSure
-        FSTableCreator userTable = new FSTableCreator("my.provider.authority", UserTable.class);
-        FSTableCreator profileInfoTable = new FSTableCreator("my.provider.authority", ProfileInfoTable.class);
-        ForSure.init(this, "test.db", Lists.newArrayList(userTable, profileInfoTable));
-    }
-}
-
 ```
 - Migrate the database
 ```
