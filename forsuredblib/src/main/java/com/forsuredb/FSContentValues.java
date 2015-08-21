@@ -10,7 +10,7 @@ import com.forsuredb.api.RecordContainer;
  *     This is a ContentValues object wrapper that implements RecordContainer so that a FSSaveApi can be created
  * </p>
  */
-public class FSContentValues implements RecordContainer {
+/*package*/ class FSContentValues implements RecordContainer {
 
     private final ContentValues cv;
 
@@ -18,7 +18,7 @@ public class FSContentValues implements RecordContainer {
         this.cv = cv;
     }
 
-    public static FSContentValues getNew() {
+    /*package*/ static FSContentValues getNew() {
         return new FSContentValues(new ContentValues());
     }
 

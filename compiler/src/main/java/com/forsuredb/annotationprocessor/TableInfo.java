@@ -24,7 +24,7 @@ public class TableInfo {
     private TableInfo(String tableName, String qualifiedClassName, Map<String, ColumnInfo> columnMap) {
         this.tableName = createTableName(tableName, qualifiedClassName);
         this.qualifiedClassName = qualifiedClassName;
-        this.columnMap.putAll(columnMap);
+        createColumnMap(columnMap);
         this.simpleClassName = createSimpleClassName(qualifiedClassName);
         this.classPackageName = createPackageName(qualifiedClassName);
     }
@@ -139,6 +139,16 @@ public class TableInfo {
             buf.append(".").append(split[i]);
         }
         return buf.toString();
+    }
+
+    private void createColumnMap(Map<String, ColumnInfo> columnMap) {
+        // puts the id column because the superclass of all interfaces that define tables has this column
+        this.columnMap.put("_id", ColumnInfo.builder().columnName("_id")
+                .methodName("id")
+                .primaryKey(true)
+                .qualifiedType("long")
+                .build());
+        this.columnMap.putAll(columnMap);
     }
 
     public static class Builder {

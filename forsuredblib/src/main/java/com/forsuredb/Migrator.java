@@ -15,14 +15,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 
-public class Migrator {
+/*package*/ class Migrator {
 
     private static final String LOG_TAG = Migrator.class.getSimpleName();
 
     private final Context context;
     private List<Migration> migrations;
 
-    public Migrator(Context context) {
+    /*package*/ Migrator(Context context) {
         this.context = context;
     }
 
