@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.Log;
 
+import com.forsuredb.api.FSLogger;
 import com.forsuredb.migration.Migration;
 import com.forsuredb.migration.MigrationRetrieverFactory;
 import com.google.common.base.Strings;
@@ -46,7 +47,7 @@ public class Migrator {
         }
     }
 
-    private void addMigrationsFromFile(AssetManager assetManager, String filename, com.forsuredb.api.FSLogger log) {
+    private void addMigrationsFromFile(AssetManager assetManager, String filename, FSLogger log) {
         InputStream in = null;
         try {
             in = assetManager.open(filename);
@@ -84,7 +85,7 @@ public class Migrator {
         return filename != null && filename.endsWith("migration.xml");
     }
 
-    private static class ADBFSLogger implements com.forsuredb.api.FSLogger {
+    private static class ADBFSLogger implements FSLogger {
 
         @Override
         public void e(String message) {
