@@ -3,6 +3,10 @@ package com.forsuredb;
 import android.content.Context;
 import android.net.Uri;
 
+import com.forsuredb.api.FSQueryable;
+import com.forsuredb.api.FSSelection;
+import com.forsuredb.api.Retriever;
+
 /*package*/ class ContentProviderQueryable implements FSQueryable<Uri, FSContentValues> {
 
     private final Context appContext;
@@ -33,7 +37,7 @@ import android.net.Uri;
     }
 
     @Override
-    public Retriever query(FSProjection projection, FSSelection selection, String sortOrder) {
+    public Retriever query(com.forsuredb.api.FSProjection projection, FSSelection selection, String sortOrder) {
         final String[] p = projection == null ? null : projection.columns();
         final String s = selection == null ? null : selection.where();
         final String[] sArgs = selection == null ? null : selection.replacements();

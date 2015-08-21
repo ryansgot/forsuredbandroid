@@ -1,4 +1,4 @@
-package com.forsuredb;
+package com.forsuredb.api;
 
 public interface FSLogger {
     void e(String message);

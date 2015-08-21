@@ -39,14 +39,14 @@ public class Migrator {
         final AssetManager assetManager = context.getResources().getAssets();
         final PriorityQueue<String> sortedPaths = createSortedMigrationFilenames(assetManager);
 
-        FSLogger log = new ADBFSLogger();
+        com.forsuredb.api.FSLogger log = new ADBFSLogger();
         migrations = new LinkedList<>();
         while (sortedPaths.size() > 0) {
             addMigrationsFromFile(assetManager, sortedPaths.remove(), log);
         }
     }
 
-    private void addMigrationsFromFile(AssetManager assetManager, String filename, FSLogger log) {
+    private void addMigrationsFromFile(AssetManager assetManager, String filename, com.forsuredb.api.FSLogger log) {
         InputStream in = null;
         try {
             in = assetManager.open(filename);
@@ -84,7 +84,7 @@ public class Migrator {
         return filename != null && filename.endsWith("migration.xml");
     }
 
-    private static class ADBFSLogger implements FSLogger {
+    private static class ADBFSLogger implements com.forsuredb.api.FSLogger {
 
         @Override
         public void e(String message) {

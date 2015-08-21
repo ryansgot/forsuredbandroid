@@ -10,6 +10,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
+import com.forsuredb.api.Retriever;
+
 /**
  * <p>
  *     This is a very simple wrapper for a cursor that implements the Retriever interface for Android compatibility

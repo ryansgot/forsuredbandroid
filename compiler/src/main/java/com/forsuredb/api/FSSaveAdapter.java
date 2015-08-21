@@ -1,7 +1,6 @@
-package com.forsuredb;
+package com.forsuredb.api;
 
 import com.forsuredb.annotation.FSColumn;
-import com.forsuredb.api.FSSaveApi;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -10,7 +9,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-/*package*/ class FSSaveAdapter {
+public class FSSaveAdapter {
 
     private static final Map<Class<? extends FSSaveApi>, Handler> HANDLERS = new HashMap<>();
 
@@ -18,10 +17,14 @@ import java.util.Map;
      * <p>
      *     Create an api object capable of saving a row.
      * </p>
+     *
      * @param queryable
+     * @param emptyRecord
      * @param api
-     * @param <T>
-     * @return
+     * @param <T> Some FSSaveApi
+     * @param <U> The class by which the save api reports its inserted rows (In Android, for example, this is a Uri)
+     * @param <R> The class by which records are created (In Android, for example, this is supported by a wrapped ContentValues)
+     * @return An implementation of the api class passed in.
      */
     public static <T extends FSSaveApi<U>, U, R extends RecordContainer> T create(FSQueryable<U, R> queryable,
                                                                                   R emptyRecord,
@@ -30,14 +33,7 @@ import java.util.Map;
         return (T) Proxy.newProxyInstance(api.getClassLoader(), new Class<?>[]{api}, handler);
     }
 
-    /**
-     * <p>
-     *     Lazily create the invocation handlers for the save API.
-     * </p>
-     * @param queryable
-     * @param api
-     * @return
-     */
+    // Lazily create the invocation handlers for the save API.
     private static <U, R extends RecordContainer> Handler<U, R> getOrCreateFor(FSQueryable<U, R> queryable,
                                                                                R emptyRecord,
                                                                                Class<? extends com.forsuredb.api.FSSaveApi<U>> api) {

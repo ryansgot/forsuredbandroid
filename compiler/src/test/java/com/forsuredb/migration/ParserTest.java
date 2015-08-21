@@ -1,6 +1,6 @@
 package com.forsuredb.migration;
 
-import com.forsuredb.FSLogger;
+import com.forsuredb.api.FSLogger;
 
 import org.junit.Before;
 import org.junit.Test;

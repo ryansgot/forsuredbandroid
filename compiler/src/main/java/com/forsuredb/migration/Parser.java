@@ -1,6 +1,6 @@
 package com.forsuredb.migration;
 
-import com.forsuredb.FSLogger;
+import com.forsuredb.api.FSLogger;
 
 import java.io.File;
 import java.io.FileInputStream;

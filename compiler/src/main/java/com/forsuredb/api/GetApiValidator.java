@@ -1,4 +1,4 @@
-package com.forsuredb;
+package com.forsuredb.api;
 
 import com.forsuredb.annotation.FSColumn;
 

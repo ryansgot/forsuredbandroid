@@ -3,9 +3,11 @@ package com.forsuredb;
 
 import android.content.ContentValues;
 
+import com.forsuredb.api.RecordContainer;
+
 /**
  * <p>
- *     This is a ContentValues object wrapper that implements
+ *     This is a ContentValues object wrapper that implements RecordContainer so that a FSSaveApi can be created
  * </p>
  */
 public class FSContentValues implements RecordContainer {
@@ -16,7 +18,7 @@ public class FSContentValues implements RecordContainer {
         this.cv = cv;
     }
 
-    public static FSContentValues newInstance() {
+    public static FSContentValues getNew() {
         return new FSContentValues(new ContentValues());
     }
 

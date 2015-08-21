@@ -1,6 +1,6 @@
 package com.forsuredb.testapp.model;
 
-import com.forsuredb.Retriever;
+import com.forsuredb.api.Retriever;
 import com.forsuredb.annotation.FSColumn;
 import com.forsuredb.api.FSGetApi;
 import com.forsuredb.annotation.ForeignKey;

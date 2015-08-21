@@ -1,6 +1,6 @@
 package com.forsuredb.migration;
 
-import com.forsuredb.FSLogger;
+import com.forsuredb.api.FSLogger;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;

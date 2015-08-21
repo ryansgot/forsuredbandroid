@@ -1,9 +1,6 @@
-package com.forsuredb;
-
-import android.util.Log;
+package com.forsuredb.api;
 
 import com.forsuredb.annotation.FSColumn;
-import com.google.common.collect.ImmutableMap;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -11,24 +8,26 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
-/*package*/ class FSGetAdapter {
+public class FSGetAdapter {
 
     private static final String LOG_TAG = FSGetAdapter.class.getSimpleName();
 
-    /*package*/ static ImmutableMap<Type, Method> methodMap;
+    /*package*/ static final Map<Type, Method> methodMap = new HashMap<>();
     static {
         try {
-            methodMap = new ImmutableMap.Builder<Type, Method>().put(BigDecimal.class, Retriever.class.getDeclaredMethod("getString", String.class))
-                                                                      .put(boolean.class, Retriever.class.getDeclaredMethod("getInt", String.class))
-                                                                      .put(byte[].class, Retriever.class.getDeclaredMethod("getBlob", String.class))
-                                                                      .put(double.class, Retriever.class.getDeclaredMethod("getDouble", String.class))
-                                                                      .put(int.class, Retriever.class.getDeclaredMethod("getInt", String.class))
-                                                                      .put(long.class, Retriever.class.getDeclaredMethod("getLong", String.class))
-                                                                      .put(String.class, Retriever.class.getDeclaredMethod("getString", String.class))
-                                                                      .build();
+            methodMap.put(BigDecimal.class, Retriever.class.getDeclaredMethod("getString", String.class));
+            methodMap.put(boolean.class, Retriever.class.getDeclaredMethod("getInt", String.class));
+            methodMap.put(byte[].class, Retriever.class.getDeclaredMethod("getBlob", String.class));
+            methodMap.put(double.class, Retriever.class.getDeclaredMethod("getDouble", String.class));
+            methodMap.put(int.class, Retriever.class.getDeclaredMethod("getInt", String.class));
+            methodMap.put(long.class, Retriever.class.getDeclaredMethod("getLong", String.class));
+            methodMap.put(String.class, Retriever.class.getDeclaredMethod("getString", String.class));
         } catch (NoSuchMethodException nsme) {
-            Log.e(LOG_TAG, "error creating methodMap", nsme);
+            nsme.printStackTrace();
+            System.exit(-1);
         }
     }
 
@@ -79,7 +78,7 @@ import java.math.BigDecimal;
             try {
                 return new BigDecimal((String) retrieverMethod.invoke(retriever, column));
             } catch (NumberFormatException nfe) {
-                Log.e(LOG_TAG, "number format exception when getting a BigDecimal from retriever at column: " + column, nfe);
+                nfe.printStackTrace();
             }
             return null;
         }

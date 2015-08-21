@@ -4,7 +4,9 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.forsuredb.annotation.FSTable;
+import com.forsuredb.api.FSGetAdapter;
 import com.forsuredb.api.FSGetApi;
+import com.forsuredb.api.FSSaveAdapter;
 import com.google.common.base.Strings;
 
 public class FSTableDescriber {
@@ -65,7 +67,7 @@ public class FSTableDescriber {
 
     public com.forsuredb.api.FSSaveApi set(ContentProviderQueryable q) {
         if (setApi == null) {
-            setApi = FSSaveAdapter.create(q, FSContentValues.newInstance(), getSaveApiClass());
+            setApi = FSSaveAdapter.create(q, FSContentValues.getNew(), getSaveApiClass());
         }
         return setApi;
     }

@@ -1,6 +1,6 @@
 package com.forsuredb.annotationprocessor;
 
-import com.forsuredb.FSLogger;
+import com.forsuredb.api.FSLogger;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.Diagnostic;

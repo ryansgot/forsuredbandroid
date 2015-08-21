@@ -1,4 +1,4 @@
-package com.forsuredb;
+package com.forsuredb.api;
 
 public interface FSQueryable<U, R extends RecordContainer> {
     U insert(R record);
