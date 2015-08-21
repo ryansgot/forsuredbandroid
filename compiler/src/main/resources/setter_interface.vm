@@ -1,6 +1,6 @@
 package ${packageName};
 
-import com.forsuredb.FSSaveApi;
+import com.forsuredb.api.FSSaveApi;
 import com.forsuredb.annotation.FSColumn;
 
 public interface ${className} extends FSSaveApi#if( $resultParameter )<$resultParameter>#end {

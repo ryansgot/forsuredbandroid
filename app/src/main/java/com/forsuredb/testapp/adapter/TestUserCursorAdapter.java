@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import com.forsuredb.FSCursor;
 import com.forsuredb.FSTableDescriber;
 import com.forsuredb.ForSure;
 import com.forsuredb.testapp.R;
@@ -19,17 +20,17 @@ public class TestUserCursorAdapter extends BaseAdapter {
 
     private final FSTableDescriber table;
     private Context context;
-    private Cursor cursor;
+    private FSCursor retriever;
 
     public TestUserCursorAdapter(Context context) {
         table = ForSure.inst().getTable("user");
         this.context = context;
-        cursor = null;
+        retriever = null;
     }
 
     @Override
     public int getCount() {
-        return cursor == null ? 0 : cursor.getCount();
+        return retriever == null ? 0 : retriever.getCount();
     }
 
     @Override
@@ -39,29 +40,29 @@ public class TestUserCursorAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int position) {
-        return cursor == null || getCount() <= position ? -1L : position;
+        return retriever == null || getCount() <= position ? -1L : position;
     }
 
     @Override
     public View getView(int position, View view, ViewGroup viewGroup) {
-        if (cursor == null || !cursor.moveToPosition(position)) {
+        if (retriever == null || !retriever.moveToPosition(position)) {
             return null;
         }
         UserTable api = ForSure.inst().getApi(table.getAllRecordsUri());
-        return new ViewBuilder().id(api.id(cursor))
-                                .globalId(api.globalId(cursor))
-                                .loginCount(api.loginCount(cursor))
-                                .appRating(api.appRating(cursor))
-                                .competitorAppRating(api.competitorAppRating(cursor))
+        return new ViewBuilder().id(api.id(retriever))
+                                .globalId(api.globalId(retriever))
+                                .loginCount(api.loginCount(retriever))
+                                .appRating(api.appRating(retriever))
+                                .competitorAppRating(api.competitorAppRating(retriever))
                                 .targetLayout(view)
                                 .build(context);
     }
 
     public void changeCursor(Cursor newCursor) {
-        if (cursor != null) {
-            cursor.close();
+        if (retriever != null) {
+            retriever.close();
         }
-        cursor = newCursor;
+        retriever = new FSCursor(newCursor);
         notifyDataSetChanged();
     }
 

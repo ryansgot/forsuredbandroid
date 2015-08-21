@@ -1,11 +1,7 @@
 package com.forsuredb;
 
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.net.Uri;
-import android.util.Log;
-
 import com.forsuredb.annotation.FSColumn;
+import com.forsuredb.api.FSSaveApi;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -16,20 +12,21 @@ import java.util.Map;
 
 /*package*/ class FSSaveAdapter {
 
-    private static final String LOG_TAG = FSSaveAdapter.class.getSimpleName();
-    private static final Map<Class<? extends FSSaveApi<Uri>>, Handler> HANDLERS = new HashMap<>();
+    private static final Map<Class<? extends FSSaveApi>, Handler> HANDLERS = new HashMap<>();
 
     /**
      * <p>
      *     Create an api object capable of saving a row.
      * </p>
-     * @param q
+     * @param queryable
      * @param api
      * @param <T>
      * @return
      */
-    public static <T extends FSSaveApi<Uri>> T create(ContentProviderQueryable q, Class<T> api) {
-        final Handler handler = getOrCreateFor(q, api);
+    public static <T extends FSSaveApi<U>, U, R extends RecordContainer> T create(FSQueryable<U, R> queryable,
+                                                                                  R emptyRecord,
+                                                                                  Class<T> api) {
+        final Handler handler = getOrCreateFor(queryable, emptyRecord, api);
         return (T) Proxy.newProxyInstance(api.getClassLoader(), new Class<?>[]{api}, handler);
     }
 
@@ -37,29 +34,32 @@ import java.util.Map;
      * <p>
      *     Lazily create the invocation handlers for the save API.
      * </p>
-     * @param q
+     * @param queryable
      * @param api
      * @return
      */
-    private static Handler getOrCreateFor(ContentProviderQueryable q, Class<? extends FSSaveApi<Uri>> api) {
+    private static <U, R extends RecordContainer> Handler<U, R> getOrCreateFor(FSQueryable<U, R> queryable,
+                                                                               R emptyRecord,
+                                                                               Class<? extends com.forsuredb.api.FSSaveApi<U>> api) {
         Handler handler = HANDLERS.get(api);
         if (handler == null) {
-            handler = new Handler(q, api);
+            handler = new Handler(queryable, emptyRecord, api);
             HANDLERS.put(api, handler);
         }
         return handler;
     }
 
-    private static class Handler implements InvocationHandler {
+    private static class Handler<U, R extends RecordContainer> implements InvocationHandler {
 
-        private final ContentProviderQueryable cpWrapper;
+        private final FSQueryable<U, R> queryable;
         private final Map<String, Integer> columnNameToIndexMap = new HashMap<>();
-        private final ContentValues cv = new ContentValues();
+        private final R recordContainer;
         private String[] columns;
         private Type[] columnTypes;
 
-        public Handler(ContentProviderQueryable cpWrapper, Class<? extends FSSaveApi<Uri>> api) {
-            this.cpWrapper = cpWrapper;
+        public Handler(FSQueryable<U, R> queryable, R recordContainer, Class<? extends com.forsuredb.api.FSSaveApi<U>> api) {
+            this.queryable = queryable;
+            this.recordContainer = recordContainer;
             setColumnsAndTypes(api);
         }
 
@@ -77,40 +77,37 @@ import java.util.Map;
             return performSave();
         }
 
-        private SaveResult<Uri> performSave() {
+        private SaveResult<U> performSave() {
             if (!idStored()) {  // <-- if no id has been stored, then this is almost assuredly an instertion . . . not necessarily true, but baby steps
                 return performInsert();
             }
             return performUpsert();
         }
 
-        private SaveResult<Uri> performInsert() {
+        private SaveResult<U> performInsert() {
             try {
-                final Uri insertedUri = cpWrapper.insert(cv);
-                return new ResultBuilder().insertedUri(insertedUri)
-                                          .rowsAffected(insertedUri == null ? 0 : 1)
-                                          .build();
+                final U inserted = queryable.insert(recordContainer);
+                return ResultFactory.create(inserted, inserted == null ? 0 : 1, null);
             } catch (Exception e) {
-                return new ResultBuilder().exception(e).build();
+                return ResultFactory.create(null, 0, e);
             } finally {
-                cv.clear();
+                recordContainer.clear();
             }
         }
 
-        private SaveResult<Uri> performUpsert() {
-            FSSelection selection = new Selection("_id = ?", new String[]{(String) cv.get("_id")});
-            Cursor cursor = cpWrapper.query(null, selection, null);
+        private SaveResult<U> performUpsert() {
+            FSSelection selection = new Selection("_id = ?", new String[]{(String) recordContainer.get("_id")});
+            Retriever cursor = queryable.query(null, selection, null);
             try {
                 if (cursor == null || cursor.getCount() < 1) {
                     return performInsert();
                 }
-                int rowsAffected = cpWrapper.update(cv, selection);
-                return new ResultBuilder().rowsAffected(rowsAffected).build();
+                int rowsAffected = queryable.update(recordContainer, selection);
+                return ResultFactory.create(null, rowsAffected, null);
             } catch (Exception e) {
-                Log.e(LOG_TAG, "exception while upserting: " + cv.toString(), e);
-                return new ResultBuilder().exception(e).build();
+                return ResultFactory.create(null, 0, e);
             } finally {
-                cv.clear();
+                recordContainer.clear();
                 if (cursor != null) {
                     cursor.close();
                 }
@@ -120,15 +117,15 @@ import java.util.Map;
         private void performSet(String column, Object arg) {
             Type type = columnTypes[columnNameToIndexMap.get(column).intValue()];
             if (type.equals(byte[].class)) {
-                cv.put(column, (byte[]) arg);
+                recordContainer.put(column, (byte[]) arg);
             } else if (type.equals(boolean.class) || type.equals(Boolean.class)) {
-                cv.put(column, (Boolean) arg ? 0 : 1);
+                recordContainer.put(column, (Boolean) arg ? 0 : 1);
             } else {
-                cv.put(column, arg.toString());
+                recordContainer.put(column, arg.toString());
             }
         }
 
-        private void setColumnsAndTypes(Class<? extends FSSaveApi<Uri>> api) {
+        private void setColumnsAndTypes(Class<? extends com.forsuredb.api.FSSaveApi<U>> api) {
             final Method[] apiDeclaredMethods = api.getDeclaredMethods();
             columns = new String[apiDeclaredMethods.length];
             columnTypes = new Type[apiDeclaredMethods.length];
@@ -140,7 +137,7 @@ import java.util.Map;
         }
 
         private boolean idStored() {
-            return cv.get("_id") != null;
+            return recordContainer.get("_id") != null;
         }
     }
 
@@ -165,36 +162,17 @@ import java.util.Map;
         }
     }
 
-    private static class ResultBuilder {
-        private Uri insertedUri = null;
-        private int rowsAffected = 0;
-        private Exception e = null;
-
-        public ResultBuilder insertedUri(Uri insertedUri) {
-            this.insertedUri = insertedUri;
-            return this;
-        }
-
-        public ResultBuilder exception(Exception e) {
-            this.e = e;
-            return this;
-        }
-
-        public ResultBuilder rowsAffected(int rowsAffected) {
-            this.rowsAffected = rowsAffected;
-            return this;
-        }
-
-        public SaveResult<Uri> build() {
-            return new SaveResult<Uri>() {
+    private static class ResultFactory {
+        public static <U> SaveResult<U> create(final U inserted, final int rowsAffected, final Exception e) {
+            return new SaveResult<U>() {
                 @Override
                 public Exception exception() {
                     return e;
                 }
 
                 @Override
-                public Uri inserted() {
-                    return insertedUri;
+                public U inserted() {
+                    return inserted;
                 }
 
                 @Override

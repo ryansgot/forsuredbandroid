@@ -1,6 +1,6 @@
 package com.forsuredb.annotation;
 
-import com.forsuredb.FSGetApi;
+import com.forsuredb.api.FSGetApi;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

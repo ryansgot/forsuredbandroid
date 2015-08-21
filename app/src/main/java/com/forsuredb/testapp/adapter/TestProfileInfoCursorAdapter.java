@@ -2,17 +2,16 @@ package com.forsuredb.testapp.adapter;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import com.forsuredb.FSCursor;
 import com.forsuredb.FSTableDescriber;
 import com.forsuredb.ForSure;
 import com.forsuredb.testapp.R;
-import com.forsuredb.testapp.contentprovider.TestContentProvider;
 import com.forsuredb.testapp.model.ProfileInfoTable;
 
 import java.util.Arrays;
@@ -21,17 +20,17 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
 
     private final FSTableDescriber table;
     private Context context;
-    private Cursor cursor;
+    private FSCursor retriever;
 
     public TestProfileInfoCursorAdapter(Context context) {
         table = ForSure.inst().getTable("profile_info");
         this.context = context;
-        cursor = null;
+        retriever = null;
     }
 
     @Override
     public int getCount() {
-        return cursor == null ? 0 : cursor.getCount();
+        return retriever == null ? 0 : retriever.getCount();
     }
 
     @Override
@@ -41,28 +40,28 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int position) {
-        return cursor == null || getCount() <= position ? -1L : position;
+        return retriever == null || getCount() <= position ? -1L : position;
     }
 
     @Override
     public View getView(int position, View view, ViewGroup viewGroup) {
-        if (cursor == null || !cursor.moveToPosition(position)) {
+        if (retriever == null || !retriever.moveToPosition(position)) {
             return null;
         }
         final ProfileInfoTable api = ForSure.inst().getApi(table.getAllRecordsUri());
-        return new ViewBuilder().id(api.id(cursor))
-                                .userId(api.userId(cursor))
-                                .emalAddress(api.emailAddress(cursor))
-                                .binaryData(api.binaryData(cursor))
+        return new ViewBuilder().id(api.id(retriever))
+                                .userId(api.userId(retriever))
+                                .emalAddress(api.emailAddress(retriever))
+                                .binaryData(api.binaryData(retriever))
                                 .targetLayout(view)
                                 .build(context);
     }
 
     public void changeCursor(Cursor newCursor) {
-        if (cursor != null) {
-            cursor.close();
+        if (retriever != null) {
+            retriever.close();
         }
-        cursor = newCursor;
+        retriever = new FSCursor(newCursor);
         notifyDataSetChanged();
     }
 

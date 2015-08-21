@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.forsuredb.annotation.FSTable;
+import com.forsuredb.api.FSGetApi;
 import com.google.common.base.Strings;
 
 public class FSTableDescriber {
@@ -11,13 +12,13 @@ public class FSTableDescriber {
     private static final String LOG_TAG = FSTableDescriber.class.getSimpleName();
 
     private final String name;
-    private final Class<? extends FSGetApi> getApiClass;
-    private Class<? extends FSSaveApi<Uri>> saveApiClass;
+    private final Class<? extends com.forsuredb.api.FSGetApi> getApiClass;
+    private Class<? extends com.forsuredb.api.FSSaveApi<Uri>> saveApiClass;
     private final String mimeType;
     private final Uri allRecordsUri;
 
-    private FSGetApi getApi;
-    private FSSaveApi<Uri> setApi;
+    private com.forsuredb.api.FSGetApi getApi;
+    private com.forsuredb.api.FSSaveApi<Uri> setApi;
 
     /*package*/ FSTableDescriber(FSTableCreator fsTableCreator) throws IllegalStateException {
         validate(fsTableCreator);
@@ -35,7 +36,7 @@ public class FSTableDescriber {
             throw new IllegalArgumentException("Cannot create " + FSTableDescriber.class.getSimpleName() + " without an authority");
         }
         if (!fsTableCreator.getTableApiClass().isAnnotationPresent(FSTable.class)) {
-            throw new IllegalArgumentException("Cannot create " + FSTableDescriber.class.getSimpleName() + " without a table name. Use the FSTable annotation on all " + FSGetApi.class.getSimpleName() + " extensions");
+            throw new IllegalArgumentException("Cannot create " + FSTableDescriber.class.getSimpleName() + " without a table name. Use the FSTable annotation on all " + com.forsuredb.api.FSGetApi.class.getSimpleName() + " extensions");
         }
     }
 
@@ -62,18 +63,18 @@ public class FSTableDescriber {
         return getApi;
     }
 
-    public FSSaveApi set(ContentProviderQueryable q) {
+    public com.forsuredb.api.FSSaveApi set(ContentProviderQueryable q) {
         if (setApi == null) {
-            setApi = FSSaveAdapter.create(q, getSaveApiClass());
+            setApi = FSSaveAdapter.create(q, FSContentValues.newInstance(), getSaveApiClass());
         }
         return setApi;
     }
 
-    public Class<? extends FSGetApi> getGetApiClass() {
+    public Class<? extends com.forsuredb.api.FSGetApi> getGetApiClass() {
         return getApiClass;
     }
 
-    public Class<? extends FSSaveApi<Uri>> getSaveApiClass() {
+    public Class<? extends com.forsuredb.api.FSSaveApi<Uri>> getSaveApiClass() {
         if (saveApiClass == null) {
             initSaveApi();
         }
@@ -90,7 +91,7 @@ public class FSTableDescriber {
             throw new IllegalStateException("Cannot load the save api class because it was not found.");
         }
         try {
-            saveApiClass = (Class<? extends FSSaveApi<Uri>>) loaded;
+            saveApiClass = (Class<? extends com.forsuredb.api.FSSaveApi<Uri>>) loaded;
         } catch (ClassCastException cce) {
             Log.e(LOG_TAG, "Could not cast: " + loaded.getName() + " to correct class");
             throw cce;

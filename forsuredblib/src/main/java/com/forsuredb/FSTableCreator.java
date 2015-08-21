@@ -21,12 +21,12 @@ public class FSTableCreator {
     private static final int NO_STATIC_DATA_RESOURCE_ID = -1;
 
     private final String authority;
-    private final Class<? extends FSGetApi> tableApiClass;
+    private final Class<? extends com.forsuredb.api.FSGetApi> tableApiClass;
     private final int staticDataResId;
     private final String staticDataRecordName;
     private final String tableName;
 
-    public FSTableCreator(String authority, Class<? extends FSGetApi> tableApiClass, int staticDataResId, String staticDataRecordName) {
+    public FSTableCreator(String authority, Class<? extends com.forsuredb.api.FSGetApi> tableApiClass, int staticDataResId, String staticDataRecordName) {
         this.authority = authority;
         this.tableApiClass = tableApiClass;
         this.staticDataResId = staticDataResId;
@@ -34,11 +34,11 @@ public class FSTableCreator {
         this.tableName = tableApiClass.getAnnotation(FSTable.class).value();
     }
 
-    public FSTableCreator(String authority, Class<? extends FSGetApi> tableApiClass) {
+    public FSTableCreator(String authority, Class<? extends com.forsuredb.api.FSGetApi> tableApiClass) {
         this(authority, tableApiClass, NO_STATIC_DATA_RESOURCE_ID, "");
     }
 
-    public FSTableCreator(Class<? extends FSGetApi> tableApiClass) {
+    public FSTableCreator(Class<? extends com.forsuredb.api.FSGetApi> tableApiClass) {
         this(DefaultProvider.AUTHORITY, tableApiClass);
     }
 
@@ -50,7 +50,7 @@ public class FSTableCreator {
         return authority;
     }
 
-    public Class<? extends FSGetApi> getTableApiClass() {
+    public Class<? extends com.forsuredb.api.FSGetApi> getTableApiClass() {
         return tableApiClass;
     }
 
