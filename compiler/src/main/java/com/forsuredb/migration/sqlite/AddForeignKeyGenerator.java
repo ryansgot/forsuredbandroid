@@ -27,7 +27,7 @@ public class AddForeignKeyGenerator extends QueryGenerator {
 
         retList.addAll(new CreateTempTableFromExisting(table, column).generate());
         retList.addAll(new DropTableGenerator(getTableName()).generate());
-        retList.add(recreateTableWithAllForeignKeysQuery());
+        retList.addAll(recreateTableWithAllForeignKeysQuery());
         retList.addAll(allColumnAdditionQueries());
         retList.add(reinsertDataQuery());
         retList.addAll(new DropTableGenerator(tempTableName()).generate());
@@ -45,18 +45,26 @@ public class AddForeignKeyGenerator extends QueryGenerator {
         return ret;
     }
 
-    private String recreateTableWithAllForeignKeysQuery() {
-        // adds the default columns to the buffer
-        StringBuffer buf = new StringBuffer(new CreateTableGenerator(getTableName()).generate().get(0));
-        buf.delete(buf.length() - 2, buf.length());   // <-- removes );
+    private List<String> recreateTableWithAllForeignKeysQuery() {
+        final List<String> retList = new LinkedList<>();
+        List<String> normalCreationQueries = new CreateTableGenerator(getTableName()).generate();
 
+        // add the default columns to the normal TABLE CREATE query
+        StringBuffer buf = new StringBuffer(normalCreationQueries.remove(0));
+        buf.delete(buf.length() - 2, buf.length());   // <-- removes );
         List<ColumnInfo> foreignKeyColumns = table.getForeignKeyColumns();
         addColumnDefinitionsToBuffer(buf, foreignKeyColumns);
         addColumnDefinitionToBuffer(buf, column);
         addForeignKeyDefinitionsToBuffer(buf, foreignKeyColumns);
         addForeignKeyDefinitionToBuffer(buf, column);
+        retList.add(buf.append(");").toString());
 
-        return buf.append(");").toString();
+        // add all remaining table create queries
+        while (normalCreationQueries.size() > 0) {
+            retList.add(normalCreationQueries.remove(0));
+        }
+
+        return retList;
     }
 
     private List<String> allColumnAdditionQueries() {

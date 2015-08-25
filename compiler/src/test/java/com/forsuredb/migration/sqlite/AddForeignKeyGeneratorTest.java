@@ -37,6 +37,7 @@ public class AddForeignKeyGeneratorTest extends BaseSQLiteGeneratorTest {
                                 "CREATE TEMP TABLE temp_" + TestData.TABLE_NAME + " AS SELECT _id, created, deleted, modified FROM " + TestData.TABLE_NAME + ";",
                                 "DROP TABLE IF EXISTS " + TestData.TABLE_NAME + ";",
                                 "CREATE TABLE " + TestData.TABLE_NAME + "(_id INTEGER PRIMARY KEY, created DATETIME DEFAULT CURRENT_TIMESTAMP, deleted INTEGER DEFAULT 0, modified DATETIME DEFAULT CURRENT_TIMESTAMP, long_column INTEGER, FOREIGN KEY(long_column) REFERENCES user(_id));",
+                                "CREATE TRIGGER " + TestData.TABLE_NAME + "_updated_trigger AFTER UPDATE ON " + TestData.TABLE_NAME + " BEGIN UPDATE " + TestData.TABLE_NAME + " SET modified=CURRENT_TIMESTAMP WHERE _id=NEW._id; END;",
                                 "INSERT INTO " + TestData.TABLE_NAME + " SELECT _id, created, deleted, modified, null AS long_column FROM temp_" + TestData.TABLE_NAME + ";",
                                 "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";"
                         }
@@ -50,6 +51,7 @@ public class AddForeignKeyGeneratorTest extends BaseSQLiteGeneratorTest {
                                 "CREATE TEMP TABLE temp_" + TestData.TABLE_NAME + " AS SELECT _id, created, deleted, modified, int_column FROM " + TestData.TABLE_NAME + ";",
                                 "DROP TABLE IF EXISTS " + TestData.TABLE_NAME + ";",
                                 "CREATE TABLE " + TestData.TABLE_NAME + "(_id INTEGER PRIMARY KEY, created DATETIME DEFAULT CURRENT_TIMESTAMP, deleted INTEGER DEFAULT 0, modified DATETIME DEFAULT CURRENT_TIMESTAMP, long_column INTEGER, FOREIGN KEY(long_column) REFERENCES user(_id));",
+                                "CREATE TRIGGER " + TestData.TABLE_NAME + "_updated_trigger AFTER UPDATE ON " + TestData.TABLE_NAME + " BEGIN UPDATE " + TestData.TABLE_NAME + " SET modified=CURRENT_TIMESTAMP WHERE _id=NEW._id; END;",
                                 "ALTER TABLE " + TestData.TABLE_NAME + " ADD COLUMN int_column INTEGER;",
                                 "INSERT INTO " + TestData.TABLE_NAME + " SELECT _id, created, deleted, modified, int_column, null AS long_column FROM temp_" + TestData.TABLE_NAME + ";",
                                 "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";"
@@ -64,6 +66,7 @@ public class AddForeignKeyGeneratorTest extends BaseSQLiteGeneratorTest {
                                 "CREATE TEMP TABLE temp_" + TestData.TABLE_NAME + " AS SELECT _id, created, deleted, modified, int_column FROM " + TestData.TABLE_NAME + ";",
                                 "DROP TABLE IF EXISTS " + TestData.TABLE_NAME + ";",
                                 "CREATE TABLE " + TestData.TABLE_NAME + "(_id INTEGER PRIMARY KEY, created DATETIME DEFAULT CURRENT_TIMESTAMP, deleted INTEGER DEFAULT 0, modified DATETIME DEFAULT CURRENT_TIMESTAMP, int_column INTEGER, long_column INTEGER, FOREIGN KEY(int_column) REFERENCES profile_info(_id), FOREIGN KEY(long_column) REFERENCES user(_id));",
+                                "CREATE TRIGGER " + TestData.TABLE_NAME + "_updated_trigger AFTER UPDATE ON " + TestData.TABLE_NAME + " BEGIN UPDATE " + TestData.TABLE_NAME + " SET modified=CURRENT_TIMESTAMP WHERE _id=NEW._id; END;",
                                 "INSERT INTO " + TestData.TABLE_NAME + " SELECT _id, created, deleted, modified, int_column, null AS long_column FROM temp_" + TestData.TABLE_NAME + ";",
                                 "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";"
                         }
