@@ -8,12 +8,16 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class FSGetAdapter {
 
-    private static final String LOG_TAG = FSGetAdapter.class.getSimpleName();
+    /*package*/ static final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
     /*package*/ static final Map<Type, Method> methodMap = new HashMap<>();
     static {
@@ -25,6 +29,7 @@ public class FSGetAdapter {
             methodMap.put(int.class, Retriever.class.getDeclaredMethod("getInt", String.class));
             methodMap.put(long.class, Retriever.class.getDeclaredMethod("getLong", String.class));
             methodMap.put(String.class, Retriever.class.getDeclaredMethod("getString", String.class));
+            methodMap.put(Date.class, Retriever.class.getDeclaredMethod("getString", String.class));
         } catch (NoSuchMethodException nsme) {
             nsme.printStackTrace();
             System.exit(-1);
@@ -69,6 +74,13 @@ public class FSGetAdapter {
             } else if (type.equals(boolean.class)) {
                 final Object o = cursorMethod.invoke(retriever, fsColumn.value());
                 return o != null && (Integer) o == 1;
+            } else if (type.equals(Date.class)) {
+                final String dateStr = (String) cursorMethod.invoke(retriever, fsColumn.value());
+                try {
+                    return DATETIME_FORMAT.parse(dateStr);
+                } catch (ParseException pe) {
+                    pe.printStackTrace();
+                }
             }
             return cursorMethod.invoke(retriever, fsColumn.value());
         }

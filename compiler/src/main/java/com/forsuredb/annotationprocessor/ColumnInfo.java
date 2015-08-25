@@ -12,11 +12,12 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 
-public class ColumnInfo {
+public class ColumnInfo implements Comparable<ColumnInfo> {
 
     private final String methodName;
     private final String columnName;
     private final String qualifiedType;
+    private final String defaultValue;
     private final boolean foreignKey;
     private final boolean unique;
     private final boolean primaryKey;
@@ -27,6 +28,7 @@ public class ColumnInfo {
     private ColumnInfo(String methodName,
                        String columnName,
                        String qualifiedType,
+                       String defaultValue,
                        boolean foreignKey,
                        boolean unique,
                        boolean primaryKey,
@@ -36,6 +38,7 @@ public class ColumnInfo {
         this.methodName = methodName;
         this.columnName = columnName == null || columnName.isEmpty() ? methodName : columnName;
         this.qualifiedType = qualifiedType == null || qualifiedType.isEmpty() ? "java.lang.String" : qualifiedType;
+        this.defaultValue = defaultValue;
         this.foreignKey = foreignKey;
         this.unique = unique;
         this.primaryKey = primaryKey;
@@ -77,6 +80,35 @@ public class ColumnInfo {
                 .append("}").toString();
     }
 
+    @Override
+    public int compareTo(ColumnInfo other) {
+        // handle null cases
+        if (other == null || other.getColumnName() == null) {
+            return -1;
+        }
+        if (columnName == null) {
+            return 1;
+        }
+
+        // prioritize default columns
+        if (TableInfo.DEFAULT_COLUMNS.containsKey(columnName) && !TableInfo.DEFAULT_COLUMNS.containsKey(other.getColumnName())) {
+            return -1;
+        }
+        if (!TableInfo.DEFAULT_COLUMNS.containsKey(columnName) && TableInfo.DEFAULT_COLUMNS.containsKey(other.getColumnName())) {
+            return 1;
+        }
+
+        // prioritize foreign key columns
+        if (foreignKey && !other.isForeignKey()) {
+            return -1;  // <-- this column is a foreign key and the other is not
+        }
+        if (!foreignKey && other.isForeignKey()) {
+            return 1;   // <-- this column is not a foreign key and the other is
+        }
+
+        return columnName.compareToIgnoreCase(other.getColumnName());
+    }
+
     public String getMethodName() {
         return methodName;
     }
@@ -87,6 +119,14 @@ public class ColumnInfo {
 
     public String getQualifiedType() {
         return qualifiedType;
+    }
+
+    public boolean hasDefaultValue() {
+        return defaultValue != null;
+    }
+
+    public String getDefaultValue() {
+        return defaultValue;
     }
 
     public boolean isForeignKey() {
@@ -156,6 +196,7 @@ public class ColumnInfo {
         private String methodName;
         private String columnName;
         private String qualifiedType;
+        private String defaultValue;
         private boolean foreignKey = false;
         private boolean unique = false;
         private boolean primaryKey = false;
@@ -182,6 +223,11 @@ public class ColumnInfo {
 
         public Builder qualifiedType(String qualifiedType) {
             this.qualifiedType = qualifiedType;
+            return this;
+        }
+
+        public Builder defaultValue(String defaultValue) {
+            this.defaultValue = defaultValue;
             return this;
         }
 
@@ -222,6 +268,7 @@ public class ColumnInfo {
             return new ColumnInfo(methodName,
                     columnName,
                     qualifiedType,
+                    defaultValue,
                     foreignKey,
                     unique,
                     primaryKey,

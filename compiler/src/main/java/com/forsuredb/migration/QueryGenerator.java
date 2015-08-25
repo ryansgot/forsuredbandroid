@@ -45,7 +45,10 @@ public abstract class QueryGenerator implements Comparable<QueryGenerator> {
     public enum MigrationType {
         CREATE_TABLE(0),
         ALTER_TABLE_ADD_COLUMN(1),
-        ADD_FOREIGN_KEY_REFERENCE(2);
+        ALTER_TABLE_ADD_UNIQUE(1),
+        ADD_FOREIGN_KEY_REFERENCE(2),
+        CREATE_TEMP_TABLE_FROM_EXISTING(3),
+        DROP_TABLE(4);
 
         private int priority;
 

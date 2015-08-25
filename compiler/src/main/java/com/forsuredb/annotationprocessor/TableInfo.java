@@ -3,6 +3,7 @@ package com.forsuredb.annotationprocessor;
 import com.forsuredb.annotation.FSTable;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,6 +16,31 @@ import javax.lang.model.util.ElementFilter;
 
 public class TableInfo {
 
+    // The default columns for each table
+    public static final Map<String, ColumnInfo> DEFAULT_COLUMNS = new HashMap<>();
+    static {
+        DEFAULT_COLUMNS.put("_id", ColumnInfo.builder().columnName("_id")
+                .methodName("id")
+                .primaryKey(true)
+                .qualifiedType("long")
+                .build());
+        DEFAULT_COLUMNS.put("created", ColumnInfo.builder().columnName("created")
+                .methodName("created")
+                .qualifiedType("java.util.Date")
+                .defaultValue("CURRENT_TIMESTAMP")
+                .build());
+        DEFAULT_COLUMNS.put("modified", ColumnInfo.builder().columnName("modified")
+                .methodName("modified")
+                .qualifiedType("java.util.Date")
+                .defaultValue("CURRENT_TIMESTAMP")
+                .build());
+        DEFAULT_COLUMNS.put("deleted", ColumnInfo.builder().columnName("deleted")
+                .methodName("deleted")
+                .qualifiedType("boolean")
+                .defaultValue("0")
+                .build());
+    }
+
     private final Map<String, ColumnInfo> columnMap = new HashMap<>();
     private final String qualifiedClassName;
     private final String simpleClassName;
@@ -24,7 +50,8 @@ public class TableInfo {
     private TableInfo(String tableName, String qualifiedClassName, Map<String, ColumnInfo> columnMap) {
         this.tableName = createTableName(tableName, qualifiedClassName);
         this.qualifiedClassName = qualifiedClassName;
-        createColumnMap(columnMap);
+        this.columnMap.putAll(DEFAULT_COLUMNS);
+        this.columnMap.putAll(columnMap);
         this.simpleClassName = createSimpleClassName(qualifiedClassName);
         this.classPackageName = createPackageName(qualifiedClassName);
     }
@@ -95,6 +122,7 @@ public class TableInfo {
                 retList.add(column);
             }
         }
+        Collections.sort(retList);
         return retList;
     }
 
@@ -105,6 +133,7 @@ public class TableInfo {
                 retList.add(column);
             }
         }
+        Collections.sort(retList);
         return retList;
     }
 
@@ -139,16 +168,6 @@ public class TableInfo {
             buf.append(".").append(split[i]);
         }
         return buf.toString();
-    }
-
-    private void createColumnMap(Map<String, ColumnInfo> columnMap) {
-        // puts the id column because the superclass of all interfaces that define tables has this column
-        this.columnMap.put("_id", ColumnInfo.builder().columnName("_id")
-                .methodName("id")
-                .primaryKey(true)
-                .qualifiedType("long")
-                .build());
-        this.columnMap.putAll(columnMap);
     }
 
     public static class Builder {

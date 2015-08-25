@@ -33,6 +33,7 @@ public class AddColumnGenerator extends QueryGenerator {
                                                     .append(column.getColumnName())
                                                     .append(" ")
                                                     .append(TypeTranslator.from(column.getQualifiedType()).getSqlString())
+                                                    .append(column.hasDefaultValue() ? " DEFAULT " + column.getDefaultValue() : "")
                                                     .append(";")
                                                     .toString());
         return queries;

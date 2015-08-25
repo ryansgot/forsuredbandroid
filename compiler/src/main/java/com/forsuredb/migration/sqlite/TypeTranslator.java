@@ -1,6 +1,7 @@
 package com.forsuredb.migration.sqlite;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 import javax.lang.model.type.TypeMirror;
 
@@ -9,6 +10,7 @@ public enum TypeTranslator {
     BOOLEAN("boolean", "INTEGER"),
     BOOLEAN_WRAPPER(Boolean.class.getName(), "INTEGER"),
     BYTE_ARRAY("byte[]", "BLOB"),
+    DATE(Date.class.getName(), "DATETIME"),
     DOUBLE("double", "REAL"),
     DOUBLE_WRAPPER(Double.class.getName(), "REAL"),
     FLOAT("float", "REAL"),
@@ -19,11 +21,11 @@ public enum TypeTranslator {
     LOG_WRAPPER(Long.class.getName(), "INTEGER"),
     STRING(String.class.getName(), "TEXT");
 
-    private String typeMirrorString;
+    private String qualifiedType;
     private String sqlString;
 
-    TypeTranslator(String typeMirrorString, String sqlString) {
-        this.typeMirrorString = typeMirrorString;
+    TypeTranslator(String qualifiedType, String sqlString) {
+        this.qualifiedType = qualifiedType;
         this.sqlString = sqlString;
     }
 
@@ -33,7 +35,7 @@ public enum TypeTranslator {
         }
 
         for (TypeTranslator typeTranslator : TypeTranslator.values()) {
-            if (typeTranslator.getTypeMirrorString().equals(typeMirror.toString())) {
+            if (typeTranslator.getQualifiedType().equals(typeMirror.toString())) {
                 return typeTranslator;
             }
         }
@@ -47,7 +49,7 @@ public enum TypeTranslator {
         }
 
         for (TypeTranslator typeTranslator : TypeTranslator.values()) {
-            if (typeTranslator.getTypeMirrorString().equals(qualifiedTypeString)) {
+            if (typeTranslator.getQualifiedType().equals(qualifiedTypeString)) {
                 return typeTranslator;
             }
         }
@@ -55,8 +57,8 @@ public enum TypeTranslator {
         return STRING;
     }
 
-    public String getTypeMirrorString() {
-        return typeMirrorString;
+    public String getQualifiedType() {
+        return qualifiedType;
     }
 
     public String getSqlString() {

@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,7 +54,7 @@ public class FSSaveAdapter {
         private String[] columns;
         private Type[] columnTypes;
 
-        public Handler(FSQueryable<U, R> queryable, R recordContainer, Class<? extends com.forsuredb.api.FSSaveApi<U>> api) {
+        public Handler(FSQueryable<U, R> queryable, R recordContainer, Class<? extends FSSaveApi<U>> api) {
             this.queryable = queryable;
             this.recordContainer = recordContainer;
             setColumnsAndTypes(api);
@@ -116,6 +117,8 @@ public class FSSaveAdapter {
                 recordContainer.put(column, (byte[]) arg);
             } else if (type.equals(boolean.class) || type.equals(Boolean.class)) {
                 recordContainer.put(column, (Boolean) arg ? 0 : 1);
+            } else if (type.equals(Date.class)) {
+                recordContainer.put(column, FSGetAdapter.DATETIME_FORMAT.format((Date) arg));
             } else {
                 recordContainer.put(column, arg.toString());
             }

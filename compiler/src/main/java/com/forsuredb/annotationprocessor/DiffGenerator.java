@@ -2,9 +2,7 @@ package com.forsuredb.annotationprocessor;
 
 import com.forsuredb.migration.MigrationContext;
 import com.forsuredb.migration.QueryGenerator;
-import com.forsuredb.migration.sqlite.AddColumnGenerator;
-import com.forsuredb.migration.sqlite.AddForeignKeyGenerator;
-import com.forsuredb.migration.sqlite.CreateTableGenerator;
+import com.forsuredb.migration.sqlite.QueryGeneratorFactory;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -46,39 +44,10 @@ public class DiffGenerator {
                 printMessage(Diagnostic.Kind.NOTE, "Not checking column diffs for table: " + targetTable.getTableName());
                 continue;
             }
-            retQueue.addAll(getColumnChangeQueryGenerators(targetTable));
+            retQueue.addAll(getColumnChangeQueryGenerators(context.getTable(targetTable.getTableName()), targetTable));
         }
 
         return retQueue;
-    }
-
-    private Collection<? extends QueryGenerator> getColumnChangeQueryGenerators(TableInfo targetTable) {
-        TableInfo sourceTable = context.getTable(targetTable.getTableName());
-        List<QueryGenerator> retList = new LinkedList<>();
-        for (ColumnInfo column : targetTable.getNonForeignKeyColumns()) {
-            if ("_id".equals(column.getColumnName())) {
-                continue;
-            }
-            if (!sourceTable.hasColumn(column.getColumnName())) {
-                printMessage(Diagnostic.Kind.NOTE, sourceTable.getTableName() + "." + column.getColumnName() + " column did not previously exist. Creating migration for it");
-                retList.add(new AddColumnGenerator(sourceTable.getTableName(), column));
-            } else {
-                printMessage(Diagnostic.Kind.NOTE, sourceTable.getTableName() + "." + column.getColumnName() + " column PREVIOUSLY EXISTED. NOT creating migration for it");
-            }
-        }
-        for (ColumnInfo column : targetTable.getForeignKeyColumns()) {
-            if ("_id".equals(column.getColumnName())) {
-                continue;
-            }
-            if (!sourceTable.hasColumn(column.getColumnName())) {
-                printMessage(Diagnostic.Kind.NOTE, sourceTable.getTableName() + "." + column.getColumnName() + " foreign key column did not previously exist. Creating foreign key migration for it");
-                retList.add(new AddForeignKeyGenerator(sourceTable, column));
-            } else {
-                printMessage(Diagnostic.Kind.NOTE, sourceTable.getTableName() + "." + column.getColumnName() + " foreign key column PREVIOUSLY EXISTED. NOT creating migration for it");
-            }
-        }
-
-        return retList;
     }
 
     private boolean tableCreateQueryAppended(PriorityQueue<QueryGenerator> retQueue, TableInfo table) {
@@ -89,21 +58,23 @@ public class DiffGenerator {
         }
 
         printMessage(Diagnostic.Kind.NOTE, table.getTableName() + " table did not previously exist. Creating migration for it");
-        retQueue.add(new CreateTableGenerator(table.getTableName()));
-        for (ColumnInfo column : table.getForeignKeyColumns()) {
-            if ("_id".equals(column.getColumnName())) {
-                continue;
-            }
-            retQueue.add(new AddForeignKeyGenerator(table, column));
-        }
-        for (ColumnInfo column : table.getNonForeignKeyColumns()) {
-            if ("_id".equals(column.getColumnName())) {
-                continue;
-            }
-            retQueue.add(new AddColumnGenerator(table.getTableName(), column));
-        }
+        retQueue.add(QueryGeneratorFactory.createForTable(table));
+        retQueue.addAll(getColumnChangeQueryGenerators(null, table));
 
         return true;
+    }
+
+    private Collection<? extends QueryGenerator> getColumnChangeQueryGenerators(TableInfo sourceTable, TableInfo targetTable) {
+        List<QueryGenerator> retList = new LinkedList<>();
+        for (ColumnInfo column : targetTable.getColumns()) {
+            if (TableInfo.DEFAULT_COLUMNS.containsKey(column.getColumnName())) {
+                continue;   // <-- columns in the default columns map are added when the table is created
+            }
+            if (sourceTable == null || !sourceTable.hasColumn(column.getColumnName())) {
+                retList.add(QueryGeneratorFactory.createForColumn(targetTable, column));
+            }
+        }
+        return retList;
     }
 
     private void printMessage(Diagnostic.Kind kind, String message) {
