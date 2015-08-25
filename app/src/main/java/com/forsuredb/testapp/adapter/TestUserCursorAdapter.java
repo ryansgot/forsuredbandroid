@@ -13,6 +13,7 @@ import com.forsuredb.FSTableDescriber;
 import com.forsuredb.ForSure;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.UserTable;
+import com.google.common.base.Strings;
 
 import java.math.BigDecimal;
 
@@ -54,6 +55,9 @@ public class TestUserCursorAdapter extends BaseAdapter {
                                 .loginCount(api.loginCount(retriever))
                                 .appRating(api.appRating(retriever))
                                 .competitorAppRating(api.competitorAppRating(retriever))
+                                .created(api.created(retriever).toString())
+                                .modified(api.modified(retriever).toString())
+                                .deleted(api.deleted(retriever))
                                 .targetLayout(view)
                                 .build(context);
     }
@@ -74,6 +78,9 @@ public class TestUserCursorAdapter extends BaseAdapter {
         private double appRating;
         private BigDecimal competitorAppRating;
         private View targetLayout;
+        private String created;
+        private String modified;
+        private boolean deleted;
 
         public ViewBuilder id(long id) {
             this.id = id;
@@ -100,6 +107,21 @@ public class TestUserCursorAdapter extends BaseAdapter {
             return this;
         }
 
+        public ViewBuilder created(String created) {
+            this.created = created;
+            return this;
+        }
+
+        public ViewBuilder modified(String modified) {
+            this.modified = modified;
+            return this;
+        }
+
+        public ViewBuilder deleted(boolean deleted) {
+            this.deleted = deleted;
+            return this;
+        }
+
         public ViewBuilder targetLayout(View targetLayout) {
             this.targetLayout = targetLayout;
             return this;
@@ -123,6 +145,9 @@ public class TestUserCursorAdapter extends BaseAdapter {
             ((TextView) targetLayout.findViewById(R.id.login_count_text)).setText(Integer.toString(loginCount));
             ((TextView) targetLayout.findViewById(R.id.app_rating_text)).setText(Double.toString(appRating));
             ((TextView) targetLayout.findViewById(R.id.competitor_app_rating)).setText(competitorAppRating.toString());
+            ((TextView) targetLayout.findViewById(R.id.user_created_text)).setText(Strings.nullToEmpty(created));
+            ((TextView) targetLayout.findViewById(R.id.user_modified_text)).setText(Strings.nullToEmpty(modified));
+            ((TextView) targetLayout.findViewById(R.id.user_deleted_text)).setText(Boolean.toString(deleted));
         }
     }
 }

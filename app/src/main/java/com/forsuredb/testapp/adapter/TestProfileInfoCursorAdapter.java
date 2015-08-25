@@ -13,8 +13,10 @@ import com.forsuredb.FSTableDescriber;
 import com.forsuredb.ForSure;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.ProfileInfoTable;
+import com.google.common.base.Strings;
 
 import java.util.Arrays;
+import java.util.Date;
 
 public class TestProfileInfoCursorAdapter extends BaseAdapter {
 
@@ -53,6 +55,9 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
                                 .userId(api.userId(retriever))
                                 .emalAddress(api.emailAddress(retriever))
                                 .binaryData(api.binaryData(retriever))
+                                .created(api.created(retriever).toString())
+                                .modified(api.modified(retriever).toString())
+                                .deleted(api.deleted(retriever))
                                 .targetLayout(view)
                                 .build(context);
     }
@@ -72,6 +77,9 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
         private String emailAddress;
         private byte[] binaryData;
         private View targetLayout;
+        private String created;
+        private String modified;
+        private boolean deleted;
 
         public ViewBuilder id(long id) {
             this.id = id;
@@ -90,6 +98,21 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
 
         public ViewBuilder binaryData(byte[] binaryData) {
             this.binaryData = binaryData;
+            return this;
+        }
+
+        public ViewBuilder created(String created) {
+            this.created = created;
+            return this;
+        }
+
+        public ViewBuilder modified(String modified) {
+            this.modified = modified;
+            return this;
+        }
+
+        public ViewBuilder deleted(boolean deleted) {
+            this.deleted = deleted;
             return this;
         }
 
@@ -115,6 +138,9 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
             ((TextView) targetLayout.findViewById(R.id.foreign_user_id_text)).setText(Long.toString(userId));
             ((TextView) targetLayout.findViewById(R.id.email_address_text)).setText(emailAddress);
             ((TextView) targetLayout.findViewById(R.id.binary_data_text)).setText(Arrays.toString(binaryData));
+            ((TextView) targetLayout.findViewById(R.id.profile_info_created_text)).setText(Strings.nullToEmpty(created));
+            ((TextView) targetLayout.findViewById(R.id.profile_info_modified_text)).setText(Strings.nullToEmpty(modified));
+            ((TextView) targetLayout.findViewById(R.id.profile_info_deleted_text)).setText(Boolean.toString(deleted));
         }
     }
 }
