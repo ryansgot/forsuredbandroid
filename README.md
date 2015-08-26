@@ -26,7 +26,7 @@ public interface UserTable extends FSGetApi {   // <-- you must extend FSGetApi 
  * The Retriever implementation for Android projects is defined for you as the FSCursor class--which itself is a Cursor
  */
 ```
-- Initialize ForSure in your Application
+- Initialize ForSure in your Application (note that your Application class must be defined in your application's root package at the moment). The TableGenerator class is generated at compile time, so your IDE may give you a compilation error--ignore it. Maybe someday I'll make an Android Studio plugin.
 ```java
 public class App extends Application {
 
