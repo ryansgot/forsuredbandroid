@@ -14,7 +14,7 @@ public class AddUniqueColumnGenerator extends QueryGenerator {
     private final ColumnInfo column;
 
     public AddUniqueColumnGenerator(String tableName, ColumnInfo column) {
-        super(tableName, MigrationType.ALTER_TABLE_ADD_COLUMN);
+        super(tableName, MigrationType.ALTER_TABLE_ADD_UNIQUE);
         this.column = column;
     }
 

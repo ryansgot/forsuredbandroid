@@ -87,12 +87,12 @@ public class AddForeignKeyGenerator extends QueryGenerator {
         // append all of the previously existing columns first
         for (ColumnInfo tableColumn : tableColumns) {
             if (tableColumn.getColumnName().equals(column.getColumnName())) {
-                continue;   // <-- the new column will be appended last
+                buf.append(", null AS ").append(column.getColumnName());
+            } else {
+                buf.append("_id".equals(tableColumn.getColumnName()) ? "" : ", ").append(tableColumn.getColumnName());
             }
-            buf.append("_id".equals(tableColumn.getColumnName()) ? "" : ", ").append(tableColumn.getColumnName());
         }
         // append the new foreign key last
-        buf.append(", ").append("null AS ").append(column.getColumnName());
         return buf.append(" FROM ").append(tempTableName()).append(";").toString();
     }
 
