@@ -13,17 +13,18 @@ I can't give clear instructions on how to do this right now. Every interface you
 
 ## Using forsuredb in Android
 - Create a new Android project
-- Create a ContentProvider (with ```"my.provider.authority"``` as the authority--or whatever you want)
-- Define an interface
+- Define an interface that extends FSGetApi
 ```java
 @FSTable("user")
-public interface UserTable extends FSGetApi {
-    @FSColumn("_id") @PrimaryKey long id(Cursor cursor);
-    @FSColumn("global_id") long globalId(Cursor cursor);
-    @FSColumn("login_count") int loginCount(Cursor cursor);
-    @FSColumn("app_rating") double appRating(Cursor cursor);
-    @FSColumn("competitor_app_rating") BigDecimal competitorAppRating(Cursor cursor);
+public interface UserTable extends FSGetApi {   // <-- you must extend FSGetApi when @FSTable annotates an interface or your app won't compile
+    @FSColumn("global_id") long globalId(Retriever retriever);
+    @FSColumn("login_count") int loginCount(Retriever retriever);
+    @FSColumn("app_rating") double appRating(Retriever retriever);
+    @FSColumn("competitor_app_rating") BigDecimal competitorAppRating(Retriever retriever);
 }
+/*
+ * The Retriever implementation for Android projects is defined for you as the FSCursor class--which itself is a Cursor
+ */
 ```
 - Initialize ForSure in your Application
 ```java
@@ -33,24 +34,31 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
 
-        // initialize ForSure
-        FSTableCreator userTable = new FSTableCreator("my.provider.authority", UserTable.class);
-        ForSure.init(this, "test.db", Lists.newArrayList(userTable));
+        // initialize ForSure. You can choose to pass in a database name or not.
+        ForSure.init(this, TableGenerator.generate());
     }
 }
+/*
+ * NOTICE: The TableGenerator class is generated for you at compile time, so until you compile the project once, your IDE won't
+ * find this class
+ */
 ```
 - Migrate the database (until I create a gradle plugin, take a look at the dbmigrate task in app/build.gradle file of this repo)
 ```
 ./gradlew dbmigrate
 ```
-After you do this, then you can get stuff from the database by:
+After you do this, then you can retrieve records from the database by:
 ```java
 Uri usersUri = ForSure.inst().getTable("user").getAllRecordsUri();
-Cursor cursor = getContentResolver().query(usersUri, null, null, null, null);
+Retriever retriever = new FSCursor(getContentResolver().query(usersUri, null, null, null, null));
 UserTable userTable = ForSure.inst().getApi(userUri);
-userTable.id(cursor);
-userTable.globalId(cursor);
+userTable.id(retriever);
+userTable.globalId(retriever);
 /* etc */
+/*
+ * NOTICE: you didn't have to define the id method in the UserTable interface because it extends the FSGetApi interface,
+ * where the id, created, deleted, and modified methods are defined for you.
+ */
 ```
 You can put stuff into the database by:
 ```java
@@ -61,46 +69,40 @@ ForSure.inst().setApi(UserTableSetter.class)  // You can also retrieve the setAp
         .id(8493L)
         .loginCount(5)
         .save();
+/*
+ * When you run the save method, an upsert is performed. That is, if the record with the _id specified does not exist, a new one
+ * is inserted. When the record exist, an update is performed. If an update is performed, then the modified column trigger updates
+ * the modified date to the date the record was modified.
+ */
 ```
 _Notice that you DID NOT have to write the UserTableSetter class above. It gets generated for you at compile time._ Moreover, you did not have to write the implementation of either your interface or the corresponding Setter interface that got generated.
 
-In fact, _migrations also get generated for you_ as XML assets when you run ```./gradlew dbmigrate``` (the parser is provided for you when you under-the-hood when you use ```MigrationRetrieverFactory```). These XML assets will then be placed in your classpath next time you build. Since the forsuredblib project contains the SQLiteOpenHelper class, it figures out the version number of your database for you (based upon the migrations) and applies the necessary migrations on upgrade or all migrations on create of the database.
+In fact, _migrations also get generated for you_ as XML assets when you run ```./gradlew dbmigrate```. These XML assets will then be placed in your classpath next time you build. Since the forsuredblib project contains the SQLiteOpenHelper class, it figures out the version number of your database for you and applies the necessary migrations on upgrade or all migrations on create of the database.
 
-So if you want to migrate your database after its initial creation . . . say to add a table, then you would just:
+So if you want to migrate your database after its initial creation (in this case, to add a table), then you would just:
 - Define another interface
 ```java
 @FSTable("profile_info")
 public interface ProfileInfoTable extends FSGetApi {
-    @FSColumn("_id") @PrimaryKey long id(Cursor cursor);
-    @FSColumn("user_id") @ForeignKey(apiClass = UserTable.class, columnName = "_id") long userId(Cursor cursor);
-    @FSColumn("email_address") String emailAddress(Cursor cursor);
-    @FSColumn("binary_data") byte[] binaryData(Cursor cursor);
+    @FSColumn("_id") @PrimaryKey long id(Retriever retriever);
+    @FSColumn("user_id") @ForeignKey(apiClass = UserTable.class, columnName = "_id") long userId(Retriever retriever);
+    @FSColumn("email_address") String emailAddress(Retriever retriever);
+    @FSColumn("binary_data") byte[] binaryData(Retriever retriever);
 }
 ```
-- Create a new FSTableCreator object to initialize ForSure with:
-```java
-public class App extends Application {
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-        // initialize ForSure
-        FSTableCreator userTable = new FSTableCreator("my.provider.authority", UserTable.class);
-        FSTableCreator profileInfoTable = new FSTableCreator("my.provider.authority", ProfileInfoTable.class);
-        ForSure.init(this, "test.db", Lists.newArrayList(userTable, profileInfoTable));
-    }
-}
-
-```
+NOTICE: As of this README, you cannot add more than one ```@ForeignKey``` column to the same table when you run ```./gradlew dbmigrate```. A workaround if you want to add multiple ```@ForeignKey``` columns is to run ```./gradlew dbmigrate``` in between addition of each ```@ForeignKey``` column.
 - Migrate the database
 ```
 ./gradlew dbmigrate
 ```
 
-That's it. No messy one-off code--no necessary SQL. Just as before, a corresponding Setter interface gets generated for you at compile time, so you can use it in your app.
+That's it. No messy one-off code--no need to write your own SQL or migrations--just write java interfaces. Just as before, a corresponding Setter interface gets generated for you at compile time, so you can use it in your app.
+
+## Supported Migrations
+- Add a table
+- Add a column to a table
+- Add a unique index column to a table
+- Add a foreign key column to a table
 
 ## Coming up
 - A gradle plugin containing the dbmigrate task
-- An SQLite QueryGenerator for specifying that a column is unique
-- A refactor of the FSGetAdapter and FSSaveAdapter classes.
