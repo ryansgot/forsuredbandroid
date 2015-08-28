@@ -63,12 +63,14 @@ public class MigrationContext implements TableContext {
             case CREATE_TABLE:
                 handleCreateTable(m, tableBuilderMap, columnBuilderMap);
                 break;
-            case ALTER_TABLE_ADD_COLUMN:
-                handleAddColumn(m, columnBuilderMap);
-                break;
             case ADD_FOREIGN_KEY_REFERENCE:
                 handleAddForeignKeyReference(m, columnBuilderMap);
                 break;
+            case ALTER_TABLE_ADD_COLUMN:
+                handleAddColumn(m, columnBuilderMap);
+                break;
+            case ALTER_TABLE_ADD_UNIQUE:
+                handleAddUniqueColumn(m, columnBuilderMap);
         }
     }
 
@@ -80,10 +82,18 @@ public class MigrationContext implements TableContext {
                 .foreignKeyTableName(m.getForeignKeyTable()));
     }
 
+    private void handleAddUniqueColumn(Migration m, Map<String, ColumnInfo.Builder> columnBuilderMap) {
+        handleAddColumn(m, true, columnBuilderMap);
+    }
+
     private void handleAddColumn(Migration m, Map<String, ColumnInfo.Builder> columnBuilderMap) {
+        handleAddColumn(m, false, columnBuilderMap);
+    }
+
+    private void handleAddColumn(Migration m, boolean unique, Map<String, ColumnInfo.Builder> columnBuilderMap) {
         ColumnInfo.Builder b = columnBuilderMap.get(columnKey(m));
         if (b == null) {
-            b = ColumnInfo.builder().columnName(m.getColumnName()).qualifiedType(m.getColumnQualifiedType());
+            b = ColumnInfo.builder().columnName(m.getColumnName()).qualifiedType(m.getColumnQualifiedType()).unique(unique);
             columnBuilderMap.put(columnKey(m), b);
         }
     }

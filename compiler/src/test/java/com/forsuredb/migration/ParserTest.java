@@ -11,6 +11,11 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.util.Arrays;
 
+/**
+ * <p>
+ *     Test whether the correct amount of migrations is parsed from one of the files in the test resources directory
+ * </p>
+ */
 @RunWith(Parameterized.class)
 public class ParserTest {
 
@@ -30,9 +35,22 @@ public class ParserTest {
     @Parameterized.Parameters
     public static Iterable<Object[]> data() {
         return Arrays.asList(new Object[][]{
-                {"create_table_migration.xml", 1},
-                {"alter_table_add_column_migration.xml", 1},
-                {"alter_table_add_foreign_key_migration.xml", 9}
+                {
+                        "create_table_migration.xml",
+                        1
+                },
+                {
+                        "alter_table_add_column_migration.xml",
+                        1
+                },
+                {
+                        "alter_table_add_foreign_key_migration.xml",
+                        9
+                },
+                {
+                        "alter_table_add_unique_column_migration.xml",
+                        2
+                }
         });
     }
 

@@ -46,6 +46,56 @@ public class Migration {
                                                                 .append("}").toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof Migration)) {
+            return false;
+        }
+
+        Migration other = (Migration) o;
+        if (!isSame(tableName, other.getTableName())) {
+            return false;
+        }
+        if (!isSame(query, other.getQuery())) {
+            return false;
+        }
+        if (dbVersion != other.getDbVersion()) {
+            return false;
+        }
+        if (!isSame(migrationType, other.getMigrationType())) {
+            return false;
+        }
+        if (!isSame(columnName, other.getColumnName())) {
+            return false;
+        }
+        if (!isSame(columnQualifiedType, other.getColumnQualifiedType())) {
+            return false;
+        }
+        if (!isSame(foreignKeyTable, other.getForeignKeyTable())) {
+            return false;
+        }
+        if (!isSame(foreignKeyColumn, other.getForeignKeyColumn())) {
+            return false;
+        }
+
+        return isLastInSet == other.isLastInSet();
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 41;
+        result = 37 * result + dbVersion;
+        result = 37 * result + (tableName == null ? 0 : tableName.hashCode());
+        result = 37 * result + (query == null ? 0 : query.hashCode());
+        result = 37 * result + (migrationType == null ? 0 : migrationType.hashCode());
+        result = 37 * result + (columnName == null ? 0 : columnName.hashCode());
+        result = 37 * result + (columnQualifiedType == null ? 0 : columnQualifiedType.hashCode());
+        result = 37 * result + (foreignKeyTable == null ? 0 : foreignKeyTable.hashCode());
+        result = 37 * result + (foreignKeyColumn == null ? 0 : foreignKeyColumn.hashCode());
+        result = 37 * result + (isLastInSet ?  0 : 1);
+        return result;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -84,6 +134,22 @@ public class Migration {
 
     public boolean isLastInSet() {
         return isLastInSet;
+    }
+
+    // Helpers for the equals method
+
+    private boolean isSame(String thisObjectString, String otherObjectString) {
+        if (thisObjectString == null) {
+            return otherObjectString == null;
+        }
+        return thisObjectString.equals(otherObjectString);
+    }
+
+    private boolean isSame(QueryGenerator.MigrationType thisMigrationType, QueryGenerator.MigrationType otherMigrationType) {
+        if (thisMigrationType == null) {
+            return otherMigrationType == null;
+        }
+        return thisMigrationType == otherMigrationType;
     }
 
     public static class Builder {
