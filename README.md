@@ -9,7 +9,13 @@ forsuredb is a project designed to take a lot of the work out of database progra
 The original intention of the project was to make database programming in Android take less boilerplate code. If you always follow the examples available to you via http://developer.android.com/ or many other sites, then you will find yourself writing highly verbose code that works its way into being unreadable quickly. You'll also end up writing one-off code a lot of places when you do migrations.
 
 ### Some other Java Project
-I can't give clear instructions on how to do this right now. Every interface you'll need to adapt to your setup is defined in the compiler project, so you can just implement those interfaces, following the example in the forsuredblib project. The ```QueryGenerator``` extensions for SQLite are provided, so it would be easiest if you used SQLite, but that's not a requirement.
+Having only done this for the example Android project, I'm not quite sure about all of the details to make this work in your own project, but a good place to start would be ...
+- Implement the following interfaces
+  - FSQueryable&lt;U, R&gt;, where U is the type parameter of the SaveResult interface that you want (should match the ```resultParameter``` System property set in the build.gradle file), and R is the class that prepares a record for insert or update queries. Take a look at the ```ContentProviderQueryable``` class for an example.
+  - RecordContainer, the container for a record that prepares the record for insertion and update queries. Take a look at ```FSContentValues``` for an example.
+  - Retriever, the class that can retrieve records from your database. Take a look at ```FSCursor``` for an example.
+- Write Some code to retrieve migrations from the generated migration XML assets. You _DO NOT_ have to write your own XML parsing code. This is already done for you. You just have to use the ```MigrationRetrieverFactory``` class to create an appropriate migration retriever.
+- Use SQLite as your database if you intend to make use of the migration capability of forsuredb. All of the provided migration SQL presupposes SQLite at the moment.
 
 ## Using forsuredb in Android
 - Create a new Android project
