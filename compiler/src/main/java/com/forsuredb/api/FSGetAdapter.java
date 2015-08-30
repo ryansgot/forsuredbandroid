@@ -75,14 +75,19 @@ public class FSGetAdapter {
                 final Object o = cursorMethod.invoke(retriever, fsColumn.value());
                 return o != null && (Integer) o == 1;
             } else if (type.equals(Date.class)) {
-                final String dateStr = (String) cursorMethod.invoke(retriever, fsColumn.value());
-                try {
-                    return DATETIME_FORMAT.parse(dateStr);
-                } catch (ParseException pe) {
-                    pe.printStackTrace();
-                }
+                return getDateFrom(cursorMethod, retriever, fsColumn.value());
             }
             return cursorMethod.invoke(retriever, fsColumn.value());
+        }
+
+        private Date getDateFrom(Method cursorMethod, Retriever retriever, String column)
+                                                                        throws InvocationTargetException, IllegalAccessException {
+            try {
+                return DATETIME_FORMAT.parse((String) cursorMethod.invoke(retriever, column));
+            } catch (ParseException pe) {
+                pe.printStackTrace();
+            }
+            return null;
         }
 
         private BigDecimal getBigDecimalFrom(Method retrieverMethod, Retriever retriever, String column)

@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
 import com.forsuredb.api.FSGetApi;
+import com.forsuredb.api.FSSaveApi;
 import com.google.common.collect.ImmutableBiMap;
 
 import java.util.HashMap;
@@ -17,9 +18,9 @@ public class ForSure {
 
     private final Context appContext;
     private final Map<Class<? extends FSGetApi>, FSTableDescriber> tableDescriberByGetApi = new HashMap<>();
-    private final Map<Class<? extends com.forsuredb.api.FSSaveApi<Uri>>, FSTableDescriber> tableDescriberBySaveApi = new HashMap<>();
-    private ImmutableBiMap<Uri, Class<? extends com.forsuredb.api.FSGetApi>> uriToGetApiMap;
-    private ImmutableBiMap<Uri, Class<? extends com.forsuredb.api.FSSaveApi<Uri>>> uriToSaveApiMap;
+    private final Map<Class<? extends FSSaveApi<Uri>>, FSTableDescriber> tableDescriberBySaveApi = new HashMap<>();
+    private ImmutableBiMap<Uri, Class<? extends FSGetApi>> uriToGetApiMap;
+    private ImmutableBiMap<Uri, Class<? extends FSSaveApi<Uri>>> uriToSaveApiMap;
     private final Map<String, FSTableDescriber> tableDescriberByName = new HashMap<>();
 
     private ForSure(Context appContext, List<FSTableCreator> tableCreators) {
@@ -79,7 +80,7 @@ public class ForSure {
      * @param <T>
      * @return
      */
-    public <T extends com.forsuredb.api.FSGetApi> T getApi(Uri resource) {
+    public <T extends FSGetApi> T getApi(Uri resource) {
         return resource == null ? null : (T) tableDescriberByGetApi.get(uriToGetApiMap.get(resource)).get();
     }
 
@@ -91,20 +92,20 @@ public class ForSure {
      * @param <T>
      * @return
      */
-    public <T extends com.forsuredb.api.FSSaveApi<Uri>> T setApi(Uri resource) {
+    public <T extends FSSaveApi<Uri>> T setApi(Uri resource) {
         if (resource == null) {
             return null;
         }
         final ContentProviderQueryable cpq = new ContentProviderQueryable(appContext, resource);
-        final Class<? extends com.forsuredb.api.FSSaveApi<Uri>> saveApi = uriToSaveApiMap.get(resource);
+        final Class<? extends FSSaveApi<Uri>> saveApi = uriToSaveApiMap.get(resource);
         return (T) tableDescriberBySaveApi.get(saveApi).set(cpq);
     }
 
-    public <T extends com.forsuredb.api.FSGetApi> T getApi(Class<T> getApiClass) {
+    public <T extends FSGetApi> T getApi(Class<T> getApiClass) {
         return getApiClass == null ? null : (T) tableDescriberByGetApi.get(getApiClass).get();
     }
 
-    public <T extends com.forsuredb.api.FSSaveApi<Uri>> T setApi(Class<T> saveApiClass) {
+    public <T extends FSSaveApi<Uri>> T setApi(Class<T> saveApiClass) {
         if (saveApiClass == null) {
             return null;
         }
@@ -122,8 +123,8 @@ public class ForSure {
     }
 
     private void createTableDescriberMaps(List<FSTableCreator> tableCreators) {
-        final ImmutableBiMap.Builder<Uri, Class<? extends com.forsuredb.api.FSGetApi>> uriToGetApiBuilder = ImmutableBiMap.builder();
-        final ImmutableBiMap.Builder<Uri, Class<? extends com.forsuredb.api.FSSaveApi<Uri>>> uriToSaveApiBuilder = ImmutableBiMap.builder();
+        final ImmutableBiMap.Builder<Uri, Class<? extends FSGetApi>> uriToGetApiBuilder = ImmutableBiMap.builder();
+        final ImmutableBiMap.Builder<Uri, Class<? extends FSSaveApi<Uri>>> uriToSaveApiBuilder = ImmutableBiMap.builder();
 
         for (FSTableCreator tableCreator : tableCreators) {
             addTable(new FSTableDescriber(tableCreator), uriToGetApiBuilder, uriToSaveApiBuilder);
@@ -134,8 +135,8 @@ public class ForSure {
     }
 
     private void addTable(FSTableDescriber fsTableDescriber,
-                          ImmutableBiMap.Builder<Uri, Class<? extends com.forsuredb.api.FSGetApi>> uriToGetApiBuilder,
-                          ImmutableBiMap.Builder<Uri, Class<? extends com.forsuredb.api.FSSaveApi<Uri>>> uriToSaveApiBuilder) {
+                          ImmutableBiMap.Builder<Uri, Class<? extends FSGetApi>> uriToGetApiBuilder,
+                          ImmutableBiMap.Builder<Uri, Class<? extends FSSaveApi<Uri>>> uriToSaveApiBuilder) {
         tableDescriberByGetApi.put(fsTableDescriber.getGetApiClass(), fsTableDescriber);
         uriToGetApiBuilder.put(fsTableDescriber.getAllRecordsUri(), fsTableDescriber.getGetApiClass());
         tableDescriberBySaveApi.put(fsTableDescriber.getSaveApiClass(), fsTableDescriber);
