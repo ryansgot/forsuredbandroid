@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'android-apt'
-
+apply plugin: 'com.fsryan.forsuredb'
 
 android {
     compileSdkVersion 21
@@ -32,115 +32,18 @@ android {
     }
 }
 
+forsuredb {
+    applicationPackageName = 'com.forsuredb.testapp'
+    resultParameter = "android.net.Uri"
+    dbType = 'sqlite'
+    migrationDirectory = 'app/src/main/assets'
+    appProjectDirectory = 'app'
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:21.0.3'
 
     compile project(':forsuredblib')
     apt project(':compiler')
-}
-
-// Makes sure that setProperties task is run prior to compilation
-gradle.projectsEvaluated {
-    setProperties.shouldRunAfter(clean)
-    compileDebugJava.dependsOn(setProperties)
-    dbmigrate.dependsOn(clean)
-    dbmigrate.dependsOn(compileDebugJava)
-}
-
-boolean wasRequestedTask(String taskName) {
-    for (TaskExecutionRequest taskExecutionRequest : project.gradle.startParameter.taskRequests) {
-        for (String arg : taskExecutionRequest.args) {
-            if (arg.equals(taskName)) {
-                return true
-            }
-        }
-    }
-
-    return false
-}
-
-boolean copyFile(String input, String output) {
-    File inFile = new File(input)
-    if (!inFile.exists()) {
-        println("[copyFile]: input " + input + " did not exist")
-        return false
-    }
-
-    File outFile = new File(output)
-    if (!ensureFileExists(outFile)) {
-        println("[copyFile]: could not create " + outFile.path)
-        return false
-    }
-
-    FileInputStream inReader = new FileInputStream(inFile)
-    FileOutputStream outWriter = new FileOutputStream(outFile)
-
-    int read;
-    while (-1 != (read = inReader.read())) {
-        outWriter.write(read)
-    }
-    inReader.close();
-    outWriter.close();
-
-    return true;
-}
-
-boolean ensureFileExists(File file) {
-    Stack<File> fileStack = new Stack<File>()
-
-    File temp = file
-    while (temp != null && !temp.exists()) {
-        fileStack.push(temp)
-        temp = temp.getParentFile()
-    }
-
-    while (fileStack.size() > 0) {
-        File toCreate = fileStack.pop()
-        if (fileStack.size() == 0) {
-            println("[ensureFileExists]: creating file " + toCreate.path)
-            if (!toCreate.createNewFile()) {
-                return false
-            }
-        } else {
-            println("[ensureFileExists]: creating directory " + toCreate.path)
-            if (!toCreate.mkdir()) {
-                return false
-            }
-        }
-    }
-
-    return true
-}
-
-task setProperties << {
-    // Ensures that the property the CodeGenerator needs is set and accurate for an Android project
-    System.properties.put("applicationPackageName", android.defaultConfig.applicationId)
-    System.properties.put("resultParameter", "android.net.Uri")
-    println("[setProperties]: set property resultParameter=" + System.properties.get("resultParameter"))
-    println("[setProperties]: set property applicationPackageName=" + System.properties.get("applicationPackageName"))
-    if (wasRequestedTask("dbmigrate")) {
-        System.properties.put("dbtype", "sqlite")
-        System.properties.put("createMigrations", "true")
-        System.properties.put("migrationDirectory", "app/src/main/assets")
-        println("[setProperties]: set property dbtype=" + System.properties.get("dbtype"))
-        println("[setProperties]: set property createMigrations=" + System.properties.get("createMigrations"))
-        println("[setProperties]: set property migrationDirectory=" + System.properties.get("migrationDirectory"))
-    }
-}
-
-task dbmigrate << {
-    println("[dbmigrate]: output migrations to default class path with package: " + System.getProperty("applicationPackageName"))
-
-    String assetDir = "app/src/main/assets"
-    String generatedDir = "app/build/intermediates/classes/debug/" + android.defaultConfig.applicationId.replace(".", File.separator)
-
-    new File(generatedDir).eachFileRecurse { file ->
-        if (file.getName().endsWith("migration")) {
-            String outFile = assetDir + File.separator + file.getName() + ".xml";
-            println("[dbigrate]: copying " + file.getAbsolutePath() + " to " + outFile);
-            copyFile(file.getAbsolutePath(), outFile)
-        }
-    }
-    println("[dbmigrate]: copied migrations from " + generatedDir + " into " + assetDir)
 }
