@@ -19,6 +19,40 @@ Having only done this for the example Android project, I'm not quite sure about 
 
 ## Using forsuredb in Android
 - Create a new Android project
+- Set up the project build.gradle buildscript repositories and dependencies like this:
+```groovy
+buildscript {
+    repositories {
+        jcenter()
+        // the following is necessary until the plugin is hosted on jcenter
+        maven {
+            url  "http://dl.bintray.com/ryansgot/maven"
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.2.3'
+        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.6'
+        classpath 'com.fsryan:forsuredbplugin:0.0.3'
+    }
+}
+```
+- Amend your app build.gradle file as such:
+```groovy
+apply plugin: 'com.android.application'
+apply plugin: 'android-apt'
+apply plugin: 'com.fsryan.forsuredb'
+
+/* etc*/
+
+forsuredb {
+    applicationPackageName = 'com.forsuredb.testapp'
+    resultParameter = "android.net.Uri"               // the fully-qualified class name of the parameterization of the SaveResult.
+                                                      // If you have an Android project, this should be the result parameter.
+    dbType = 'sqlite'                                 // this does nothing at the moment. Only sqlite is supported.
+    migrationDirectory = 'app/src/main/assets'        // the assets directory of your app starting at your project's base directory
+    appProjectDirectory = 'app'
+}
+```
 - Define an interface that extends FSGetApi
 ```java
 @FSTable("user")
