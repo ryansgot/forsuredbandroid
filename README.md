@@ -99,6 +99,11 @@ public class App extends Application {
     }
 }
 ```
+- Ensure that that the class above is referenced properly in AndroidManifest.xml as below:
+```xml
+<application
+        android:name=".App" >
+```
 - Migrate the database
 ```
 ./gradlew dbmigrate
