@@ -50,6 +50,13 @@ apply plugin: 'com.android.application'
 apply plugin: 'android-apt'
 apply plugin: 'com.fsryan.forsuredb'    // <-- provides the dbmigrate task
 
+android {
+    packagingOptions {
+        exclude 'META-INF/LICENSE.txt'  // <-- the forsuredbcompiler relies upon the apache velocity project, which packages a META-INF/LICENSE.txt file. 
+        exclude 'META-INF/NOTICE.txt'   // <-- the forsuredbcompiler relies upon the apache velocity project, which packages a META-INF/NOTICE.txt file. 
+    }
+}
+
 dependencies {
     /* etc */
     compile 'com.fsryan:forsuredbandroid:0.0.1'
