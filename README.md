@@ -3,10 +3,12 @@ forsuredb is a project designed to take a lot of the work out of database progra
 
 ## Possible Use Cases
 1. Android Development
+  * The integration work has already been done for you in the forsuredbandroid module
 2. Some other java project
+  * There is some integration work remaining, but you should be able to get a handle for how to do it by taking a look at the forsuredbandroid module. See the 'Some other Java Project' subheading below for instructions.
 
 ### Android Development
-The original intention of the project was to make database programming in Android take less boilerplate code. If you always follow the examples available to you via http://developer.android.com/ or many other sites, then you will find yourself writing highly verbose code that works its way into being unreadable quickly. You'll also end up writing one-off code a lot of places when you do migrations.
+The original intention of the project was to reduce the amount of sprinkled boilerplate code when doing database programming in Android. If you always follow the examples available to you via http://developer.android.com/ or many other instructional sites, then you will find yourself writing highly verbose code that works its way into being unreadable quickly. You'll also end up writing one-off code a lot of places when you do migrations. The code in the compiler java library and the forsuredbandroid android library make this sort of programming quite a bit easier.
 
 ### Some other Java Project
 Having only done this for the example Android project, I'm not quite sure about all of the details to make this work in your own project, but a good place to start would be ...
@@ -24,7 +26,8 @@ Having only done this for the example Android project, I'm not quite sure about 
 buildscript {
     repositories {
         jcenter()
-        // the following is necessary until the plugin is hosted on jcenter
+        // the following is necessary until the forsuredbplugin and
+        // the forsuredbcompiler and forsuredbandroid libraries are hosted on jcenter
         maven {
             url  "http://dl.bintray.com/ryansgot/maven"
         }
@@ -40,9 +43,13 @@ buildscript {
 ```groovy
 apply plugin: 'com.android.application'
 apply plugin: 'android-apt'
-apply plugin: 'com.fsryan.forsuredb'
+apply plugin: 'com.fsryan.forsuredb'    // <-- provides the dbmigrate task
 
-/* etc*/
+dependencies {
+    /* etc */
+    compile 'com.fsryan:forsuredbandroid:0.0.1'
+    apt 'com.fsryan:forsuredbcompiler:0.0.1'
+}
 
 forsuredb {
     applicationPackageName = 'com.forsuredb.testapp'
@@ -75,15 +82,12 @@ public class App extends Application {
         super.onCreate();
 
         // initialize ForSure. You can choose to pass in a database name or not.
-        ForSure.init(this, TableGenerator.generate());
+        ForSure.init(this, TableGenerator.generate());  // <-- The TableGenerator class is generated for you at
+                                                        // compile time, so it won't be found until you compile
     }
 }
-/*
- * NOTICE: The TableGenerator class is generated for you at compile time, so until you compile the project once, your IDE won't
- * find this class
- */
 ```
-- Migrate the database (until I create a gradle plugin, take a look at the dbmigrate task in app/build.gradle file of this repo)
+- Migrate the database
 ```
 ./gradlew dbmigrate
 ```
@@ -92,13 +96,10 @@ After you do this, then you can retrieve records from the database by:
 Uri usersUri = ForSure.inst().getTable("user").getAllRecordsUri();
 Retriever retriever = new FSCursor(getContentResolver().query(usersUri, null, null, null, null));
 UserTable userTable = ForSure.inst().getApi(userUri);
-userTable.id(retriever);
+userTable.id(retriever);    // <-- the id, created, deleted, and modified methods are defined for you in the 
+                            // FSGetApi interface
 userTable.globalId(retriever);
 /* etc */
-/*
- * NOTICE: you didn't have to define the id method in the UserTable interface because it extends the FSGetApi interface,
- * where the id, created, deleted, and modified methods are defined for you.
- */
 ```
 You can put stuff into the database by:
 ```java
@@ -145,4 +146,6 @@ That's it. No messy one-off code--no need to write your own SQL or migrations--j
 - Add a foreign key column to a table
 
 ## Coming up
-- A gradle plugin containing the dbmigrate task
+- support for more types of migrations
+- automatically-generated join interfaces based upon foreign key relationships
+- general cleanup and configurable logging for dbmigrate task
