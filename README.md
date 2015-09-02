@@ -21,21 +21,26 @@ Having only done this for the example Android project, I'm not quite sure about 
 
 ## Using forsuredb in Android
 - Create a new Android project
-- Set up the project build.gradle buildscript repositories and dependencies like this:
+- Set up the project build.gradle repositories and dependencies like this:
 ```groovy
 buildscript {
     repositories {
         jcenter()
-        // the following is necessary until the forsuredbplugin and
-        // the forsuredbcompiler and forsuredbandroid libraries are hosted on jcenter
-        maven {
-            url  "http://dl.bintray.com/ryansgot/maven"
-        }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.2.3'
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.6'
         classpath 'com.fsryan:forsuredbplugin:0.0.3'
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        // the following is necessary until the forsuredbandroid android library is hosted on jcenter
+        maven {
+            url  "http://dl.bintray.com/ryansgot/maven"
+        }
     }
 }
 ```
