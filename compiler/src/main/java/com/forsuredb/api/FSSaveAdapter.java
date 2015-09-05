@@ -29,7 +29,7 @@ import java.util.Map;
 
 public class FSSaveAdapter {
 
-    private static final Map<Class<? extends FSSaveApi>, Handler> HANDLERS = new HashMap<>();
+    private static final Map<Class<? extends FSSaveApi>, Map<String, Type>> API_TO_COLUMNS_MAP = new HashMap<>();
 
     /**
      * <p>
@@ -47,34 +47,43 @@ public class FSSaveAdapter {
     public static <T extends FSSaveApi<U>, U, R extends RecordContainer> T create(FSQueryable<U, R> queryable,
                                                                                   R emptyRecord,
                                                                                   Class<T> api) {
-        final Handler handler = getOrCreateFor(queryable, emptyRecord, api);
-        return (T) Proxy.newProxyInstance(api.getClassLoader(), new Class<?>[]{api}, handler);
+        return (T) Proxy.newProxyInstance(api.getClassLoader(),
+                                          new Class<?>[]{api},
+                                          new Handler(queryable, emptyRecord, getColumnTypeMapFor(api)));
     }
 
-    // Lazily create the invocation handlers for the save API.
-    private static <U, R extends RecordContainer> Handler<U, R> getOrCreateFor(FSQueryable<U, R> queryable,
-                                                                               R emptyRecord,
-                                                                               Class<? extends com.forsuredb.api.FSSaveApi<U>> api) {
-        Handler handler = HANDLERS.get(api);
-        if (handler == null) {
-            handler = new Handler(queryable, emptyRecord, api);
-            HANDLERS.put(api, handler);
+    // lazily create the column type maps for each api so that they are not created each time a new handler is created
+    private static <T extends FSSaveApi> Map<String, Type> getColumnTypeMapFor(Class<T> api) {
+        Map<String, Type> retMap = API_TO_COLUMNS_MAP.get(api);
+        if (retMap == null) {
+            retMap = createColumnTypeMapFor(api);
+            API_TO_COLUMNS_MAP.put(api, retMap);
         }
-        return handler;
+        return retMap;
+    }
+
+    private static <T extends FSSaveApi> Map<String, Type> createColumnTypeMapFor(Class<T> api) {
+        Map<String, Type> retMap = new HashMap<>();
+        for (Method m : api.getDeclaredMethods()) {
+            retMap.put(getColumnName(m), m.getGenericParameterTypes()[0]);
+        }
+        return retMap;
+    }
+
+    private static String getColumnName(Method m) {
+        return m.isAnnotationPresent(FSColumn.class) ? m.getAnnotation(FSColumn.class).value() : m.getName();
     }
 
     private static class Handler<U, R extends RecordContainer> implements InvocationHandler {
 
         private final FSQueryable<U, R> queryable;
-        private final Map<String, Integer> columnNameToIndexMap = new HashMap<>();
         private final R recordContainer;
-        private String[] columns;
-        private Type[] columnTypes;
+        private final Map<String, Type> columnTypeMap;
 
-        public Handler(FSQueryable<U, R> queryable, R recordContainer, Class<? extends FSSaveApi<U>> api) {
+        public Handler(FSQueryable<U, R> queryable, R recordContainer, Map<String, Type> columnTypeMap) {
             this.queryable = queryable;
             this.recordContainer = recordContainer;
-            setColumnsAndTypes(api);
+            this.columnTypeMap = columnTypeMap;
         }
 
         @Override
@@ -84,7 +93,7 @@ public class FSSaveAdapter {
             }
 
             if (!"save".equals(method.getName())) {
-                performSet(method.getAnnotation(FSColumn.class).value(), args[0]);
+                performSet(getColumnName(method), args[0]);
                 return proxy;
             }
 
@@ -129,7 +138,7 @@ public class FSSaveAdapter {
         }
 
         private void performSet(String column, Object arg) {
-            Type type = columnTypes[columnNameToIndexMap.get(column).intValue()];
+            Type type = columnTypeMap.get(column);
             if (type.equals(byte[].class)) {
                 recordContainer.put(column, (byte[]) arg);
             } else if (type.equals(boolean.class) || type.equals(Boolean.class)) {
@@ -138,17 +147,6 @@ public class FSSaveAdapter {
                 recordContainer.put(column, FSGetAdapter.DATETIME_FORMAT.format((Date) arg));
             } else {
                 recordContainer.put(column, arg.toString());
-            }
-        }
-
-        private void setColumnsAndTypes(Class<? extends com.forsuredb.api.FSSaveApi<U>> api) {
-            final Method[] apiDeclaredMethods = api.getDeclaredMethods();
-            columns = new String[apiDeclaredMethods.length];
-            columnTypes = new Type[apiDeclaredMethods.length];
-            for (int i = 0; i < apiDeclaredMethods.length; i++) {
-                columns[i] = apiDeclaredMethods[i].getAnnotation(FSColumn.class).value();
-                columnTypes[i] = apiDeclaredMethods[i].getGenericParameterTypes()[0];
-                columnNameToIndexMap.put(columns[i], i);
             }
         }
 
