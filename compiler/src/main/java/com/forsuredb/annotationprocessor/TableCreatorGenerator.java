@@ -35,7 +35,9 @@ public class TableCreatorGenerator extends BaseGenerator<JavaFileObject> {
     private final String applicationPackageName;
     private final ProcessingContext pContext;
 
-    public TableCreatorGenerator(ProcessingEnvironment processingEnv, String applicationPackageName, ProcessingContext pContext) {
+    public TableCreatorGenerator(ProcessingEnvironment processingEnv,
+                                 String applicationPackageName,
+                                 ProcessingContext pContext) {
         super(processingEnv);
         this.applicationPackageName = applicationPackageName;
         this.pContext = pContext;
@@ -71,6 +73,7 @@ public class TableCreatorGenerator extends BaseGenerator<JavaFileObject> {
 
     private String createAddFSTableCreatorLine(TableInfo tableInfo) {
         return new StringBuffer(LIST_VARIABLE_NAME).append(".add(new FSTableCreator(")
+                .append("authority, ")
                 .append(tableInfo.getQualifiedClassName())
                 .append(".class));")
                 .toString();

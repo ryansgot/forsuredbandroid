@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.forsuredb.provider;
+package com.forsuredb.testapp.provider;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -27,11 +27,11 @@ import android.net.Uri;
 import com.forsuredb.FSTableDescriber;
 import com.forsuredb.ForSure;
 
-public class DefaultProvider extends ContentProvider {
+public class TestappProvider extends ContentProvider {
 
-    public static final String AUTHORITY = "com.forsuredb.default.content";
+    public static final String AUTHORITY = "com.forsuredb.testapp.content";
 
-    public DefaultProvider() {}
+    public TestappProvider() {}
 
     @Override
     public boolean onCreate() {

@@ -24,6 +24,7 @@ import com.forsuredb.annotation.FSTable;
 import com.forsuredb.api.FSGetAdapter;
 import com.forsuredb.api.FSGetApi;
 import com.forsuredb.api.FSSaveAdapter;
+import com.forsuredb.api.FSSaveApi;
 import com.google.common.base.Strings;
 
 public class FSTableDescriber {
@@ -31,8 +32,8 @@ public class FSTableDescriber {
     private static final String LOG_TAG = FSTableDescriber.class.getSimpleName();
 
     private final String name;
-    private final Class<? extends com.forsuredb.api.FSGetApi> getApiClass;
-    private Class<? extends com.forsuredb.api.FSSaveApi<Uri>> saveApiClass;
+    private final Class<? extends FSGetApi> getApiClass;
+    private Class<? extends FSSaveApi<Uri>> saveApiClass;
     private final String mimeType;
     private final Uri allRecordsUri;
 

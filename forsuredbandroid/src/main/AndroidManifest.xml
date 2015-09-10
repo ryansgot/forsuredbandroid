@@ -1,10 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.forsuredb">
     <application>
-        <provider
-            android:name=".provider.DefaultProvider"
-            android:authorities="com.forsuredb.default.content"
-            android:enabled="true"
-            android:exported="false" />
     </application>
 </manifest>

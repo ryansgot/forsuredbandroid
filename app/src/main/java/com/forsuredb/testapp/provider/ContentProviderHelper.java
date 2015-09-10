@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.forsuredb.provider;
+package com.forsuredb.testapp.provider;
 
 import android.net.Uri;
 

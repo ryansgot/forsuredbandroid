@@ -18,8 +18,31 @@
 package com.forsuredb.api;
 
 public interface FSQueryable<U, R extends RecordContainer> {
-    U insert(R record);
-    int update(R record, FSSelection selection);
+    /**
+     * @param recordContainer
+     * @return if you've parameterized this properly, U would be a class that locates records, and the return would be the locator
+     * for the record that was inserted
+     */
+    U insert(R recordContainer);
+
+    /**
+     * @param recordContainer A container for the record to be updated
+     * @param selection
+     * @return the number of records affected by the update
+     */
+    int update(R recordContainer, FSSelection selection);
+
+    /**
+     * @param selection
+     * @return the number of records affected by the delete
+     */
     int delete(FSSelection selection);
+
+    /**
+     * @param projection
+     * @param selection
+     * @param sortOrder the SQL sort order for the query
+     * @return A Retriever that will be able to retrieve records returned by this query
+     */
     Retriever query(FSProjection projection, FSSelection selection, String sortOrder);
 }
