@@ -17,11 +17,20 @@
  */
 package com.forsuredb.annotation;
 
+import com.forsuredb.api.FSGetApi;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * <p>
+ *     Use the Unique annotation on methods defined in your extensions of {@link FSGetApi FSGetApi}
+ *     in order to create this column as a unique index for your table.
+ * </p>
+ * @author Ryan Scott
+ */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.SOURCE)
 public @interface Unique {}

@@ -24,9 +24,34 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * <p>
+ *     Use the ForeignKey annotation on methods in your {@link FSGetApi FSGetApi} extension in order
+ *     to indicate that a column is a foreign key to another table, defined by
+ *     {@link #apiClass() apiClass()}, on its column, defined by {@link #columnName() columName()}.
+ * </p>
+ * <p>
+ *     Note that there is currently a limitation that you can only put one ForeignKey annotation per
+ *     {@link FSGetApi FSGetApi} extension per time that you run ./gradlew dbmigrate. Unfortunately,
+ *     too, this will not generate a compilation error. You'll have to wait until your database
+ *     migrations occur for a {@link RuntimeException RuntimeException} to get generated.
+ * </p>
+ *
+ * @author Ryan Scott
+ */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.METHOD)
 public @interface ForeignKey {
+
+    /**
+     * @return the {@link FSGetApi FSGetApi} class that defines the table to which this
+     * {@link ForeignKey ForeignKey} points
+     */
     Class<? extends FSGetApi> apiClass();
+
+    /**
+     * @return The name of the column in the table, defined by {@link #apiClass() apiClass()}, to
+     * which this {@link ForeignKey ForeignKey} points
+     */
     String columnName();
 }

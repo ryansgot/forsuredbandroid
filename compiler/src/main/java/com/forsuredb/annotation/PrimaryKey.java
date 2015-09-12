@@ -17,13 +17,20 @@
  */
 package com.forsuredb.annotation;
 
+import com.forsuredb.api.FSGetApi;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * <p>
+ *     Use the PrimaryKey annotation on methods defined in your extensions of
+ *     {@link FSGetApi FSGetApi} in order to specify that the column is a primary key in the table.
+ * </p>
+ * @author Ryan Scott
+ */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.METHOD)
-public @interface PrimaryKey {
-    String definitionText() default "PRIMARY KEY";
-}
+public @interface PrimaryKey {}

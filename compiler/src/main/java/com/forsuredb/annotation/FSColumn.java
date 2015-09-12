@@ -17,13 +17,32 @@
  */
 package com.forsuredb.annotation;
 
+import com.forsuredb.api.FSGetApi;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * <p>
+ *     Use the FSColumn annotation on methods defined in your extensions of
+ *     {@link FSGetApi FSGetApi} in order to specify the column name associated with the method.
+ * </p>
+ * <p>
+ *     Note that <i>It is NOT required to use this annotation</i>. However, it is suggested as
+ *     Java convention around method names usually differs from convention around column names in
+ *     database tables. Unlike most of the annotations defined in com.forsuredb.annotation, FSColumn
+ *     is {@link RetentionPolicy#RUNTIME retained at runtime}. However, future versions may differ.
+ * </p>
+ * @author Ryan Scott
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface FSColumn {
+
+   /**
+    * @return the name of the column
+    */
     String value();
 }
