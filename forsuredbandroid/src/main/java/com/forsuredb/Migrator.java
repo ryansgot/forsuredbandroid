@@ -21,7 +21,6 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.Log;
 
-import com.forsuredb.api.FSLogger;
 import com.forsuredb.migration.Migration;
 import com.forsuredb.migration.MigrationRetrieverFactory;
 
