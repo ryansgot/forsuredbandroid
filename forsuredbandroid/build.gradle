@@ -31,7 +31,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.google.guava:guava:18.0'
 
-    compile project(':compiler')
+    compile 'com.fsryan:forsuredbcompiler:0.0.2'
 }
 
 install {
