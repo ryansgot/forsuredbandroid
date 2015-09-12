@@ -17,6 +17,7 @@
  */
 package com.forsuredb.annotationprocessor;
 
+import com.forsuredb.annotation.FSStaticData;
 import com.forsuredb.annotation.FSTable;
 
 import java.util.Collection;
@@ -63,14 +64,22 @@ public class TableInfo {
     private final String simpleClassName;
     private final String classPackageName;
     private final String tableName;
+    private final String staticDataAsset;
+    private final String staticDataRecordName;
 
-    private TableInfo(String tableName, String qualifiedClassName, Map<String, ColumnInfo> columnMap) {
+    private TableInfo(String tableName,
+                      String qualifiedClassName,
+                      Map<String, ColumnInfo> columnMap,
+                      String staticDataAsset,
+                      String staticDataRecordName) {
         this.tableName = createTableName(tableName, qualifiedClassName);
         this.qualifiedClassName = qualifiedClassName;
         this.columnMap.putAll(DEFAULT_COLUMNS);
         this.columnMap.putAll(columnMap);
         this.simpleClassName = createSimpleClassName(qualifiedClassName);
         this.classPackageName = createPackageName(qualifiedClassName);
+        this.staticDataAsset = staticDataAsset;
+        this.staticDataRecordName = staticDataRecordName;
     }
 
     public static TableInfo from(TypeElement intf) {
@@ -87,6 +96,8 @@ public class TableInfo {
         }
         return builder.qualifiedClassName(intf.getQualifiedName().toString())
                       .tableName(createTableName(intf))
+                      .staticDataAsset(createStaticDataAsset(intf))
+                      .staticDataRecordName(createStaticDataRecordName(intf))
                       .build();
     }
 
@@ -106,6 +117,7 @@ public class TableInfo {
 
     public String getQualifiedClassName() {
         return qualifiedClassName;
+
     }
 
     public String getSimpleClassName() {
@@ -118,6 +130,21 @@ public class TableInfo {
 
     public String getTableName() {
         return tableName;
+    }
+
+    public String getStaticDataAsset() {
+        return staticDataAsset;
+    }
+
+    public String getStaticDataRecordName() {
+        return staticDataRecordName;
+    }
+
+    public boolean hasStaticData() {
+        return staticDataAsset != null
+                && !staticDataAsset.isEmpty()
+                && staticDataRecordName != null
+                && !staticDataRecordName.isEmpty();
     }
 
     public boolean hasColumn(String columnName) {
@@ -175,6 +202,16 @@ public class TableInfo {
         return table == null ? intf.getSimpleName().toString() : table.value();
     }
 
+    private static String createStaticDataAsset(TypeElement intf) {
+        FSStaticData staticData = intf.getAnnotation(FSStaticData.class);
+        return staticData == null ? null : staticData.asset();
+    }
+
+    private static String createStaticDataRecordName(TypeElement intf) {
+        FSStaticData staticData = intf.getAnnotation(FSStaticData.class);
+        return staticData == null ? null : staticData.recordName();
+    }
+
     private String createPackageName(String qualifiedClassName) {
         if (qualifiedClassName == null || qualifiedClassName.isEmpty()) {
             return null;
@@ -191,6 +228,8 @@ public class TableInfo {
         private final Map<String, ColumnInfo> columnMap = new HashMap<>();
         private String qualifiedClassName;
         private String tableName;
+        private String staticDataAsset;
+        private String staticDataRecordName;
 
         public Builder addColumn(ColumnInfo column) {
             if (column != null) {
@@ -209,11 +248,21 @@ public class TableInfo {
             return this;
         }
 
+        public Builder staticDataAsset(String staticDataAsset) {
+            this.staticDataAsset = staticDataAsset;
+            return this;
+        }
+
+        public Builder staticDataRecordName(String staticDataRecordName) {
+            this.staticDataRecordName = staticDataRecordName;
+            return this;
+        }
+
         public TableInfo build() {
             if (!canBuild()) {
                 throw new IllegalStateException("Cannot build TableInfo with both qualifiedClassName and tableName null/empty");
             }
-            return new TableInfo(tableName, qualifiedClassName, columnMap);
+            return new TableInfo(tableName, qualifiedClassName, columnMap, staticDataAsset, staticDataRecordName);
         }
 
         private boolean canBuild() {

@@ -3,7 +3,7 @@ package ${packageName};
 import java.util.List;
 import java.util.LinkedList;
 
-import com.forsuredb.FSTableCreator;
+import com.forsuredb.api.FSTableCreator;
 
 public class ${className} {
 

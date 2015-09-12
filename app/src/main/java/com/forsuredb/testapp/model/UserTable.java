@@ -1,5 +1,6 @@
 package com.forsuredb.testapp.model;
 
+import com.forsuredb.annotation.FSStaticData;
 import com.forsuredb.api.Retriever;
 import com.forsuredb.api.FSGetApi;
 import com.forsuredb.annotation.FSColumn;
@@ -8,6 +9,7 @@ import com.forsuredb.annotation.FSTable;
 import java.math.BigDecimal;
 
 @FSTable("user")
+@FSStaticData(asset = "user.xml", recordName = "user")
 public interface UserTable extends FSGetApi {
     @FSColumn("global_id") long globalId(Retriever retriever);
     @FSColumn("login_count") int loginCount(Retriever retriever);

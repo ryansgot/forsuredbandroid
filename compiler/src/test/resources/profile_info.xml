@@ -1,0 +1,12 @@
+<resources>
+    <profile_info _id="1" user_id="5" email_address="user_id_5@email.com" binary_data="42" />
+    <profile_info _id="2" user_id="4" email_address="user_id_4@email.com" binary_data="42" />
+    <profile_info _id="3" user_id="3" email_address="user_id_3@email.com" binary_data="42" />
+    <profile_info _id="4" user_id="2" email_address="user_id_2@email.com" binary_data="42" />
+    <profile_info _id="5" user_id="1" email_address="user_id_1@email.com" binary_data="42" />
+    <profile_info _id="6" user_id="6" email_address="user_id_6@email.com" binary_data="42" />
+    <profile_info _id="7" user_id="7" email_address="user_id_7@email.com" binary_data="42" />
+    <profile_info _id="8" user_id="8" email_address="user_id_8@email.com" binary_data="42" />
+    <profile_info _id="9" user_id="9" email_address="user_id_9@email.com" binary_data="42" />
+    <profile_info _id="10" user_id="10" email_address="user_id_10@email.com" binary_data="42" />
+</resources>

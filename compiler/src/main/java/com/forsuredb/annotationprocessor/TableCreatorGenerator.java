@@ -72,10 +72,19 @@ public class TableCreatorGenerator extends BaseGenerator<JavaFileObject> {
     }
 
     private String createAddFSTableCreatorLine(TableInfo tableInfo) {
-        return new StringBuffer(LIST_VARIABLE_NAME).append(".add(new FSTableCreator(")
+        StringBuffer buf = new StringBuffer(LIST_VARIABLE_NAME).append(".add(new FSTableCreator(")
                 .append("authority, ")
-                .append(tableInfo.getQualifiedClassName())
-                .append(".class));")
-                .toString();
+                .append(tableInfo.getQualifiedClassName()).append(".class");
+
+        if (tableInfo.hasStaticData()) {
+            buf.append(", \"").append(tableInfo.getStaticDataAsset()).append("\"")
+                    .append(", \"").append(tableInfo.getStaticDataRecordName()).append("\"");
+        }
+
+        for (ColumnInfo column : tableInfo.getForeignKeyColumns()) {
+            buf.append(", ").append(column.getForeignKeyApiClassName()).append(".class");
+        }
+
+        return buf.append("));").toString();
     }
 }

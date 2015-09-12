@@ -22,8 +22,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.forsuredb.api.FSTableCreator;
 import com.forsuredb.migration.Migration;
 
+import java.util.Collections;
 import java.util.List;
 
 /*package*/ class FSDBHelper extends SQLiteOpenHelper {
@@ -62,6 +64,7 @@ import java.util.List;
     public void onCreate(SQLiteDatabase db) {
         applyMigrations(db, 0);
 
+        Collections.sort(tables);
         for (FSTableCreator table : tables) {
             performStaticDataInsertion(db, table);
         }
@@ -89,7 +92,7 @@ import java.util.List;
     }
 
     private void performStaticDataInsertion(SQLiteDatabase db, FSTableCreator table) {
-        for (String insertionSqlString : table.getStaticInsertsSQL(context)) {
+        for (String insertionSqlString : new StaticDataSQL(table).getInsertionSQL(context)) {
             db.execSQL(insertionSqlString);
         }
     }

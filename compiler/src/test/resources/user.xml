@@ -1,0 +1,22 @@
+<resources>
+    <user _id="1" global_id="1" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="2" global_id="2" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="3" global_id="3" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="4" global_id="4" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="5" global_id="5" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="6" global_id="6" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="7" global_id="7" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="8" global_id="8" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="9" global_id="9" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="10" global_id="10" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="11" global_id="11" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="12" global_id="12" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="13" global_id="13" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="14" global_id="14" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="15" global_id="15" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="16" global_id="16" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="17" global_id="17" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="18" global_id="18" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="19" global_id="19" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+    <user _id="20" global_id="20" login_count="6" app_rating="4.1" competitor_app_rating="4.1" />
+</resources>

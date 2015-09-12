@@ -166,6 +166,10 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
         return foreignKeyColumnName;
     }
 
+    public String getForeignKeyApiClassName() {
+        return foreignKeyApiClassName;
+    }
+
     /**
      * <p>
      *     Allows the tables to know the name of the foreign key class without resorting to the trickery you see

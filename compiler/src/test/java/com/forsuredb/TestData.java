@@ -23,6 +23,7 @@ import com.forsuredb.migration.sqlite.TypeTranslator;
 
 public class TestData {
 
+    public static final String TEST_RES = "src/test/resources";
     public static final ColumnInfo[] DEFAULT_COLUMNS = new ColumnInfo[] {TestData.idCol(), TestData.createdCol(), TestData.deletedCol(), TestData.modifiedCol()};
 
     // Convenience constants

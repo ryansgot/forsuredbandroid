@@ -23,6 +23,7 @@ import android.net.Uri;
 
 import com.forsuredb.api.FSGetApi;
 import com.forsuredb.api.FSSaveApi;
+import com.forsuredb.api.FSTableCreator;
 import com.google.common.collect.ImmutableBiMap;
 
 import java.util.HashMap;

@@ -53,7 +53,8 @@ public class FSGetAdapter {
         }
     }
 
-    private static final Handler handler = new Handler();   // <-- there only needs to be one handler ever
+    // Because the Handler instance is stateless, there only needs to be one handler ever.
+    private static final Handler handler = new Handler();
 
     public static <T> T create(Class<T> tableApi) {
         GetApiValidator.validateClass(tableApi);

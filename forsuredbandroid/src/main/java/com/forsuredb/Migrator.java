@@ -24,7 +24,6 @@ import android.util.Log;
 import com.forsuredb.api.FSLogger;
 import com.forsuredb.migration.Migration;
 import com.forsuredb.migration.MigrationRetrieverFactory;
-import com.google.common.base.Strings;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,7 +56,7 @@ import java.util.PriorityQueue;
         final AssetManager assetManager = context.getResources().getAssets();
         final PriorityQueue<String> sortedPaths = createSortedMigrationFilenames(assetManager);
 
-        com.forsuredb.api.FSLogger log = new ADBFSLogger();
+        com.forsuredb.api.FSLogger log = new ADBFSLogger(LOG_TAG);
         migrations = new LinkedList<>();
         while (sortedPaths.size() > 0) {
             addMigrationsFromFile(assetManager, sortedPaths.remove(), log);
@@ -102,26 +101,4 @@ import java.util.PriorityQueue;
         return filename != null && filename.endsWith("migration.xml");
     }
 
-    private static class ADBFSLogger implements FSLogger {
-
-        @Override
-        public void e(String message) {
-            Log.e(LOG_TAG, Strings.nullToEmpty(message));
-        }
-
-        @Override
-        public void i(String message) {
-            Log.i(LOG_TAG, Strings.nullToEmpty(message));
-        }
-
-        @Override
-        public void w(String message) {
-            Log.w(LOG_TAG, Strings.nullToEmpty(message));
-        }
-
-        @Override
-        public void o(String message) {
-            Log.d(LOG_TAG, Strings.nullToEmpty(message));
-        }
-    }
 }

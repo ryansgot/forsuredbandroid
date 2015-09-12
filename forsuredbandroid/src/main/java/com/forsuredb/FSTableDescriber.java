@@ -25,6 +25,7 @@ import com.forsuredb.api.FSGetAdapter;
 import com.forsuredb.api.FSGetApi;
 import com.forsuredb.api.FSSaveAdapter;
 import com.forsuredb.api.FSSaveApi;
+import com.forsuredb.api.FSTableCreator;
 import com.google.common.base.Strings;
 
 public class FSTableDescriber {
@@ -36,9 +37,11 @@ public class FSTableDescriber {
     private Class<? extends FSSaveApi<Uri>> saveApiClass;
     private final String mimeType;
     private final Uri allRecordsUri;
+    private final String staticDataAsset;
+    private final String staticDataRecordName;
 
-    private com.forsuredb.api.FSGetApi getApi;
-    private com.forsuredb.api.FSSaveApi<Uri> setApi;
+    private FSGetApi getApi;
+    private FSSaveApi<Uri> setApi;
 
     /*package*/ FSTableDescriber(FSTableCreator fsTableCreator) throws IllegalStateException {
         validate(fsTableCreator);
@@ -46,6 +49,8 @@ public class FSTableDescriber {
         this.getApiClass = fsTableCreator.getTableApiClass();
         mimeType = "vnd.android.cursor/" + name;
         allRecordsUri = Uri.parse("content://" + fsTableCreator.getAuthority() + "/" + name);
+        staticDataAsset = fsTableCreator.getStaticDataAsset();
+        staticDataRecordName = fsTableCreator.getStaticDataRecordName();
     }
 
     private void validate(FSTableCreator fsTableCreator) {
@@ -72,6 +77,14 @@ public class FSTableDescriber {
         return allRecordsUri;
     }
 
+    public String getStaticDataAsset() {
+        return staticDataAsset;
+    }
+
+    public String getStaticDataRecordName() {
+        return staticDataRecordName;
+    }
+
     public Uri getSpecificRecordUri(long id) {
         return Uri.withAppendedPath(allRecordsUri, Long.toString(id));
     }
@@ -83,18 +96,18 @@ public class FSTableDescriber {
         return getApi;
     }
 
-    public com.forsuredb.api.FSSaveApi set(ContentProviderQueryable q) {
+    public FSSaveApi<Uri> set(ContentProviderQueryable q) {
         if (setApi == null) {
             setApi = FSSaveAdapter.create(q, FSContentValues.getNew(), getSaveApiClass());
         }
         return setApi;
     }
 
-    public Class<? extends com.forsuredb.api.FSGetApi> getGetApiClass() {
+    public Class<? extends FSGetApi> getGetApiClass() {
         return getApiClass;
     }
 
-    public Class<? extends com.forsuredb.api.FSSaveApi<Uri>> getSaveApiClass() {
+    public Class<? extends FSSaveApi<Uri>> getSaveApiClass() {
         if (saveApiClass == null) {
             initSaveApi();
         }

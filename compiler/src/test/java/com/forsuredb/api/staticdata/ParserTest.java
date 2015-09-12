@@ -15,10 +15,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.forsuredb.migration;
+package com.forsuredb.api.staticdata;
 
 import com.forsuredb.TestData;
 import com.forsuredb.api.FSLogger;
+import com.forsuredb.api.RecordContainer;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -37,48 +38,45 @@ import java.util.Arrays;
 @RunWith(Parameterized.class)
 public class ParserTest {
 
-    private Parser.OnMigrationLineListener omll;
+
+    private Parser.RecordListener rl;
     private Parser parser;
 
-    private String migrationFile;
-    private int numMigrations;
+    private String xmlRecordFile;
+    private String recordName;
+    private int numRecords;
 
-    public ParserTest(String migrationFile, int numMigrations) {
-        this.migrationFile = migrationFile;
-        this.numMigrations = numMigrations;
+    public ParserTest(String xmlRecordFile, String recordName, int numRecords) {
+        this.xmlRecordFile = xmlRecordFile;
+        this.recordName = recordName;
+        this.numRecords = numRecords;
     }
 
     @Parameterized.Parameters
     public static Iterable<Object[]> data() {
         return Arrays.asList(new Object[][]{
                 {
-                        "create_table_migration.xml",
-                        1
+                        "profile_info.xml",
+                        "profile_info",
+                        10
                 },
                 {
-                        "alter_table_add_column_migration.xml",
-                        1
-                },
-                {
-                        "alter_table_add_foreign_key_migration.xml",
-                        9
-                },
-                {
-                        "alter_table_add_unique_column_migration.xml",
-                        2
+                        "user.xml",
+                        "user",
+                        20
                 }
         });
     }
 
     @Before
     public void setUp() {
-        omll = Mockito.mock(Parser.OnMigrationLineListener.class);
-        parser = new Parser(omll, new FSLogger.DefaultFSLogger());
+        rl = Mockito.mock(Parser.RecordListener.class);
+        parser = new Parser(new FSLogger.DefaultFSLogger(), rl);
     }
 
     @Test
     public void testParserFindsEachMigrationLine() throws Exception {
-        parser.parseMigration(TestData.TEST_RES + File.separator + migrationFile);
-        Mockito.verify(omll, Mockito.times(numMigrations)).onMigrationLine(Mockito.any(Migration.class));
+        parser.parse(TestData.TEST_RES + File.separator + xmlRecordFile, recordName);
+        Mockito.verify(rl, Mockito.times(numRecords)).onRecord(Mockito.any(RecordContainer.class));
     }
 }
