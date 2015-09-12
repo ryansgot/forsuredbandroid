@@ -1,5 +1,5 @@
 # forsuredb
-forsuredb is a project designed to take a lot of the work out of database programming. It was inspired mainly by the retrofit project (https://github.com/square/retrofit), and it is meant to be a typesafe, quick means of defining and working with data. forsuredb is not intended to replace existing frameworks (see the Android Development subheading below)
+forsuredb is a project designed to take a lot of the work out of database programming. It was inspired mainly by the retrofit project (https://github.com/square/retrofit) and Ruby on Rails, and it is meant to be a typesafe, quick means of defining and working with data. forsuredb is not intended to replace existing frameworks, but to work within them (see the Android Development subheading below).
 
 ## Possible Use Cases
 1. Android Development
@@ -58,9 +58,12 @@ android {
 }
 
 dependencies {
-    /* etc */
-    compile 'com.fsryan:forsuredbandroid:0.0.1'
-    apt 'com.fsryan:forsuredbcompiler:0.0.1'
+    compile 'com.google.guava:guava:18.0' // <-- forsuredbandroid depends on this, but the version probably doesn't matter much
+    
+    compile 'com.fsryan:forsuredbandroid:0.0.2@aar'
+    compile 'com.fsryan:forsuredbcompiler:0.0.2'
+    
+    apt 'com.fsryan:forsuredbcompiler:0.0.2'
 }
 
 forsuredb {
@@ -72,6 +75,9 @@ forsuredb {
     appProjectDirectory = 'app'
 }
 ```
+- Create a ContentProvider http://developer.android.com/intl/ko/guide/topics/providers/content-providers.html
+  - Note that A default implementation of a ContentProvider necessarily cannot be implemented for you (it would block other applications with the same ContentProvider from being installed).
+  - Note that you can use ForSure to help you write the ContentProvider, but it's not required. See the app project's TestappContentProvider for an example.
 - Define an interface that extends FSGetApi
 ```java
 @FSTable("user")
@@ -94,8 +100,9 @@ public class App extends Application {
         super.onCreate();
 
         // initialize ForSure. You can choose to pass in a database name or not.
-        ForSure.init(this, TableGenerator.generate());  // <-- The TableGenerator class is generated for you at
-                                                        // compile time, so it won't be found until you compile
+        ForSure.init(this, TableGenerator.generate());
+        // if your ContentProvider's authority is not app.package.name.content, then you need to pass
+        // the authority string as an argument to TableGenerator.generate("my.contentprovider.authority");
     }
 }
 ```
@@ -142,7 +149,6 @@ So if you want to migrate your database after its initial creation (in this case
 ```java
 @FSTable("profile_info")
 public interface ProfileInfoTable extends FSGetApi {
-    @FSColumn("_id") @PrimaryKey long id(Retriever retriever);
     @FSColumn("user_id") @ForeignKey(apiClass = UserTable.class, columnName = "_id") long userId(Retriever retriever);
     @FSColumn("email_address") String emailAddress(Retriever retriever);
     @FSColumn("binary_data") byte[] binaryData(Retriever retriever);
@@ -156,6 +162,32 @@ NOTICE: As of this README, you cannot add more than one ```@ForeignKey``` column
 
 That's it. No messy one-off code--no need to write your own SQL or migrations--just write java interfaces. Just as before, a corresponding Setter interface gets generated for you at compile time, so you can use it in your app.
 
+### Static Data
+You can define static data as XML in your assets directory. for example, app/src/main/assets/profile_info.xml is below:
+```xml
+<resources>
+    <profile_info _id="1" user_id="5" email_address="user_id_5@email.com" binary_data="42" />
+    <profile_info _id="2" user_id="4" email_address="user_id_4@email.com" binary_data="42" />
+    <profile_info _id="3" user_id="3" email_address="user_id_3@email.com" binary_data="42" />
+    <profile_info _id="4" user_id="2" email_address="user_id_2@email.com" binary_data="42" />
+    <profile_info _id="5" user_id="1" email_address="user_id_1@email.com" binary_data="42" />
+    <profile_info _id="6" user_id="6" email_address="user_id_6@email.com" binary_data="42" />
+    <profile_info _id="7" user_id="7" email_address="user_id_7@email.com" binary_data="42" />
+    <profile_info _id="8" user_id="8" email_address="user_id_8@email.com" binary_data="42" />
+    <profile_info _id="9" user_id="9" email_address="user_id_9@email.com" binary_data="42" />
+</resources>
+```
+If you do this, then you notify the compiler that you'd like to use this file by annotating your extension of the ```FSGetApi``` interface with ```@StaticData``` as below:
+```java
+@FSTable("profile_info")
+@FSStaticData(asset = "profile_info.xml", recordName = "profile_info")
+public interface ProfileInfoTable extends FSGetApi {
+    @FSColumn("user_id") @ForeignKey(apiClass = UserTable.class, columnName = "_id") long userId(Retriever retriever);
+    @FSColumn("email_address") String emailAddress(Retriever retriever);
+    @FSColumn("binary_data") byte[] binaryData(Retriever retriever);
+}
+```
+For Android projects, this means that even when the user deletes all data, after all of the migrations are rerun, the static data will get reinserted.
 ## Supported Migrations
 - Add a table
 - Add a column to a table
@@ -164,5 +196,5 @@ That's it. No messy one-off code--no need to write your own SQL or migrations--j
 
 ## Coming up
 - support for more types of migrations
+- an example java project
 - automatically-generated join interfaces based upon foreign key relationships
-- general cleanup and configurable logging for dbmigrate task
