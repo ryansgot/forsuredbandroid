@@ -31,7 +31,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.google.guava:guava:18.0'
 
-    compile 'com.fsryan:forsuredbcompiler:0.0.2'
+    compile project(':compiler')
 }
 
 install {
@@ -40,8 +40,6 @@ install {
         pom {
             project {
                 packaging 'aar'
-                groupId 'com.fsryan'
-                artifactId 'forsuredbandroid'
 
                 // Add your description here
                 name 'forsuredbandroid'
@@ -95,6 +93,26 @@ bintray {
     }
 }
 
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+    //options.encoding = 'UTF-8'
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
 
 task release(dependsOn: bintrayUpload) {
     doLast {
