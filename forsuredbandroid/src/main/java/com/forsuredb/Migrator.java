@@ -58,15 +58,15 @@ import java.util.PriorityQueue;
 
         migrations = new LinkedList<>();
         while (sortedPaths.size() > 0) {
-            addMigrationsFromFile(assetManager, sortedPaths.remove(), new ADBFSLogger(LOG_TAG));
+            addMigrationsFromFile(assetManager, sortedPaths.remove());
         }
     }
 
-    private void addMigrationsFromFile(AssetManager assetManager, String filename, FSLogger log) {
+    private void addMigrationsFromFile(AssetManager assetManager, String filename) {
         InputStream in = null;
         try {
             in = assetManager.open(filename);
-            migrations.addAll(new MigrationRetrieverFactory(log).fromStream(in).getMigrations());
+            migrations.addAll(new MigrationRetrieverFactory(new ADBFSLogger(LOG_TAG)).fromStream(in).getMigrations());
         } catch (IOException ioe) {
             throw new IllegalStateException(ioe);
         } finally {
