@@ -34,6 +34,14 @@ dependencies {
     compile project(':compiler')
 }
 
+def bintrayUserCredential() {
+    return hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
+}
+
+def bintrayApiKeyCredential() {
+    return hasProperty('bintrayApiKey') ? getProperty('bintrayApiKey') : ''
+}
+
 install {
     repositories.mavenInstaller {
         // This generates POM.xml with proper parameters
@@ -55,7 +63,7 @@ install {
                 }
                 developers {
                     developer {
-                        id bintrayUser
+                        id bintrayUserCredential()
                         name 'Ryan Scott'
                         email 'ryansgot@gmail.com'
                     }
@@ -71,8 +79,8 @@ install {
 }
 
 bintray {
-    user = bintrayUser
-    key = bintrayApiKey
+    user = bintrayUserCredential()
+    key = bintrayApiKeyCredential()
 
     configurations = ['archives']
     pkg {
