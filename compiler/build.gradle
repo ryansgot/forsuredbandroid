@@ -4,7 +4,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 group = 'com.fsryan'
-version = '0.0.1'
+version = '0.0.2'
 
 sourceCompatibility = JavaVersion.VERSION_1_7
 targetCompatibility = JavaVersion.VERSION_1_7
@@ -43,10 +43,10 @@ bintray {
         vcsUrl = 'https://github.com/ryansgot/forsuredb.git'
         publicDownloadNumbers = true
         version {
-            name = '0.0.1'
+            name = '0.0.2'
             desc = 'Guts of the ForSureDB project, containing code to generate source and assets'
             released  = new Date()
-            vcsTag = 'v0.0.1'
+            vcsTag = 'v0.0.2'
         }
     }
 }
@@ -58,7 +58,7 @@ publishing {
             from components.java
             groupId = 'com.fsryan'
             artifactId = 'forsuredbcompiler'
-            version = '0.0.1'
+            version = '0.0.2'
         }
     }
 }
