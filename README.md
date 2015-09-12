@@ -36,11 +36,7 @@ buildscript {
 
 allprojects {
     repositories {
-        jcenter()
-        // the following is necessary until the forsuredbandroid android library is hosted on jcenter
-        maven {
-            url  "http://dl.bintray.com/ryansgot/maven"
-        }
+        jcenter() // <-- hosts the forsuredbcompiler and forsuredbandroid binaries
     }
 }
 ```
@@ -76,8 +72,8 @@ forsuredb {
 }
 ```
 - Create a ContentProvider http://developer.android.com/intl/ko/guide/topics/providers/content-providers.html
-  - Note that A default implementation of a ContentProvider necessarily cannot be implemented for you (it would block other applications with the same ContentProvider from being installed).
-  - Note that you can use ForSure to help you write the ContentProvider, but it's not required. See the app project's TestappContentProvider for an example.
+  - _Note that A default implementation of a ContentProvider necessarily cannot be implemented for you (it would block other applications with the same ContentProvider from being installed)._
+  - _Note that you can use ForSure to help you write the ContentProvider._ I recommend this, but it is not required. See the app project's ```TestappContentProvider``` class for an example.
 - Define an interface that extends FSGetApi
 ```java
 @FSTable("user")
@@ -195,6 +191,8 @@ For Android projects, this means that even when the user deletes all data, after
 - Add a foreign key column to a table
 
 ## Coming up
+- stricter testing
 - support for more types of migrations
-- an example java project
+- an example java (non-Android) project and corresponding forsuredbjava library
 - automatically-generated join interfaces based upon foreign key relationships
+- plugin-style database support extensions
