@@ -56,10 +56,9 @@ import java.util.PriorityQueue;
         final AssetManager assetManager = context.getResources().getAssets();
         final PriorityQueue<String> sortedPaths = createSortedMigrationFilenames(assetManager);
 
-        com.forsuredb.api.FSLogger log = new ADBFSLogger(LOG_TAG);
         migrations = new LinkedList<>();
         while (sortedPaths.size() > 0) {
-            addMigrationsFromFile(assetManager, sortedPaths.remove(), log);
+            addMigrationsFromFile(assetManager, sortedPaths.remove(), new ADBFSLogger(LOG_TAG));
         }
     }
 
@@ -74,9 +73,7 @@ import java.util.PriorityQueue;
             if (in != null) {
                 try {
                     in.close();
-                } catch (IOException ioe) {
-                    // can't do anything about this
-                }
+                } catch (IOException ioe) {}
             }
         }
     }
@@ -100,5 +97,4 @@ import java.util.PriorityQueue;
     private boolean isMigrationXml(String filename) {
         return filename != null && filename.endsWith("migration.xml");
     }
-
 }
