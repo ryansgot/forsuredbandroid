@@ -17,6 +17,9 @@
  */
 package com.forsuredb.annotationprocessor;
 
+import com.forsuredb.annotation.FSTable;
+import com.forsuredb.api.FSGetApi;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,6 +33,13 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
+/**
+ * <p>
+ *     This is the TableContext that corresponds to the currently defined extensions of the
+ *     {@link FSGetApi FSGetApi} interface annotated with the {@link FSTable FSTable} annotation.
+ * </p>
+ * @author Ryan Scott
+ */
 public class ProcessingContext implements TableContext {
 
     private final Set<TypeElement> tableTypes = new HashSet<>();

@@ -17,6 +17,8 @@
  */
 package com.forsuredb.annotationprocessor;
 
+import com.forsuredb.api.FSTableCreator;
+
 import org.apache.velocity.VelocityContext;
 
 import java.io.IOException;
@@ -26,6 +28,13 @@ import java.util.List;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.JavaFileObject;
 
+/**
+ * <p>
+ *     Generator for the TableGenerator class that contains all of the
+ *     {@link FSTableCreator FSTableCreator} instance definitions and returns them as a list.
+ * </p>
+ * @author Ryan Scott
+ */
 public class TableCreatorGenerator extends BaseGenerator<JavaFileObject> {
 
     private static final String CLASS_NAME = "TableGenerator";

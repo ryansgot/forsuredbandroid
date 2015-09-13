@@ -17,6 +17,7 @@
  */
 package com.forsuredb.annotationprocessor;
 
+import com.forsuredb.migration.Migration;
 import com.forsuredb.migration.QueryGenerator;
 
 import java.util.ArrayList;
@@ -38,10 +39,13 @@ public class XmlGenerator {
 
     /**
      * <p>
-     *     Generates the XML which contains the definition of the Migration
+     *     Generates the XML which contains the representation of all of the
+     *     {@link Migration Migration} objects for each {@link QueryGenerator QueryGenerator} in the
+     *     priority queue.
      * </p>
      *
-     * @return
+     * @return a List&lt;String&gt; of the generated XML representing {@link Migration Migration}
+     * objects
      */
     public final List<String> generate() {
         List<String> retList = new ArrayList<>();

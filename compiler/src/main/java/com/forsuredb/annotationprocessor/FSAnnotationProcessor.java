@@ -38,8 +38,11 @@ import javax.tools.Diagnostic;
 
 /**
  * <p>
- *     Currently, this only prints output to to the console at compile time. Eventually, it will generate classes at compile time.
+ *     FSAnnotationProcessor is the guts of the forsuredbcompiler project. When you compile, the
+ *     {@link #process(Set, RoundEnvironment) process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnvironment)}
+ *     gets called, and the annotation processing begins.
  * </p>
+ * @author Ryan Scott
  */
 @SupportedAnnotationTypes("com.forsuredb.annotation.*")
 @SupportedSourceVersion(SourceVersion.RELEASE_7)

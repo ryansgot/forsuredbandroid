@@ -35,6 +35,14 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 
+/**
+ * <p>
+ *     Used for generating the appropriate migration XML resource corresponding to the difference
+ *     between the accumulated migrations in the migration directory used to instantiate this object
+ *     and the {@link ProcessingContext ProcessingContext} used to instantiate the object.
+ * </p>
+ * @author Ryan Scott
+ */
 /*package*/ class MigrationGenerator extends BaseGenerator<FileObject> {
 
     private final Date date;
@@ -42,10 +50,10 @@ import javax.tools.FileObject;
     private final MigrationRetriever mr;
 
     public MigrationGenerator(ProcessingContext pContext, String migrationDirectory, ProcessingEnvironment processingEnv)  {
-        super(processingEnv);
-        date = new Date();
-        this.pContext = pContext;
-        mr = new MigrationRetrieverFactory().fromDirectory(migrationDirectory);
+            super(processingEnv);
+            date = new Date();
+            this.pContext = pContext;
+            mr = new MigrationRetrieverFactory().fromDirectory(migrationDirectory);
     }
 
     @Override

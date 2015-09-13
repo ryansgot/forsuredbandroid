@@ -32,9 +32,27 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 
+/**
+ * <p>
+ *     The complete description of a table. Each table will have the
+ *     {@link #DEFAULT_COLUMNS default columns}. You should call the {@link #builder() builder()}
+ *     method in order to begin building a TableInfo instance.
+ * </p>
+ * @author Ryan Scott
+ */
 public class TableInfo {
 
-    // The default columns for each table
+    /**
+     * <p>
+     *     By default, each table has the following columns:
+     *     <ul>
+     *         <li>_id: an integer primary key</li>
+     *         <li>created: a datetime describing when the record was created</li>
+     *         <li>modified: a datetime describing when the record was last modified</li>
+     *         <li>deleted: an integer (either 0 or 1) describing whether the record is deleted</li>
+     *     </ul>
+     * </p>
+     */
     public static final Map<String, ColumnInfo> DEFAULT_COLUMNS = new HashMap<>();
     static {
         DEFAULT_COLUMNS.put("_id", ColumnInfo.builder().columnName("_id")
@@ -101,6 +119,9 @@ public class TableInfo {
                       .build();
     }
 
+    /**
+     * @return a Builder object capable of building a TableInfo
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -258,6 +279,13 @@ public class TableInfo {
             return this;
         }
 
+        /**
+         * <p>
+         *     Builds a TableInfo. Throws {@link IllegalStateException IllegalStateException} if
+         *     both the qualifiedClassName and the tableName are either null or empty
+         * </p>
+         * @return a new TableInfo
+         */
         public TableInfo build() {
             if (!canBuild()) {
                 throw new IllegalStateException("Cannot build TableInfo with both qualifiedClassName and tableName null/empty");

@@ -29,6 +29,11 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 
+/**
+ * <p>
+ *     Store information about a column in a table.
+ * </p>
+ */
 public class ColumnInfo implements Comparable<ColumnInfo> {
 
     private final String methodName;
@@ -196,7 +201,7 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
     }
 
     private static void appendAnnotationInfo(Builder builder, AnnotationMirror am) {
-        AnnotationTranslator at = new AnnotationTranslator(am.getElementValues());
+        AnnotationTranslator at = new AnnotationTranslator(am);
 
         String annotationClass = am.getAnnotationType().toString();
         if (annotationClass.equals(FSColumn.class.getName())) {

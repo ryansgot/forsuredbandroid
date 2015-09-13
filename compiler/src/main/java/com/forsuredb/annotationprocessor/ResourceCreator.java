@@ -25,6 +25,12 @@ import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.StandardLocation;
 
+/**
+ * <p>
+ *     A helper that makes the creation of new resources easier.
+ * </p>
+ * @author Ryan Scott
+ */
 /*package*/ class ResourceCreator {
 
     private final JavaFileManager.Location location;

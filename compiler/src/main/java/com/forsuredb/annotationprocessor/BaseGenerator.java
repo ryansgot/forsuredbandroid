@@ -34,15 +34,32 @@ import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 
-public abstract class BaseGenerator<F extends FileObject> implements Generator {
+/**
+ * <p>
+ *     The base class for Generators that generate new classes, source, or resources using a
+ *     {@link VelocityEngine VelocityEngine}.
+ * </p>
+ * @param <F>
+ * @author Ryan Scott
+ */
+public abstract class BaseGenerator<F extends FileObject> {
 
     private final ProcessingEnvironment processingEnv;
 
+    // TODO: make the constructor take the templateResource argument instead of the generate method
     public BaseGenerator(ProcessingEnvironment processingEnv) {
         this.processingEnv = processingEnv;
     }
 
-    @Override
+    /**
+     * <p>
+     *     Use the {@link VelocityEngine VelocityEngine} to generate a new class, source, or
+     *     resource file based upon the template passed in
+     * </p>
+     * @param templateResource The Velocity Templating Language (VTL) resource to use
+     * @param ve
+     * @return the success/failure status of the generation. true if successful--false if unsuccessful.
+     */
     public boolean generate(String templateResource, VelocityEngine ve) {
         if (templateResource == null || templateResource.isEmpty()) {
             printMessage(Diagnostic.Kind.ERROR, "error creating from resource: " + templateResource);
@@ -87,27 +104,67 @@ public abstract class BaseGenerator<F extends FileObject> implements Generator {
         }
     }
 
+    /**
+     * @param processingEnv use this to get the filer for creating the new class, source, or resource
+     * @return
+     * @throws IOException
+     */
     protected abstract F createFileObject(ProcessingEnvironment processingEnv) throws IOException;
+
+    /**
+     *
+     * @return
+     */
     protected abstract VelocityContext createVelocityContext();
 
+    // TODO: eliminate the need for this method by just using an FSLogger
     protected ProcessingEnvironment getProcessingEnv() {
         return processingEnv;
     }
 
+    //TODO: eliminate the need for these convenience methods by just using an FSLogger
     // Wrap the processing environment for the purpose of making the printing code more readable.
 
+    /**
+     * <p>
+     *     Convenience method for printing message to the console
+     * </p>
+     * @param kind
+     * @param message
+     */
     protected void printMessage(Diagnostic.Kind kind, String message) {
         processingEnv.getMessager().printMessage(kind, message);
     }
 
+    /**
+     * <p>
+     *     Convenience method for printing message to the console
+     * </p>
+     * @param kind
+     * @param message
+     */
     protected void printMessage(Diagnostic.Kind kind, String message, Element e) {
         processingEnv.getMessager().printMessage(kind, message, e);
     }
 
+    /**
+     * <p>
+     *     Convenience method for printing message to the console
+     * </p>
+     * @param kind
+     * @param message
+     */
     protected void printMessage(Diagnostic.Kind kind, String message, Element e, AnnotationMirror am) {
         processingEnv.getMessager().printMessage(kind, message, e, am);
     }
 
+    /**
+     * <p>
+     *     Convenience method for printing message to the console
+     * </p>
+     * @param kind
+     * @param message
+     */
     protected void printMessage(Diagnostic.Kind kind, String message, Element e, AnnotationMirror am, AnnotationValue av) {
         processingEnv.getMessager().printMessage(kind, message, e, am, av);
     }

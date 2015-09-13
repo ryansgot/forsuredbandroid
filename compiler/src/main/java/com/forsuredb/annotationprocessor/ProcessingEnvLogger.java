@@ -22,6 +22,12 @@ import com.forsuredb.api.FSLogger;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.Diagnostic;
 
+/**
+ * <p>
+ *     An FSLogger that uses the ProcessingEnvironment messanger to post log messages.
+ * </p>
+ * @author Ryan Scott
+ */
 /*package*/ class ProcessingEnvLogger implements FSLogger {
 
     private ProcessingEnvironment processingEnv;

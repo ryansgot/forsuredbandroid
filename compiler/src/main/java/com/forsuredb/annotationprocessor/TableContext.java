@@ -19,8 +19,28 @@ package com.forsuredb.annotationprocessor;
 
 import java.util.Collection;
 
+/**
+ * <p>
+ *     Describes a collection of tables.
+ * </p>
+ * @author Ryan Scott
+ */
 public interface TableContext {
+
+    /**
+     * @param tableName
+     * @return true if the table exists within the context
+     */
     boolean hasTable(String tableName);
+
+    /**
+     * @param tableName
+     * @return a TableInfo object if the context contains the table and null if not
+     */
     TableInfo getTable(String tableName);
+
+    /**
+     * @return all of the tables in the context
+     */
     Collection<TableInfo> allTables();
 }

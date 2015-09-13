@@ -20,24 +20,68 @@ package com.forsuredb.annotationprocessor;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 
+/**
+ * <p>
+ *     Translates from all elements of an {@link AnnotationMirror AnnotationMirror} to properties
+ *     that can be referenced by their String names. As a convenience, the
+ * </p>
+ * @author Ryan Scott
+ */
 /*package*/ class AnnotationTranslator {
 
     private final Map<String, Object> annotation = new HashMap<>();
 
-    /*package*/ AnnotationTranslator() {}
-
-    /*package*/ AnnotationTranslator(Map<? extends ExecutableElement, ? extends AnnotationValue> annotation) {
-        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : annotation.entrySet()) {
+    /*package*/ AnnotationTranslator(AnnotationMirror am) {
+        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : am.getElementValues().entrySet()) {
             ExecutableElement ee = entry.getKey();
             AnnotationValue av = entry.getValue();
             this.annotation.put(ee.getSimpleName().toString(), av.getValue());
         }
     }
 
+    /**
+     * @param property essentially invokes the method of the annotation
+     * @return A {@link Caster Caster} that can give you the uncasted value or the value cast to the
+     * Type you wish
+     */
     public Caster property(String property) {
         return new Caster(annotation.get(property));
+    }
+
+    /**
+     * <p>
+     *     Gives the caller the choice of how it would like to get the property--either as an object
+     *     ({@link #uncasted() uncasted()}) or casted to some other class.
+     * </p>
+     * @author Ryan Scott
+     */
+    /*package*/ static class Caster {
+
+        private Object uncasted;
+
+        /*package*/ Caster(Object uncasted) {
+            this.uncasted = uncasted;
+        }
+
+        public Object uncasted() {
+            return uncasted;
+        }
+
+        /**
+         * <p>
+         *     Throws a {@link ClassCastException ClassCastException} if the type parameter cannot
+         *     be used to cast the underlying object.
+         * </p>
+         * @param cls The class of the type you would like to return
+         * @param <T> The type you would like to return
+         * @return The property cast to T
+         */
+        public <T> T as(Class<T> cls) {
+            return (T) uncasted;
+        }
     }
 }

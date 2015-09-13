@@ -29,6 +29,16 @@ import java.util.PriorityQueue;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.Diagnostic;
 
+// TODO: make this TableContext and MigrationContext agnostic.
+// TODO: use FSLogger instead of the processingEnv
+/**
+ * <p>
+ *     Analyzes the diff between two {@link TableContext TableContext} objects--the one used to
+ *     instantiate the DiffGenerator and the one passed to the
+ *     {@link #analyzeDiff(TableContext) analyzeDiff(TableContext targetContext)} method.
+ * </p>
+ * @author Ryan Scott
+ */
 public class DiffGenerator {
 
     private final TableContext context;
@@ -45,13 +55,15 @@ public class DiffGenerator {
 
     /**
      * <p>
-     *     Anayzes the diff between this instance' TableContext and the table context passed in and
-     *     delivers a priority queue of QueryGenerators that generate a sequence of queries that
-     *     allow you to migrate a database from the schema of this instance's TableContext to that
-     *     of the argument.
+     *     Anayzes the diff between this instance's {@link TableContext TableContext} and that of
+     *     the argument
      * </p>
-     * @param targetContext
-     * @return
+     * @param targetContext The {@link TableContext TableContext} that you would like to reach from
+     *                      the {@link TableContext TableContext} member of this
+     *                      {@link DiffGenerator DiffGenerator}
+     * @return a priority queue of {@link QueryGenerator QueryGenerator} that generate a sequence of
+     * queries that allow you to migrate a database from the schema of this instance's TableContext
+     * to that of the {@link TableContext TableContext} argument.
      */
     public PriorityQueue<QueryGenerator> analyzeDiff(TableContext targetContext) {
         printMessage(Diagnostic.Kind.NOTE, "analyzing diff: targetContext.allTables().size() = " + targetContext.allTables().size());
