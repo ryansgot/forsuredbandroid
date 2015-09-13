@@ -1,0 +1,5 @@
+test:
+    - ./gradlew clean :compiler:test
+  post:
+    - mkdir $CIRCLE_TEST_REPORTS/compiler
+    - cp -r compiler/build/reports/* $CIRCLE_TEST_REPORTS/compiler
