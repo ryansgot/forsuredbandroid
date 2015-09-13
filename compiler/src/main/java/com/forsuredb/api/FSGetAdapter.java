@@ -66,9 +66,9 @@ public class FSGetAdapter {
     private static final Handler handler = new Handler();
 
     /**
-     * @param tableApi
-     * @param <T>
-     * @return an instance of the {@link FSGetApi FSGetApi} interface class passed in
+     * @param tableApi The Class object of the {@link FSGetApi} for which you would like an instance
+     * @param <T> The {@link FSGetApi} extension's type
+     * @return an instance of the {@link FSGetApi} interface class passed in
      */
     public static <T extends FSGetApi> T create(Class<T> tableApi) {
         GetApiValidator.validateClass(tableApi);

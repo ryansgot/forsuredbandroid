@@ -40,25 +40,25 @@ public interface FSGetApi {
      * <p>
      *     Defines an integer primary key for each table
      * </p>
-     * @param retriever
+     * @param retriever A Retriever object that can get records of the table this extension of FSGetApi defines
      * @return the id of the record
      */
     @FSColumn("_id") @PrimaryKey long id(Retriever retriever);
 
     /**
-     * @param retriever
+     * @param retriever A Retriever object that can get records of the table this extension of FSGetApi defines
      * @return the Date this record was created
      */
     @FSColumn("created") Date created(Retriever retriever);
 
     /**
-     * @param retriever
+     * @param retriever A Retriever object that can get records of the table this extension of FSGetApi defines
      * @return the Date this record was last modified
      */
     @FSColumn("modified") Date modified(Retriever retriever);
 
     /**
-     * @param retriever
+     * @param retriever A Retriever object that can get records of the table this extension of FSGetApi defines
      * @return true if the record is deleted, false if not
      */
     @FSColumn("deleted") boolean deleted(Retriever retriever);

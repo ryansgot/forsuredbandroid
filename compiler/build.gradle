@@ -38,6 +38,7 @@ String bintrayApiKeyCredential = hasProperty('bintrayApiKey') ? getProperty('bin
 bintray {
     user = bintrayUserCredential
     key = bintrayApiKeyCredential
+
     publications = ['forsuredbcompilerPublication']
     pkg {
         repo = 'maven'
@@ -63,6 +64,22 @@ publishing {
             version = '0.0.2'
         }
     }
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+    //options.encoding = 'UTF-8'
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
 }
 
 task release(dependsOn: bintrayUpload) {

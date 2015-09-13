@@ -85,7 +85,7 @@ public final class TypedRecordContainer implements RecordContainer {
      * <p>
      *     Either incurs precision loss or throws {@link ClassCastException} if parameter is wrong
      * </p>
-     * @param column
+     * @param column The name of the column for which data is stored in this container
      * @param <T> The class of the stored column
      * @return a T or null if the column was not previously stored.
      */

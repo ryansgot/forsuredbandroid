@@ -37,9 +37,9 @@ import javax.tools.FileObject;
 /**
  * <p>
  *     The base class for Generators that generate new classes, source, or resources using a
- *     {@link VelocityEngine VelocityEngine}.
+ *     {@link VelocityEngine}.
  * </p>
- * @param <F>
+ * @param <F> some extension of {@link FileObject} that defines where to generate the file
  * @author Ryan Scott
  */
 public abstract class BaseGenerator<F extends FileObject> {
@@ -53,11 +53,11 @@ public abstract class BaseGenerator<F extends FileObject> {
 
     /**
      * <p>
-     *     Use the {@link VelocityEngine VelocityEngine} to generate a new class, source, or
-     *     resource file based upon the template passed in
+     *     Use the {@link VelocityEngine} to generate a new class, source, or resource file based upon
+     *     the template passed in
      * </p>
      * @param templateResource The Velocity Templating Language (VTL) resource to use
-     * @param ve
+     * @param ve The {@link VelocityEngine} used to create the class, source, or resource file
      * @return the success/failure status of the generation. true if successful--false if unsuccessful.
      */
     public boolean generate(String templateResource, VelocityEngine ve) {
@@ -105,15 +105,17 @@ public abstract class BaseGenerator<F extends FileObject> {
     }
 
     /**
-     * @param processingEnv use this to get the filer for creating the new class, source, or resource
-     * @return
+     * @param processingEnv use this to get the {@link javax.annotation.processing.Filer Filer}
+     *                      for creating the new class, source, or resource
+     * @return Some extension of FileObject for a class, source, or resource file. This should be
+     * JavaObject for generating java source files
      * @throws IOException
      */
     protected abstract F createFileObject(ProcessingEnvironment processingEnv) throws IOException;
 
     /**
-     *
-     * @return
+     * @return the {@link VelocityContext} to be used by the {@link VelocityEngine} and applied to the
+     * template file
      */
     protected abstract VelocityContext createVelocityContext();
 

@@ -47,13 +47,12 @@ public class FSSaveAdapter {
      *     Create an api object capable of saving a row.
      * </p>
      *
-     * @param queryable
+     * @param queryable An {@link FSQueryable} that can be used to insert/update records in the database
      * @param emptyRecord this will be emptied anyway
      * @param api The {@link FSSaveApi FSSaveApi} class for which you would like an object
-     * @param <T>
+     * @param <T> The type of an {@link FSSaveApi} which was generated from an {@link FSGetApi} definition
      * @param <U> The class by which records are located
-     * @param <R> The class by which records are created (In Android, for example, this is supported
-     *           by a wrapped ContentValues)
+     * @param <R> An extension of {@link RecordContainer} that holds records prior to their insertion/update in the database
      * @return An implementation of the api class passed in.
      */
     public static <T extends FSSaveApi<U>, U, R extends RecordContainer> T create(FSQueryable<U, R> queryable,

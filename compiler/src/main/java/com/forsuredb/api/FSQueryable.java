@@ -19,35 +19,35 @@ package com.forsuredb.api;
 
 /**
  * <p>
- *     if you've parameterized this properly, U would be a class that locates records
+ *     if you've parameterized your FSQueryable properly, U would be a class that locates records
  * </p>
- * @param <U> The record locator class (should probably be something like a Uri)
- * @param <R>
+ * @param <U> The class used to locate records in your database
+ * @param <R> an extension of {@link RecordContainer}, which contains a record before it is inserted/updated in the database
  */
 public interface FSQueryable<U, R extends RecordContainer> {
     /**
-     * @param recordContainer
+     * @param recordContainer An extension of {@link RecordContainer} which contains the record to be inserted
      * @return if you've {@link FSQueryable parameterized this class correctly}, then a record
      * locator for the inserted record
      */
     U insert(R recordContainer);
 
     /**
-     * @param recordContainer A container for the record to be updated
-     * @param selection
+     * @param recordContainer An extension of {@link RecordContainer} which contains the record to be updated
+     * @param selection The {@link FSSelection} that defines the subset of records to update
      * @return the number of records affected by the update
      */
     int update(R recordContainer, FSSelection selection);
 
     /**
-     * @param selection
+     * @param selection The {@link FSSelection} that defines the subset of records to delete
      * @return the number of records affected by the delete
      */
     int delete(FSSelection selection);
 
     /**
-     * @param projection
-     * @param selection
+     * @param projection The {@link FSProjection} that defines the subest of columns to retrieve for each record
+     * @param selection The {@link FSSelection} that defines the subset of records to retrieve
      * @param sortOrder the SQL sort order for the query
      * @return A Retriever that will be able to retrieve records returned by this query
      */

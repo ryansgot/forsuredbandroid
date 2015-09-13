@@ -39,8 +39,7 @@ import javax.tools.Diagnostic;
 /**
  * <p>
  *     FSAnnotationProcessor is the guts of the forsuredbcompiler project. When you compile, the
- *     {@link #process(Set, RoundEnvironment) process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnvironment)}
- *     gets called, and the annotation processing begins.
+ *     {@link #process(Set, RoundEnvironment)} gets called, and the annotation processing begins.
  * </p>
  * @author Ryan Scott
  */

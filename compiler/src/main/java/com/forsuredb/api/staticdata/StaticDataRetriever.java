@@ -23,7 +23,7 @@ import java.util.List;
 
 /**
  * <p>
- *     An interface for getting {@link RecordContainer objects
+ *     An interface for getting {@link RecordContainer} objects
  * </p>
  * @author Ryan Scott
  */

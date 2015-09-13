@@ -45,13 +45,13 @@ public class TableInfo {
     /**
      * <p>
      *     By default, each table has the following columns:
-     *     <ul>
-     *         <li>_id: an integer primary key</li>
-     *         <li>created: a datetime describing when the record was created</li>
-     *         <li>modified: a datetime describing when the record was last modified</li>
-     *         <li>deleted: an integer (either 0 or 1) describing whether the record is deleted</li>
-     *     </ul>
      * </p>
+     * <ul>
+     *     <li>_id: an integer primary key</li>
+     *     <li>created: a datetime describing when the record was created</li>
+     *     <li>modified: a datetime describing when the record was last modified</li>
+     *     <li>deleted: an integer (either 0 or 1) describing whether the record is deleted</li>
+     * </ul>
      */
     public static final Map<String, ColumnInfo> DEFAULT_COLUMNS = new HashMap<>();
     static {

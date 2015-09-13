@@ -55,8 +55,8 @@ public class FSTableCreator implements Comparable<FSTableCreator> {
      *     The important factor is whether this FSTableCreator is for a table with foreign keys into
      *     the other FSTableCreator's table or vice versa.
      * </p>
-     * @param o
-     * @return 1 if this FSTableCreator's table has a foreign key into the other table, -1 if the
+     * @param o The {@link FSTableCreator} to compare to this one
+     * @return 1 if this {@link FSTableCreator}'s table has a foreign key into the other table, -1 if the
      * other table has a foreign key into this table, and 0 otherwise
      */
     @Override

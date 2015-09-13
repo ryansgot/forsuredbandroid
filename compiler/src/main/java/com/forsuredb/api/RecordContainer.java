@@ -29,7 +29,7 @@ public interface RecordContainer {
      * <p>
      *     Use this method if you want to check a value that you have put into the container.
      * </p>
-     * @param column
+     * @param column The name of the column for which data is stored in this container
      * @return null if one of the put methods was not previously called for this column; the Object
      * that was stored if one of the put methods was previously called for this column
      */

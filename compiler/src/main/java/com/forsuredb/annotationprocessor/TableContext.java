@@ -28,13 +28,13 @@ import java.util.Collection;
 public interface TableContext {
 
     /**
-     * @param tableName
+     * @param tableName the name of the table to check
      * @return true if the table exists within the context
      */
     boolean hasTable(String tableName);
 
     /**
-     * @param tableName
+     * @param tableName the name of the table to get
      * @return a TableInfo object if the context contains the table and null if not
      */
     TableInfo getTable(String tableName);
