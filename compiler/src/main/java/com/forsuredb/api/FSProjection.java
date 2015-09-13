@@ -18,5 +18,8 @@
 package com.forsuredb.api;
 
 public interface FSProjection {
+    /**
+     * @return All of the columns to be retrieved in a SELECT query
+     */
     String[] columns();
 }

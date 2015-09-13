@@ -19,6 +19,13 @@ package com.forsuredb.api;
 
 import com.forsuredb.annotation.FSTable;
 
+/**
+ * <p>
+ *     All of the information necessary to create a table is contained herein. FSTableCreator is
+ *     {@link Comparable Comparable} so that when order matters (such as when performing static
+ *     data insertion), operations using FSTableCreator objects can be properly ordered.
+ * </p>
+ */
 public class FSTableCreator implements Comparable<FSTableCreator> {
 
     private static final String NO_STATIC_DATA_ASSET = "";
@@ -43,6 +50,15 @@ public class FSTableCreator implements Comparable<FSTableCreator> {
         this(authority, tableApiClass, NO_STATIC_DATA_ASSET, "", foreignKeyClasses);
     }
 
+    /**
+     * <p>
+     *     The important factor is whether this FSTableCreator is for a table with foreign keys into
+     *     the other FSTableCreator's table or vice versa.
+     * </p>
+     * @param o
+     * @return 1 if this FSTableCreator's table has a foreign key into the other table, -1 if the
+     * other table has a foreign key into this table, and 0 otherwise
+     */
     @Override
     public int compareTo(FSTableCreator o) {
         if (o == null) {

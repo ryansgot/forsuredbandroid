@@ -21,6 +21,12 @@ import com.forsuredb.api.RecordContainer;
 
 import java.util.List;
 
+/**
+ * <p>
+ *     An interface for getting {@link RecordContainer objects
+ * </p>
+ * @author Ryan Scott
+ */
 public interface StaticDataRetriever {
     List<RecordContainer> getRecords(String recordName);
 }

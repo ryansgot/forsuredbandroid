@@ -17,11 +17,18 @@
  */
 package com.forsuredb.api;
 
+/**
+ * <p>
+ *     if you've parameterized this properly, U would be a class that locates records
+ * </p>
+ * @param <U> The record locator class (should probably be something like a Uri)
+ * @param <R>
+ */
 public interface FSQueryable<U, R extends RecordContainer> {
     /**
      * @param recordContainer
-     * @return if you've parameterized this properly, U would be a class that locates records, and the return would be the locator
-     * for the record that was inserted
+     * @return if you've {@link FSQueryable parameterized this class correctly}, then a record
+     * locator for the inserted record
      */
     U insert(R recordContainer);
 

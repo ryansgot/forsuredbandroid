@@ -17,12 +17,33 @@
  */
 package com.forsuredb.api;
 
+/**
+ * <p>
+ *     Contains a Record that is yet to be inserted or updated in the database. This <i>IS NOT</i> a
+ *     record that has been retrieved from the database.
+ * </p>
+ */
 public interface RecordContainer {
+
+    /**
+     * <p>
+     *     Use this method if you want to check a value that you have put into the container.
+     * </p>
+     * @param column
+     * @return null if one of the put methods was not previously called for this column; the Object
+     * that was stored if one of the put methods was previously called for this column
+     */
     Object get(String column);
     void put(String column, String value);
     void put(String column, long value);
     void put(String column, int value);
     void put(String column, double value);
     void put(String column, byte[] value);
+
+    /**
+     * <p>
+     *     Empty all storage of this RecordContainer
+     * </p>
+     */
     void clear();
 }

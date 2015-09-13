@@ -25,6 +25,13 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * <p>
+ *     Factory that creates {@link StaticDataRetriever StaticDataRetriever} objects that are capable
+ *     of getting {@link RecordContainer RecordContainer} objects.
+ * </p>
+ * @author Ryan Scott
+ */
 public class StaticDataRetrieverFactory {
 
     private final FSLogger log;
@@ -33,9 +40,19 @@ public class StaticDataRetrieverFactory {
         this.log = log == null ? new FSLogger.SilentLog() : log;
     }
 
+    /**
+     * @param xmlStream {@link InputStream InputStream} that <i>MUST</i> be XML
+     * @return A {@link StaticDataRetriever StaticDataRetriever} that can get
+     * {@link RecordContainer RecordContainer} objects given the {@link InputStream InputStream}
+     */
     public StaticDataRetriever fromStream(final InputStream xmlStream) {
         if (xmlStream == null) {
-            return new EmptyRetriever();
+            return new StaticDataRetriever() {
+                @Override
+                public List<RecordContainer> getRecords(String recordName) {
+                    return Collections.EMPTY_LIST;
+                }
+            };
         }
 
         return new StaticDataRetriever() {
@@ -58,12 +75,5 @@ public class StaticDataRetrieverFactory {
                 return records;
             }
         };
-    }
-
-    private static class EmptyRetriever implements StaticDataRetriever {
-        @Override
-        public List<RecordContainer> getRecords(String recordName) {
-            return Collections.EMPTY_LIST;
-        }
     }
 }

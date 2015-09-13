@@ -27,8 +27,19 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * <p>
+ *     Adapter capable of creating an implementation of any {@link FSSaveApi FSSaveApi}
+ *     extension
+ * </p>
+ */
 public class FSSaveAdapter {
 
+    /**
+     * <p>
+     *     Caches the column information so that reflection on each interface must happen only once
+     * </p>
+     */
     private static final Map<Class<? extends FSSaveApi>, Map<String, Type>> API_TO_COLUMNS_MAP = new HashMap<>();
 
     /**
@@ -37,11 +48,12 @@ public class FSSaveAdapter {
      * </p>
      *
      * @param queryable
-     * @param emptyRecord
-     * @param api
-     * @param <T> Some FSSaveApi
-     * @param <U> The class by which the save api reports its inserted rows (In Android, for example, this is a Uri)
-     * @param <R> The class by which records are created (In Android, for example, this is supported by a wrapped ContentValues)
+     * @param emptyRecord this will be emptied anyway
+     * @param api The {@link FSSaveApi FSSaveApi} class for which you would like an object
+     * @param <T>
+     * @param <U> The class by which records are located
+     * @param <R> The class by which records are created (In Android, for example, this is supported
+     *           by a wrapped ContentValues)
      * @return An implementation of the api class passed in.
      */
     public static <T extends FSSaveApi<U>, U, R extends RecordContainer> T create(FSQueryable<U, R> queryable,

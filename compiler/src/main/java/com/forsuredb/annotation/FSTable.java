@@ -17,8 +17,6 @@
  */
 package com.forsuredb.annotation;
 
-import com.forsuredb.api.FSGetApi;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -26,8 +24,8 @@ import java.lang.annotation.Target;
 
 /**
  * <p>
- *     Use the FSTable annotation on your extensions of {@link FSGetApi FSGetApi} in order to
- *     tell the compiler that this interface defines a table. <i>This is required.</i>
+ *     Use the FSTable annotation on your extensions of {@link com.forsuredb.api.FSGetApi FSGetApi}
+ *     in order to tell the compiler that this interface defines a table. <i>This is required.</i>
  * </p>
  * <p>
  *     Unlike most of the annotations defined in com.forsuredb.annotation, FSTable is

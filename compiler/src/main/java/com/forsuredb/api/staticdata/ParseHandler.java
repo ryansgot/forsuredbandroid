@@ -25,6 +25,14 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import javax.xml.parsers.SAXParser;
+
+/**
+ * <p>
+ *     Handler for {@link SAXParser SAXParser} that is capable of handling static data XML
+ * </p>
+ * @author Ryan Scott
+ */
 /*package*/ class ParseHandler extends DefaultHandler {
 
     private final String recordName;

@@ -23,8 +23,8 @@ import java.util.Map;
 
 /**
  * <p>
- *     A RecordContainer backed by Map&lt;String, String&gt; that remembers the original type and offers a convenience method of
- *     typedGet.
+ *     A RecordContainer backed by Map&lt;String, String&gt; that remembers the original type and
+ *     offers a convenience method of {@link #typedGet(String)}.
  * </p>
  */
 public final class TypedRecordContainer implements RecordContainer {
@@ -83,11 +83,11 @@ public final class TypedRecordContainer implements RecordContainer {
 
     /**
      * <p>
-     *     Either incurs precision loss or throws ClassCastException if parameter is wrong
+     *     Either incurs precision loss or throws {@link ClassCastException} if parameter is wrong
      * </p>
      * @param column
-     * @param <T>
-     * @return
+     * @param <T> The class of the stored column
+     * @return a T or null if the column was not previously stored.
      */
     public <T> T typedGet(String column) {
         if (!columnToValueMap.containsKey(column)) {

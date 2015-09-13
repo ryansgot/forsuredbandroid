@@ -22,7 +22,6 @@ import com.forsuredb.annotation.FSColumn;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
-// Only works for FSGetAdapter method calls
 /*package*/ class GetApiValidator {
 
     public static void validateCall(Method method, Object[] args) {

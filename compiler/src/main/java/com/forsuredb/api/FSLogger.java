@@ -17,12 +17,23 @@
  */
 package com.forsuredb.api;
 
+/**
+ * <p>
+ *     Interface for loggers used by the forsuredbcompiler
+ * </p>
+ * @author Ryan Scott
+ */
 public interface FSLogger {
     void e(String message);
     void i(String message);
     void w(String message);
     void o(String message);
 
+    /**
+     * <p>
+     *     Does nothing.
+     * </p>
+     */
     class SilentLog implements FSLogger {
         public void e(String message) {}
         public void i(String message) {}
@@ -30,7 +41,14 @@ public interface FSLogger {
         public void o(String message) {}
     }
 
+    /**
+     * <p>
+     *     Prints log messages to {@link System#out System.out}
+     * </p>
+     */
     class DefaultFSLogger implements FSLogger {
+
+        //TODO: make a constructor that has a tag and replace the literal
 
         @Override
         public void e(String message) {

@@ -17,6 +17,12 @@
  */
 package com.forsuredb.api;
 
+/**
+ * <p>
+ *     An interface capable of pulling information from a database query
+ * </p>
+ * @author Ryan Scott
+ */
 public interface Retriever {
     String getString(String column);
     int getInt(String column);

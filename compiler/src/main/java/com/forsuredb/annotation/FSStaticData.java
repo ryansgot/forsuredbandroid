@@ -17,8 +17,6 @@
  */
 package com.forsuredb.annotation;
 
-import com.forsuredb.api.FSGetApi;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -26,9 +24,9 @@ import java.lang.annotation.Target;
 
 /**
  * <p>
- *     Use the FSStaticData annotation on an {@link FSGetApi FSGetApi} extension to direct the
- *     compiler to the static data XML asset you have prepared for this table. For an example,
- *     {@link #asset() asset()}
+ *     Use the FSStaticData annotation on an {@link com.forsuredb.api.FSGetApi FSGetApi} extension
+ *     to direct the compiler to the static data XML asset you have prepared for this table. For an
+ *     example, {@link #asset() asset()}
  * </p>
  * @author Ryan Scott
  */
@@ -48,14 +46,15 @@ public @interface FSStaticData {
      * </resources>
      * }</pre>
      * @return The filename of the XML asset that defines static data for the table defined in the
-     * {@link FSGetApi FSGetApi} extension that this FSStaticData annotation annotates.
+     * {@link com.forsuredb.api.FSGetApi FSGetApi} extension that this FSStaticData annotation
+     * annotates.
      */
     String asset();
 
     /**
      * @return The XML detail name whose attributes define the static data records for the table
-     * defined in the {@link FSGetApi FSGetApi} extension that this FSStaticData annotation
-     * annotates. See {@link #asset() asset()} for an example.
+     * defined in the {@link com.forsuredb.api.FSGetApi FSGetApi} extension that this FSStaticData
+     * annotation annotates. See {@link #asset() asset()} for an example.
      */
     String recordName();
 }

@@ -32,10 +32,19 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * <p>
+ *     Able to create an instance of any {@link FSGetApi FSGetApi} extension.
+ * </p>
+ * @author Ryan Scott
+ */
 public class FSGetAdapter {
 
     /*package*/ static final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
+    /**
+     *
+     */
     /*package*/ static final Map<Type, Method> methodMap = new HashMap<>();
     static {
         try {
@@ -56,7 +65,12 @@ public class FSGetAdapter {
     // Because the Handler instance is stateless, there only needs to be one handler ever.
     private static final Handler handler = new Handler();
 
-    public static <T> T create(Class<T> tableApi) {
+    /**
+     * @param tableApi
+     * @param <T>
+     * @return an instance of the {@link FSGetApi FSGetApi} interface class passed in
+     */
+    public static <T extends FSGetApi> T create(Class<T> tableApi) {
         GetApiValidator.validateClass(tableApi);
         return (T) Proxy.newProxyInstance(tableApi.getClassLoader(), new Class<?>[] {tableApi}, handler);
     }
@@ -67,8 +81,9 @@ public class FSGetAdapter {
          * <p>
          *     Generates a Proxy for the FSApi interface created by the client.
          * </p>
-         * @param proxy not actually ever used.
-         * @param method not actually ever called, rather, it stores the meta-data associated with a call to one of the Cursor class methods
+         * @param proxy
+         * @param method not actually ever called, rather, it stores the meta-data associated with a
+         *               call to one of the Cursor class methods
          * @param args The Retriever object on which one of the get methods will be called
          *
          * @return

@@ -17,7 +17,24 @@
  */
 package com.forsuredb.api;
 
+/**
+ * <p>
+ *     Describes a WHERE clause of an SQL query in (possibly) two parts, a {@link #where() where()}
+ *     String that perhaps has '?' characters to be replaced by the array of String returned by
+ *     {@link #replacements() replacements()}.
+ * </p>
+ */
 public interface FSSelection {
+
+    /**
+     * @return the String where clause, possibly including '?' characters to be replaced by Strings
+     * in the {@link #replacements() replacements()} String array
+     */
     String where();
+
+    /**
+     * @return the array of Strings that are to replace all '?' characters in String returned by
+     * {@link #where() where()}.
+     */
     String[] replacements();
 }

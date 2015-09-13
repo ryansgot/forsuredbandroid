@@ -29,6 +29,12 @@ import java.io.InputStream;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+/**
+ * <p>
+ *     Wrapper for a SAXParser that simplifies calls to parse
+ * </p>
+ * @author Ryan Scott
+ */
 /*package*/ class Parser {
 
     /*package*/ interface RecordListener {

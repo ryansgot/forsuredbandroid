@@ -17,9 +17,6 @@
  */
 package com.forsuredb.annotationprocessor;
 
-import com.forsuredb.api.FSGetApi;
-import com.forsuredb.api.FSSaveApi;
-
 import org.apache.velocity.VelocityContext;
 
 import java.io.IOException;
@@ -31,8 +28,9 @@ import javax.tools.JavaFileObject;
 
 /**
  * <p>
- *     Takes the table info (which was generated from an {@link FSGetApi FSGetApi} extension) and
- *     will generate the corresponding {@link FSSaveApi FSSaveApi} interface.
+ *     Takes the table info (which was generated from an {@link com.forsuredb.api.FSGetApi FSGetApi}
+ *     extension) and  will generate the corresponding {@link com.forsuredb.api.FSSaveApi FSSaveApi}
+ *     interface.
  * </p>
  */
 /*package*/ class SetterGenerator extends BaseGenerator<JavaFileObject> {

@@ -17,6 +17,18 @@
  */
 package com.forsuredb.api;
 
+/**
+ * <p>
+ *     All {@link FSGetApi FSGetApi} extensions defined by the user will have a corresponding
+ *     FSSaveApi extension.
+ * </p>
+ * @param <U> Although it is not enforced, This parameter should be a Uri or some other resource
+ *           locator
+ * @author Ryan Scott
+ */
 public interface FSSaveApi<U> {
+   /**
+    * @return A descriptor of the result of the save operation
+    */
     SaveResult<U> save();
 }
