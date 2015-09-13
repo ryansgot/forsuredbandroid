@@ -25,6 +25,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+/**
+ * <p>
+ *     Generator capable of generating XML for migrations
+ * </p>
+ * @author Ryan Scott
+ */
 public class XmlGenerator {
 
     private static final String TAG_NAME = "migration";
