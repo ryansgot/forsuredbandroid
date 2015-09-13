@@ -32,17 +32,12 @@ dependencies {
     testCompile 'com.google.guava:guava:18.0'
 }
 
-def bintrayUserCredential() {
-    return hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
-}
-
-def bintrayApiKeyCredential() {
-    return hasProperty('bintrayApiKey') ? getProperty('bintrayApiKey') : ''
-}
+String bintrayUserCredential = hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
+String bintrayApiKeyCredential = hasProperty('bintrayApiKey') ? getProperty('bintrayApiKey') : ''
 
 bintray {
-    user = bintrayUserCredential()
-    key = bintrayApiKeyCredential()
+    user = bintrayUserCredential
+    key = bintrayApiKeyCredential
     publications = ['forsuredbcompilerPublication']
     pkg {
         repo = 'maven'

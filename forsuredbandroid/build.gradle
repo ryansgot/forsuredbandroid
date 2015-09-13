@@ -34,13 +34,8 @@ dependencies {
     compile project(':compiler')
 }
 
-def bintrayUserCredential() {
-    return hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
-}
-
-def bintrayApiKeyCredential() {
-    return hasProperty('bintrayApiKey') ? getProperty('bintrayApiKey') : ''
-}
+String bintrayUserCredential = hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
+String bintrayApiKeyCredential = hasProperty('bintrayApiKey') ? getProperty('bintrayApiKey') : ''
 
 install {
     repositories.mavenInstaller {
@@ -63,7 +58,7 @@ install {
                 }
                 developers {
                     developer {
-                        id bintrayUserCredential()
+                        id bintrayUserCredential
                         name 'Ryan Scott'
                         email 'ryansgot@gmail.com'
                     }
@@ -79,8 +74,8 @@ install {
 }
 
 bintray {
-    user = bintrayUserCredential()
-    key = bintrayApiKeyCredential()
+    user = bintrayUserCredential
+    key = bintrayApiKeyCredential
 
     configurations = ['archives']
     pkg {
