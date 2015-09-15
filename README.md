@@ -1,5 +1,5 @@
 # forsuredb
-forsuredb is a project designed to take a lot of the work out of database programming. It was inspired mainly by the retrofit project (https://github.com/square/retrofit) and Ruby on Rails, and it is meant to be a typesafe, quick means of defining and working with data. forsuredb is not intended to replace existing frameworks, but to work within them (see the Android Development subheading below).
+forsuredb is a project designed to take a lot of the work out of database programming. Inspired mainly by the retrofit project (https://github.com/square/retrofit) and ActiveRecord (https://github.com/rails/rails/tree/master/activerecord), forsuredb is intended to be a typesafe, quick means of defining and working with data. It is not intended to replace existing frameworks, but to work within them (see the Android Development subheading below).
 
 ## Possible Use Cases
 1. Android Development
@@ -20,12 +20,13 @@ Having only done this for the example Android project, I'm not quite sure about 
 - Use SQLite as your database if you intend to make use of the migration capability of forsuredb. All of the provided migration SQL presupposes SQLite at the moment.
 
 ## Using forsuredb in Android
+### Setup
 - Create a new Android project
 - Set up the project build.gradle repositories and dependencies like this:
 ```groovy
 buildscript {
     repositories {
-        jcenter()
+        jcenter() // <-- hosts the forsuredbplugin binary
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.2.3'
@@ -43,7 +44,7 @@ allprojects {
 - Amend your app build.gradle file as such:
 ```groovy
 apply plugin: 'com.android.application'
-apply plugin: 'android-apt'
+apply plugin: 'android-apt'             // <-- enables the forsuredbcompiler
 apply plugin: 'com.fsryan.forsuredb'    // <-- provides the dbmigrate task
 
 android {
@@ -56,10 +57,10 @@ android {
 dependencies {
     compile 'com.google.guava:guava:18.0' // <-- forsuredbandroid depends on this, but the version probably doesn't matter much
     
-    compile 'com.fsryan:forsuredbandroid:0.0.2@aar'
-    compile 'com.fsryan:forsuredbcompiler:0.0.2'
+    compile 'com.fsryan:forsuredbandroid:0.0.3@aar'
+    compile 'com.fsryan:forsuredbcompiler:0.0.3'
     
-    apt 'com.fsryan:forsuredbcompiler:0.0.2'
+    apt 'com.fsryan:forsuredbcompiler:0.0.3'
 }
 
 forsuredb {
@@ -68,26 +69,28 @@ forsuredb {
                                                       // If you have an Android project, this should be the result parameter.
     dbType = 'sqlite'                                 // this does nothing at the moment. Only sqlite is supported.
     migrationDirectory = 'app/src/main/assets'        // the assets directory of your app starting at your project's base directory
-    appProjectDirectory = 'app'
+    appProjectDirectory = 'app'                       // Your app's base directory
 }
 ```
-- Create a ContentProvider http://developer.android.com/intl/ko/guide/topics/providers/content-providers.html
-  - _Note that A default implementation of a ContentProvider necessarily cannot be implemented for you (it would block other applications with the same ContentProvider from being installed)._
-  - _Note that you can use ForSure to help you write the ContentProvider._ I recommend this, but it is not required. See the app project's ```TestappContentProvider``` class for an example.
-- Define an interface that extends FSGetApi
-```java
-@FSTable("user")
-public interface UserTable extends FSGetApi {   // <-- you must extend FSGetApi when @FSTable annotates an interface or your app won't compile
-    @FSColumn("global_id") long globalId(Retriever retriever);
-    @FSColumn("login_count") int loginCount(Retriever retriever);
-    @FSColumn("app_rating") double appRating(Retriever retriever);
-    @FSColumn("competitor_app_rating") BigDecimal competitorAppRating(Retriever retriever);
-}
-/*
- * The Retriever implementation for Android projects is defined for you as the FSCursor class--which itself is a Cursor
- */
+- Use the default content provider by declaring it in your app's AndroidManifest.xml file:
+```xml
+<!--
+  - com.forsuredb.testapp.content is the default authority. You can use any authority you wish, and 
+  - I strongly encourage you to use a different authority because authority Strings are intended to
+  - be globally unique. Thus, if you use the default authority, then you will not be able to
+  - release your app to the app store.d
+-->
+<provider
+    android:name="com.forsuredb.provider.FSDefaultProvider"
+    android:authorities="com.forsuredb.testapp.content"
+    android:enabled="true"
+    android:exported="false" />
 ```
-- Initialize ForSure in your Application (note that your Application class must be defined in your application's root package at the moment). The TableGenerator class is generated at compile time, so your IDE may give you a compilation error--ignore it. Maybe someday I'll make an Android Studio plugin.
+- Specify your application's ```android:name``` attribute in your app's AndroidManifest.xml file and create the corresponding extension of the ```Application``` class:
+```xml
+<application
+        android:name=".App" >
+```
 ```java
 public class App extends Application {
 
@@ -102,43 +105,42 @@ public class App extends Application {
     }
 }
 ```
-- Ensure that that the class above is referenced properly in AndroidManifest.xml as below:
-```xml
-<application
-        android:name=".App" >
+- Define an interface that extends FSGetApi
+```java
+@FSTable("user")
+public interface UserTable extends FSGetApi {   // <-- you must extend FSGetApi when @FSTable annotates an interface or your app won't compile
+    @FSColumn("global_id") long globalId(Retriever retriever);
+    @FSColumn("login_count") int loginCount(Retriever retriever);
+    @FSColumn("app_rating") double appRating(Retriever retriever);
+    @FSColumn("competitor_app_rating") BigDecimal competitorAppRating(Retriever retriever);
+}
 ```
-- Migrate the database
+- Migrate the database by using the dbmigrate gradle task (defined by forsuredbplugin)
 ```
 ./gradlew dbmigrate
 ```
 After you do this, then you can retrieve records from the database by:
 ```java
-Uri usersUri = ForSure.inst().getTable("user").getAllRecordsUri();
-Retriever retriever = new FSCursor(getContentResolver().query(usersUri, null, null, null, null));
-UserTable userTable = ForSure.inst().getApi(userUri);
-userTable.id(retriever);    // <-- the id, created, deleted, and modified methods are defined for you in the 
-                            // FSGetApi interface
-userTable.globalId(retriever);
+UserTable userTable = ForSure.resolve("user").getter();
+Retriever retriever = ForSure.queryAll("user")
+long id = userTable.id(retriever);    // <-- you get the the id, created, deleted, and modified methods for free
+Date created = userTable.created(retriever);
+long globalId = userTable.globalId(retriever);
 /* etc */
 ```
-You can put stuff into the database by:
+You can update/insert to the database by:
 ```java
-ForSure.inst().setApi(UserTableSetter.class)  // You can also retrieve the setApi with a Uri
-        .appRating(4.1D)
-        .competitorAppRating(new BigDecimal(4.2))
-        .globalId(8439L)
-        .id(8493L)
-        .loginCount(5)
+UserTableSetter setter = ForSure.resolve("user").setter();
+SaveResult<Uri> sr = setter.appRating(1.25D)
+        .competitorAppRating(new BigDecimal(1.5F))
+        .globalId(234846L)
+        .id(1L)
+        .loginCount(1234)
         .save();
-/*
- * When you run the save method, an upsert is performed. That is, if the record with the _id specified does not exist, a new one
- * is inserted. When the record exist, an update is performed. If an update is performed, then the modified column trigger updates
- * the modified date to the date the record was modified.
- */
 ```
 _Notice that you DID NOT have to write the UserTableSetter class above. It gets generated for you at compile time._ Moreover, you did not have to write the implementation of either your interface or the corresponding Setter interface that got generated.
-
-In fact, _migrations also get generated for you_ as XML assets when you run ```./gradlew dbmigrate```. These XML assets will then be placed in your classpath next time you build. Since the forsuredblib project contains the SQLiteOpenHelper class, it figures out the version number of your database for you and applies the necessary migrations on upgrade or all migrations on create of the database.
+### Migration
+In fact, _migrations also get generated for you_ as XML assets when you run ```./gradlew dbmigrate```. These XML assets will then be placed in your classpath next time you build. forsuredbandroid figures out all of the details behind migrating the database for you given the assets generated by ```./gradlew dbmigrate```--so the only code you have to write is in your extensions of the ```FSGetApi``` interface.
 
 So if you want to migrate your database after its initial creation (in this case, to add a table), then you would just:
 - Define another interface
@@ -150,14 +152,13 @@ public interface ProfileInfoTable extends FSGetApi {
     @FSColumn("binary_data") byte[] binaryData(Retriever retriever);
 }
 ```
-NOTICE: As of this README, you cannot add more than one ```@ForeignKey``` column to the same table when you run ```./gradlew dbmigrate```. A workaround if you want to add multiple ```@ForeignKey``` columns is to run ```./gradlew dbmigrate``` in between addition of each ```@ForeignKey``` column.
+As of this README, you cannot add more than one ```@ForeignKey``` column to the same table when you run ```./gradlew dbmigrate```. A workaround if you want to add multiple ```@ForeignKey``` columns is to run ```./gradlew dbmigrate``` in between addition of each ```@ForeignKey``` column.
 - Migrate the database
 ```
 ./gradlew dbmigrate
 ```
 
 That's it. No messy one-off code--no need to write your own SQL or migrations--just write java interfaces. Just as before, a corresponding Setter interface gets generated for you at compile time, so you can use it in your app.
-
 ### Static Data
 You can define static data as XML in your assets directory. for example, app/src/main/assets/profile_info.xml is below:
 ```xml
@@ -192,7 +193,10 @@ For Android projects, this means that even when the user deletes all data, after
 
 ## Coming up
 - stricter testing
+- record deletion support
+- default cascading behaviors
 - support for more types of migrations
 - an example java (non-Android) project and corresponding forsuredbjava library
+- Fluent Find api for querying the database
 - automatically-generated join interfaces based upon foreign key relationships
 - plugin-style database support extensions
