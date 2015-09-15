@@ -17,7 +17,7 @@
             </intent-filter>
         </activity>
         <provider
-            android:name=".provider.TestappProvider"
+            android:name="com.forsuredb.provider.FSDefaultProvider"
             android:authorities="com.forsuredb.testapp.content"
             android:enabled="true"
             android:exported="false" />
