@@ -58,12 +58,12 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
                                 .build(context);
     }
 
-    public void changeCursor(Cursor newCursor) {
+    public void changeCursor(FSCursor newCursor) {
         if (retriever != null) {
             retriever.close();
         }
         if (newCursor != null) {
-            retriever = new FSCursor(newCursor);
+            retriever = newCursor;
             notifyDataSetChanged();
         }
     }

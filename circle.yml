@@ -3,6 +3,6 @@ test:
     - ./gradlew clean compileDebugJava :compiler:test :forsuredbandroid:test
   post:
     - mkdir $CIRCLE_TEST_REPORTS/compiler
-    - mkdir $CIRCLE_TEST_REPORTS/forsuredbandroid
     - cp -r compiler/build/reports/* $CIRCLE_TEST_REPORTS/compiler
+    - mkdir $CIRCLE_TEST_REPORTS/forsuredbandroid
     - cp -r forsuredbandroid/build/reports/* $CIRCLE_TEST_REPORTS/forsuredbandroid
