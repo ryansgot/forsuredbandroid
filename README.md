@@ -1,6 +1,8 @@
 # forsuredb
 forsuredb is a project designed to take a lot of the work out of database programming. Inspired mainly by the retrofit project (https://github.com/square/retrofit) and ActiveRecord (https://github.com/rails/rails/tree/master/activerecord), forsuredb is intended to be a typesafe, quick means of defining and working with data. It is not intended to replace existing frameworks, but to work within them (see the Android Development subheading below).
 
+For a video guide (15 minutes total) to setting up a forsuredb project in Android, see [the forsuredb introduction](https://www.youtube.com/watch?v=Z7uyuIkmYCk&list=PLVvK5rk-nDhJByVqhwdsf4icd2XBUDrtV).
+
 ## Possible Use Cases
 1. Android Development
   * The integration work has already been done for you in the forsuredbandroid module
