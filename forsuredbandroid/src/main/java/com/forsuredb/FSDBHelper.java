@@ -76,7 +76,7 @@ import java.util.List;
     }
 
     /**
-     * @param migrations
+     * @param migrations The {@link List} of {@link Migration}
      * @return either 1 or the largest dbVersion in the migrations list
      */
     private static int identifyDbVersion(List<Migration> migrations) {
