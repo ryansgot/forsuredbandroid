@@ -1,6 +1,6 @@
 test:
   override:
-    - ./gradlew clean :compiler:test :forsuredbandroid:test
+    - ./gradlew clean compileDebugJava :compiler:test :forsuredbandroid:test
   post:
     - mkdir $CIRCLE_TEST_REPORTS/compiler
     - mkdir $CIRCLE_TEST_REPORTS/forsuredbandroid
