@@ -23,71 +23,126 @@ import com.forsuredb.api.RecordContainer;
 
 /**
  * <p>
- *     This is a ContentValues object wrapper that implements RecordContainer so that a FSSaveApi can be created
+ *     This is a wrapper for a {@link ContentValues} object. Because it implements
+ *     {@link RecordContainer}, it can be used to create an
+ *     {@link com.forsuredb.api.FSSaveApi FSSaveApi}.
  * </p>
+ * @author Ryan Scott
  */
 /*package*/ class FSContentValues implements RecordContainer {
 
     private final ContentValues cv;
 
+    /**
+     * <p>
+     *     The reference to the {@link ContentValues} object reference cannot be changed, but
+     *     you can do all of the normal {@link ContentValues} operations on an
+     *     {@link FSContentValues}.
+     * </p>
+     * @param cv The {@link ContentValues} object to wrap
+     */
     private FSContentValues(ContentValues cv) {
         this.cv = cv;
     }
 
+    /**
+     * <p>
+     *     This method enforces that {@link FSContentValues} are constructed with an empty
+     *     {@link ContentValues} object. It is easier to manage state this way.
+     * </p>
+     * @return a new empty {@link FSContentValues}.
+     */
     /*package*/ static FSContentValues getNew() {
         return new FSContentValues(new ContentValues());
     }
 
+    /**
+     * @see ContentValues#toString()
+     */
     @Override
     public String toString() {
         return cv.toString();
     }
 
+    /**
+     * @see ContentValues#equals(Object)
+     */
     @Override
     public boolean equals(Object o) {
         return cv.equals(o);
     }
 
+    /**
+     * @see ContentValues#hashCode()
+     */
     @Override
     public int hashCode() {
         return cv.hashCode();
     }
 
+    /**
+     * @see ContentValues#get(String)
+     */
     @Override
     public Object get(String column) {
         return cv.get(column);
     }
 
+    /**
+     * @see ContentValues#put(String, String)
+     */
     @Override
     public void put(String column, String value) {
         cv.put(column, value);
     }
 
+    /**
+     * @see ContentValues#put(String, Long)
+     */
     @Override
     public void put(String column, long value) {
         cv.put(column, value);
     }
 
+    /**
+     * @see ContentValues#put(String, Integer)
+     */
     @Override
     public void put(String column, int value) {
         cv.put(column, value);
     }
 
+    /**
+     * @see ContentValues#put(String, Double)
+     */
     @Override
     public void put(String column, double value) {
         cv.put(column, value);
     }
 
+    /**
+     * @see ContentValues#put(String, byte[])
+     */
     @Override
     public void put(String column, byte[] value) {
         cv.put(column, value);
     }
 
+    /**
+     * @see ContentValues#clear()
+     */
     @Override
     public void clear() {
         cv.clear();
     }
 
+    /**
+     * <p>
+     *     Any changes you make to the wrapped {@link ContentValues} object will carry over
+     *     to the {@link FSContentValues} object that wraps it.
+     * </p>
+     * @return the wrapped {@link ContentValues}
+     */
     public ContentValues getContentValues() {
         return cv;
     }
