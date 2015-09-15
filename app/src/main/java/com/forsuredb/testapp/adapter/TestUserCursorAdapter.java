@@ -9,7 +9,6 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.forsuredb.FSCursor;
-import com.forsuredb.FSTableDescriber;
 import com.forsuredb.ForSure;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.UserTable;
@@ -19,12 +18,10 @@ import java.math.BigDecimal;
 
 public class TestUserCursorAdapter extends BaseAdapter {
 
-    private final FSTableDescriber table;
     private Context context;
     private FSCursor retriever;
 
     public TestUserCursorAdapter(Context context) {
-        table = ForSure.inst().getTable("user");
         this.context = context;
         retriever = null;
     }
@@ -49,15 +46,15 @@ public class TestUserCursorAdapter extends BaseAdapter {
         if (retriever == null || !retriever.moveToPosition(position)) {
             return null;
         }
-        UserTable api = ForSure.inst().getApi(table.getAllRecordsUri());
-        return new ViewBuilder().id(api.id(retriever))
-                                .globalId(api.globalId(retriever))
-                                .loginCount(api.loginCount(retriever))
-                                .appRating(api.appRating(retriever))
-                                .competitorAppRating(api.competitorAppRating(retriever))
-                                .created(api.created(retriever).toString())
-                                .modified(api.modified(retriever).toString())
-                                .deleted(api.deleted(retriever))
+        UserTable userTable = ForSure.resolve("user").getter();
+        return new ViewBuilder().id(userTable.id(retriever))
+                                .globalId(userTable.globalId(retriever))
+                                .loginCount(userTable.loginCount(retriever))
+                                .appRating(userTable.appRating(retriever))
+                                .competitorAppRating(userTable.competitorAppRating(retriever))
+                                .created(userTable.created(retriever).toString())
+                                .modified(userTable.modified(retriever).toString())
+                                .deleted(userTable.deleted(retriever))
                                 .targetLayout(view)
                                 .build(context);
     }
@@ -66,8 +63,10 @@ public class TestUserCursorAdapter extends BaseAdapter {
         if (retriever != null) {
             retriever.close();
         }
-        retriever = new FSCursor(newCursor);
-        notifyDataSetChanged();
+        if (newCursor != null) {
+            retriever = new FSCursor(newCursor);
+            notifyDataSetChanged();
+        }
     }
 
     private class ViewBuilder {

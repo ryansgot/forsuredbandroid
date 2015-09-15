@@ -2,15 +2,17 @@ package com.forsuredb.testapp;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import com.forsuredb.FSTableDescriber;
 import com.forsuredb.ForSure;
+import com.forsuredb.api.SaveResult;
 import com.forsuredb.testapp.adapter.TestProfileInfoCursorAdapter;
 import com.forsuredb.testapp.adapter.TestUserCursorAdapter;
 import com.forsuredb.testapp.model.ProfileInfoTableSetter;
@@ -39,12 +41,8 @@ public class TestActivity extends ActionBarActivity {
     @Override
     public void onResume() {
         super.onResume();
-        // Update user list
-        FSTableDescriber userTable = ForSure.inst().getTable("user");
-        userCursorAdapter.changeCursor(getContentResolver().query(userTable.getAllRecordsUri(), null, null, null, null));
-        // Update profile info list
-        FSTableDescriber profileTable = ForSure.inst().getTable("profile_info");
-        profileInfoCursorAdapter.changeCursor(getContentResolver().query(profileTable.getAllRecordsUri(), null, null, null, null));
+        userCursorAdapter.changeCursor(ForSure.queryAll("user"));   // <-- Update user list
+        profileInfoCursorAdapter.changeCursor(ForSure.queryAll("profile_info"));    // <-- Update profile info list
     }
 
     @Override
@@ -90,21 +88,22 @@ public class TestActivity extends ActionBarActivity {
         Random generator = new Random(new Date().getTime());
 
         /*
-         * This block demonstrates saving a newly created record routed via the Uri.
+         * This block demonstrates saving a newly created record routed via the table name
          */
-        ForSure.inst().setApi(UserTableSetter.class).appRating(generator.nextDouble())
+        UserTableSetter setter = ForSure.resolve("user").setter();
+        SaveResult<Uri> sr = setter.appRating(generator.nextDouble())
                 .competitorAppRating(new BigDecimal(generator.nextFloat()))
                 .globalId(generator.nextLong())
                 .id(id)
                 .loginCount(generator.nextInt())
                 .save();
+        Log.i("ForSureTest", "SaveResult<Uri>{inserted=" + sr.inserted() + ", rowsAffected=" + sr.rowsAffected() + ", exception=" + sr.exception() + "}");
         /*
          * The new record will be upserted--in other words, if a record with the specified id already exists, it will be
          * overwritten. Otherwise, it will insert.
          */
 
-        FSTableDescriber userTable = ForSure.inst().getTable("user");
-        userCursorAdapter.changeCursor(getContentResolver().query(userTable.getAllRecordsUri(), null, null, null, null));
+        userCursorAdapter.changeCursor(ForSure.queryAll("user"));   // <-- Update user list
     }
 
     private void inputRandomDataForProfileInfo(long id) {
@@ -112,23 +111,23 @@ public class TestActivity extends ActionBarActivity {
         long userId = generator.nextLong();
 
         /*
-         * This block demonstrates saving a newly created record routed via the Uri.
+         * This block demonstrates saving a newly created record as a method call chain
          */
-        ForSure.inst().setApi(ProfileInfoTableSetter.class).id(id)
+        SaveResult<Uri> sr = ForSure.setApi(ProfileInfoTableSetter.class).id(id)
                 .emailAddress("user" + userId + "@email.com")
                 .userId(userId)
                 .binaryData(new byte[] {(byte) (generator.nextInt() & 0xFF), (byte) (generator.nextInt() & 0xFF), (byte) 0})
                 .save();
+        Log.i("ForSureTest", "SaveResult<Uri>{inserted=" + sr.inserted() + ", rowsAffected=" + sr.rowsAffected() + ", exception=" + sr.exception() + "}");
         /*
          * The new record will be upserted--in other words, if a record with the specified id already exists, it will be
          * overwritten. Otherwise, it will insert.
          */
 
-        FSTableDescriber profileTable = ForSure.inst().getTable("profile_info");
-        profileInfoCursorAdapter.changeCursor(getContentResolver().query(profileTable.getAllRecordsUri(), null, null, null, null));
+        profileInfoCursorAdapter.changeCursor(ForSure.queryAll("profile_info"));    // <-- Update profile info list
     }
 
-    private long getIdFromDialog(DialogInterface dialogInterface) throws NumberFormatException{
+    private long getIdFromDialog(DialogInterface dialogInterface) throws NumberFormatException {
         EditText idText = (EditText) ((AlertDialog) dialogInterface).findViewById(R.id.id_input_text);
         return Long.parseLong(idText.getText().toString());
     }

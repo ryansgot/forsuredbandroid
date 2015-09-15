@@ -9,23 +9,19 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.forsuredb.FSCursor;
-import com.forsuredb.FSTableDescriber;
 import com.forsuredb.ForSure;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.ProfileInfoTable;
 import com.google.common.base.Strings;
 
 import java.util.Arrays;
-import java.util.Date;
 
 public class TestProfileInfoCursorAdapter extends BaseAdapter {
 
-    private final FSTableDescriber table;
     private Context context;
     private FSCursor retriever;
 
     public TestProfileInfoCursorAdapter(Context context) {
-        table = ForSure.inst().getTable("profile_info");
         this.context = context;
         retriever = null;
     }
@@ -50,7 +46,7 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
         if (retriever == null || !retriever.moveToPosition(position)) {
             return null;
         }
-        final ProfileInfoTable api = ForSure.inst().getApi(table.getAllRecordsUri());
+        final ProfileInfoTable api = ForSure.resolve("profile_info").getter();
         return new ViewBuilder().id(api.id(retriever))
                                 .userId(api.userId(retriever))
                                 .emalAddress(api.emailAddress(retriever))
@@ -66,8 +62,10 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
         if (retriever != null) {
             retriever.close();
         }
-        retriever = new FSCursor(newCursor);
-        notifyDataSetChanged();
+        if (newCursor != null) {
+            retriever = new FSCursor(newCursor);
+            notifyDataSetChanged();
+        }
     }
 
     private class ViewBuilder {
