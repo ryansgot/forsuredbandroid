@@ -31,6 +31,7 @@ import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
 
 /**
@@ -90,13 +91,17 @@ public class ProcessingContext implements TableContext {
     private List<TableInfo> gatherInitialInfo() {
         List<TableInfo> ret = new ArrayList<>();
         for (TypeElement te : tableTypes) {
-            if (te.getKind() != ElementKind.INTERFACE) {
-                continue;   // <-- only process interfaces
+            if (!isNonPrivateInterface(te)) {
+                continue;   // <-- only process interfaces that are non-private
             }
 
             ret.add(TableInfo.from(te));
         }
 
         return ret;
+    }
+
+    private boolean isNonPrivateInterface(TypeElement te) {
+        return te.getKind() == ElementKind.INTERFACE && !te.getModifiers().contains(Modifier.PRIVATE);
     }
 }
