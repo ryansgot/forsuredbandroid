@@ -28,6 +28,14 @@ import com.forsuredb.api.FSSaveApi;
 import com.forsuredb.api.FSTableCreator;
 import com.google.common.base.Strings;
 
+/**
+ * <p>
+ *     The main description of a table. The main use of this class is getting objects
+ *     of the {@link FSGetApi} extension and the {@link FSSaveApi} extension that are
+ *     associated with this table.
+ * </p>
+ * @author Ryan Scott
+ */
 public class FSTableDescriber {
 
     private static final String LOG_TAG = FSTableDescriber.class.getSimpleName();
@@ -37,8 +45,6 @@ public class FSTableDescriber {
     private Class<? extends FSSaveApi<Uri>> saveApiClass;
     private final String mimeType;
     private final Uri allRecordsUri;
-    private final String staticDataAsset;
-    private final String staticDataRecordName;
 
     private FSGetApi getApi;
     private FSSaveApi<Uri> setApi;
@@ -49,46 +55,45 @@ public class FSTableDescriber {
         this.getApiClass = fsTableCreator.getTableApiClass();
         mimeType = "vnd.android.cursor/" + name;
         allRecordsUri = Uri.parse("content://" + fsTableCreator.getAuthority() + "/" + name);
-        staticDataAsset = fsTableCreator.getStaticDataAsset();
-        staticDataRecordName = fsTableCreator.getStaticDataRecordName();
     }
 
-    private void validate(FSTableCreator fsTableCreator) {
-        if (fsTableCreator == null) {
-            throw new IllegalArgumentException("Cannot create " + FSTableDescriber.class.getSimpleName() + " with null " + FSTableCreator.class.getSimpleName());
-        }
-        if (Strings.isNullOrEmpty(fsTableCreator.getAuthority())) {
-            throw new IllegalArgumentException("Cannot create " + FSTableDescriber.class.getSimpleName() + " without an authority");
-        }
-        if (!fsTableCreator.getTableApiClass().isAnnotationPresent(FSTable.class)) {
-            throw new IllegalArgumentException("Cannot create " + FSTableDescriber.class.getSimpleName() + " without a table name. Use the FSTable annotation on all " + com.forsuredb.api.FSGetApi.class.getSimpleName() + " extensions");
-        }
+    /*package*/ FSTableDescriber(String authority, Class<? extends FSGetApi> getApiClass) {
+        this(new FSTableCreator(authority, getApiClass));
     }
 
+    /**
+     * @return the name if the table
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * @return the mime type of this table as a String
+     */
     public String getMimeType() {
         return mimeType;
     }
 
+    /**
+     * @return the {@link Uri} representing all records of this table
+     */
     public Uri getAllRecordsUri() {
         return allRecordsUri;
     }
 
-    public String getStaticDataAsset() {
-        return staticDataAsset;
-    }
-
-    public String getStaticDataRecordName() {
-        return staticDataRecordName;
-    }
-
+    /**
+     * @param id the id of the record for which you want a specific record {@link Uri}
+     * @return the {@link Uri} representation of the specific record with the id
+     */
     public Uri getSpecificRecordUri(long id) {
         return Uri.withAppendedPath(allRecordsUri, Long.toString(id));
     }
 
+    /**
+     * @return an object of the {@link FSGetApi} extension associated with this table.
+     * You should cast this to the desired extension in order to use it.
+     */
     public FSGetApi get() {
         if (getApi == null) {
             getApi = FSGetAdapter.create(getApiClass);
@@ -96,17 +101,31 @@ public class FSTableDescriber {
         return getApi;
     }
 
-    public FSSaveApi<Uri> set(ContentProviderQueryable q) {
+    /**
+     * @param cpq The {@link ContentProviderQueryable} capable of making queries for
+     *            resources associated with this table
+     * @return an object of the {@link FSSaveApi} extension associated with this table.
+     * You should cast this to the desired extension in order to use it.
+     */
+    public FSSaveApi<Uri> set(ContentProviderQueryable cpq) {
         if (setApi == null) {
-            setApi = FSSaveAdapter.create(q, FSContentValues.getNew(), getSaveApiClass());
+            setApi = FSSaveAdapter.create(cpq, FSContentValues.getNew(), getSaveApiClass());
         }
         return setApi;
     }
 
+    /**
+     * @return the {@link Class} object for the {@link FSGetApi} extension associated
+     * with this table.
+     */
     public Class<? extends FSGetApi> getGetApiClass() {
         return getApiClass;
     }
 
+    /**
+     * @return the {@link Class} object for the {@link FSSaveApi} extension associated
+     * with this table.
+     */
     public Class<? extends FSSaveApi<Uri>> getSaveApiClass() {
         if (saveApiClass == null) {
             initSaveApi();
@@ -128,6 +147,18 @@ public class FSTableDescriber {
         } catch (ClassCastException cce) {
             Log.e(LOG_TAG, "Could not cast: " + loaded.getName() + " to correct class");
             throw cce;
+        }
+    }
+
+    private void validate(FSTableCreator fsTableCreator) {
+        if (fsTableCreator == null) {
+            throw new IllegalArgumentException("Cannot create " + FSTableDescriber.class.getSimpleName() + " with null " + FSTableCreator.class.getSimpleName());
+        }
+        if (Strings.isNullOrEmpty(fsTableCreator.getAuthority())) {
+            throw new IllegalArgumentException("Cannot create " + FSTableDescriber.class.getSimpleName() + " without an authority");
+        }
+        if (!fsTableCreator.getTableApiClass().isAnnotationPresent(FSTable.class)) {
+            throw new IllegalArgumentException("Cannot create " + FSTableDescriber.class.getSimpleName() + " without a table name. Use the FSTable annotation on all " + com.forsuredb.api.FSGetApi.class.getSimpleName() + " extensions");
         }
     }
 }
