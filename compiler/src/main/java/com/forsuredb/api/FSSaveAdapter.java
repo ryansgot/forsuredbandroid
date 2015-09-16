@@ -103,16 +103,25 @@ public class FSSaveAdapter {
                 return method.invoke(this, args);
             }
 
-            if (!"save".equals(method.getName())) {
-                performSet(getColumnName(method), args[0]);
-                return proxy;
+            // The following methods are terminal
+            switch(method.getName()) {
+                case "save":
+                    return performSave();
+                case "softDelete":
+                    recordContainer.clear();
+                    recordContainer.put("deleted", 1);
+                    return performUpsert();
+                case "hardDelete":
+                    recordContainer.clear();
+                    return queryable.delete((FSSelection) args[0]);
             }
 
-            return performSave();
+            performSet(getColumnName(method), args[0]);
+            return proxy;
         }
 
         private SaveResult<U> performSave() {
-            if (!idStored()) {  // <-- if no id has been stored, then this is almost assuredly an instertion . . . not necessarily true, but baby steps
+            if (!idStored()) {
                 return performInsert();
             }
             return performUpsert();
@@ -130,8 +139,9 @@ public class FSSaveAdapter {
         }
 
         private SaveResult<U> performUpsert() {
-            FSSelection selection = new Selection("_id = ?", new String[]{(String) recordContainer.get("_id")});
-            Retriever cursor = queryable.query(null, selection, null);
+            final String id = (String) recordContainer.get("_id");
+            FSSelection selection = id == null ? null : new Selection("_id = ?", new String[]{id});
+            Retriever cursor = queryable.query(null, selection == null ? null : selection, null);
             try {
                 if (cursor == null || cursor.getCount() < 1) {
                     return performInsert();

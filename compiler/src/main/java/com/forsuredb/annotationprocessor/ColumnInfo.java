@@ -23,11 +23,15 @@ import com.forsuredb.annotation.PrimaryKey;
 import com.forsuredb.annotation.Unique;
 
 import java.util.List;
+import java.util.Map;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
 
 /**
  * <p>
@@ -40,33 +44,24 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
     private final String columnName;
     private final String qualifiedType;
     private final String defaultValue;
-    private final boolean foreignKey;
     private final boolean unique;
     private final boolean primaryKey;
-    private String foreignKeyTableName;   // <-- cannot be known at creation time in some cases
-    private String foreignKeyColumnName;  // <-- cannot be known at creation time in some cases
-    private String foreignKeyApiClassName;
+    private final ForeignKeyInfo foreignKey;
 
     private ColumnInfo(String methodName,
                        String columnName,
                        String qualifiedType,
                        String defaultValue,
-                       boolean foreignKey,
                        boolean unique,
                        boolean primaryKey,
-                       String foreignKeyTableName,
-                       String foreignKeyColumnName,
-                       String foreignKeyApiClassName) {
+                       ForeignKeyInfo foreignKey) {
         this.methodName = methodName;
         this.columnName = columnName == null || columnName.isEmpty() ? methodName : columnName;
         this.qualifiedType = qualifiedType == null || qualifiedType.isEmpty() ? "java.lang.String" : qualifiedType;
         this.defaultValue = defaultValue;
-        this.foreignKey = foreignKey;
         this.unique = unique;
         this.primaryKey = primaryKey;
-        this.foreignKeyTableName = foreignKeyTableName;
-        this.foreignKeyColumnName = foreignKeyColumnName;
-        this.foreignKeyApiClassName = foreignKeyApiClassName;
+        this.foreignKey = foreignKey;
     }
 
     public static ColumnInfo from(ExecutableElement ee) {
@@ -93,12 +88,9 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
         return new StringBuffer("ColumnInfo{columnName=").append(columnName)
                 .append(", methodName=").append(methodName)
                 .append(", qualifiedType=").append(qualifiedType)
-                .append(", foreignKey=").append(foreignKey)
+                .append(", foreignKey=").append(foreignKey == null ? "null" : foreignKey.toString())
                 .append(", unique=").append(unique)
                 .append(", primaryKey=").append(primaryKey)
-                .append(", foreignKeyTableName=").append(foreignKeyTableName)
-                .append(", foreignKeyColumnName=").append(getForeignKeyColumnName())
-                .append(", foreignKeyApiClassName=").append(foreignKeyApiClassName)
                 .append("}").toString();
     }
 
@@ -121,10 +113,10 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
         }
 
         // prioritize foreign key columns
-        if (foreignKey && !other.isForeignKey()) {
+        if (isForeignKey() && !other.isForeignKey()) {
             return -1;  // <-- this column is a foreign key and the other is not
         }
-        if (!foreignKey && other.isForeignKey()) {
+        if (!isForeignKey() && other.isForeignKey()) {
             return 1;   // <-- this column is not a foreign key and the other is
         }
 
@@ -152,6 +144,10 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
     }
 
     public boolean isForeignKey() {
+        return foreignKey != null;
+    }
+
+    public ForeignKeyInfo getForeignKey() {
         return foreignKey;
     }
 
@@ -161,18 +157,6 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
 
     public boolean isUnique() {
         return unique;
-    }
-
-    public String getForeignKeyTableName() {
-        return foreignKeyTableName;
-    }
-
-    public String getForeignKeyColumnName() {
-        return foreignKeyColumnName;
-    }
-
-    public String getForeignKeyApiClassName() {
-        return foreignKeyApiClassName;
     }
 
     /**
@@ -191,8 +175,8 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
 
     private String setForeignKeyTableName(List<TableInfo> allTables) {
         for (TableInfo table : allTables) {
-            if (table.getQualifiedClassName().equals(foreignKeyApiClassName)) {
-                foreignKeyTableName = table.getTableName();
+            if (table.getQualifiedClassName().equals(foreignKey.getForeignKeyApiClassName())) {
+                foreignKey.setForeignKeyTableName(table.getTableName());
                 break;
             }
         }
@@ -201,15 +185,17 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
     }
 
     private static void appendAnnotationInfo(Builder builder, AnnotationMirror am) {
-        AnnotationTranslator at = new AnnotationTranslator(am);
+        AnnotationTranslator at = AnnotationTranslatorFactory.inst().create(am);
 
         String annotationClass = am.getAnnotationType().toString();
         if (annotationClass.equals(FSColumn.class.getName())) {
             builder.columnName(at.property("value").as(String.class));
         } else if (annotationClass.equals(ForeignKey.class.getName())) {
-            builder.foreignKeyColumnName(at.property("columnName").as(String.class))
+            builder.foreignKey(ForeignKeyInfo.builder().foreignKeyColumnName(at.property("columnName").as(String.class))
                     .foreignKeyApiClassName(at.property("apiClass").uncasted().toString())
-                    .foreignKey(true);
+                    .cascadeDelete(at.property("cascadeDelete").as(boolean.class))
+                    .cascadeUpdate(at.property("cascadeUpdate").as(boolean.class))
+                    .build());
         } else if (annotationClass.equals(PrimaryKey.class.getName())) {
             builder.primaryKey(true);
         } else if (annotationClass.equals(Unique.class.getName())) {
@@ -223,12 +209,9 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
         private String columnName;
         private String qualifiedType;
         private String defaultValue;
-        private boolean foreignKey = false;
         private boolean unique = false;
         private boolean primaryKey = false;
-        private String foreignKeyTableName;
-        private String foreignKeyColumnName;
-        private String foreignKeyApiClassName;
+        private ForeignKeyInfo foreignKey;
 
         private Builder() {}
 
@@ -257,22 +240,7 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
             return this;
         }
 
-        public Builder foreignKeyTableName(String foreignKeyTableName) {
-            this.foreignKeyTableName = foreignKeyTableName;
-            return this;
-        }
-
-        public Builder foreignKeyColumnName(String foreignKeyColumnName) {
-            this.foreignKeyColumnName = foreignKeyColumnName;
-            return this;
-        }
-
-        public Builder foreignKeyApiClassName(String foreignKeyApiClassName) {
-            this.foreignKeyApiClassName = foreignKeyApiClassName;
-            return this;
-        }
-
-        public Builder foreignKey(boolean foreignKey) {
+        public Builder foreignKey(ForeignKeyInfo foreignKey) {
             this.foreignKey = foreignKey;
             return this;
         }
@@ -295,12 +263,9 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
                     columnName,
                     qualifiedType,
                     defaultValue,
-                    foreignKey,
                     unique,
                     primaryKey,
-                    foreignKeyTableName,
-                    foreignKeyColumnName,
-                    foreignKeyApiClassName);
+                    foreignKey);
         }
 
         private boolean canBuild() {

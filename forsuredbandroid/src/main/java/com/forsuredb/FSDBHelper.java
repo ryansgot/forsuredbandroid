@@ -75,6 +75,14 @@ import java.util.List;
         applyMigrations(db, oldVersion);
     }
 
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        if (!db.isReadOnly()) {
+            db.execSQL("PRAGMA foreign_keys=ON;");
+        }
+    }
+
     /**
      * @param migrations The {@link List} of {@link Migration}
      * @return either 1 or the largest dbVersion in the migrations list

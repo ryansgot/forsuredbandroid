@@ -47,7 +47,6 @@ public class FSTableDescriber {
     private final Uri allRecordsUri;
 
     private FSGetApi getApi;
-    private FSSaveApi<Uri> setApi;
 
     /*package*/ FSTableDescriber(FSTableCreator fsTableCreator) throws IllegalStateException {
         validate(fsTableCreator);
@@ -108,10 +107,7 @@ public class FSTableDescriber {
      * You should cast this to the desired extension in order to use it.
      */
     public FSSaveApi<Uri> set(ContentProviderQueryable cpq) {
-        if (setApi == null) {
-            setApi = FSSaveAdapter.create(cpq, FSContentValues.getNew(), getSaveApiClass());
-        }
-        return setApi;
+        return FSSaveAdapter.create(cpq, FSContentValues.getNew(), getSaveApiClass());
     }
 
     /**

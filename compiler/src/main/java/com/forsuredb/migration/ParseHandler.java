@@ -99,6 +99,12 @@ import org.xml.sax.helpers.DefaultHandler;
                 case "is_last_in_set":
                     mb.isLastInSet(Boolean.valueOf(attributes.getValue(i)));
                     break;
+                case "cascade_delete":
+                    mb.foreignKeyCascadeDelete(Boolean.valueOf(attributes.getValue(i)));
+                    break;
+                case "cascade_update":
+                    mb.foreignKeyCascadeUpdate(Boolean.valueOf(attributes.getValue(i)));
+                    break;
                 default:
                     log.i("ParseHandler not using: " + attributes.getQName(i) + "=" + attributes.getValue(i));
             }

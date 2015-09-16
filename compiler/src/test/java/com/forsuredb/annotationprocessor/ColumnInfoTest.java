@@ -30,6 +30,8 @@ import static org.junit.Assert.assertEquals;
 
 public class ColumnInfoTest {
 
+    private static ColumnInfo longColumnWithForeignKey = TestData.longCol().foreignKey(TestData.defaultFKI("user").build()).build();
+
     @Test
     public void shouldPutIdColumnFirst() {
         List<ColumnInfo> defaultColumns = new LinkedList<>();
@@ -49,7 +51,7 @@ public class ColumnInfoTest {
     @Test
     public void shouldPutDefaultColumnsBeforeForeignKeyColumns() {
         ColumnInfo defaultColumn = TableInfo.DEFAULT_COLUMNS.get("created");
-        assertTrue(defaultColumn.compareTo(TestData.longCol().foreignKey(true).build()) < 0);
+        assertTrue(defaultColumn.compareTo(longColumnWithForeignKey) < 0);
     }
 
     @Test
@@ -59,14 +61,13 @@ public class ColumnInfoTest {
 
     @Test
     public void shouldSortForeignKeyBeforeNonForeignKey() {
-        ColumnInfo foreignKeyColumn = TestData.longCol().foreignKey(true).build();
-        assertTrue("Did not sort foreign key column before non-foreign key", foreignKeyColumn.compareTo(TestData.longCol().build()) < 0);
+        assertTrue("Did not sort foreign key column before non-foreign key", longColumnWithForeignKey.compareTo(TestData.longCol().build()) < 0);
     }
 
     @Test
     public void shouldSortNonForeignKeyAfterForeignKey() {
         ColumnInfo nonForeignKeyColumn = TestData.intCol().build();
-        assertTrue("Did not sort non foreign key column after foreign key", nonForeignKeyColumn.compareTo(TestData.longCol().foreignKey(true).build()) > 0);
+        assertTrue("Did not sort non foreign key column after foreign key", nonForeignKeyColumn.compareTo(longColumnWithForeignKey) > 0);
     }
 
     @Test
@@ -76,7 +77,7 @@ public class ColumnInfoTest {
 
     @Test
     public void shouldSortIdColumnBeforeForeignKey() {
-        assertTrue("Did not sort _id column before foreign key", TestData.idCol().compareTo(TestData.longCol().foreignKey(true).build()) < 0);
+        assertTrue("Did not sort _id column before foreign key", TestData.idCol().compareTo(longColumnWithForeignKey) < 0);
     }
 
     @Test

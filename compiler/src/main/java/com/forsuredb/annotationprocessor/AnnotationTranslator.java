@@ -27,16 +27,18 @@ import javax.lang.model.element.ExecutableElement;
 /**
  * <p>
  *     Translates from all elements of an {@link AnnotationMirror AnnotationMirror} to properties
- *     that can be referenced by their String names. As a convenience, the
+ *     that can be referenced by their String names. If you pass in {@link AnnotationMirror#getElementValues()},
+ *     then only the non-default values will be translated.
  * </p>
  * @author Ryan Scott
+ * @see AnnotationTranslatorFactory
  */
 /*package*/ class AnnotationTranslator {
 
     private final Map<String, Object> annotation = new HashMap<>();
 
-    /*package*/ AnnotationTranslator(AnnotationMirror am) {
-        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : am.getElementValues().entrySet()) {
+    /*package*/ AnnotationTranslator(Map<? extends ExecutableElement, ? extends AnnotationValue> elementToValueMap) {
+        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : elementToValueMap.entrySet()) {
             ExecutableElement ee = entry.getKey();
             AnnotationValue av = entry.getValue();
             this.annotation.put(ee.getSimpleName().toString(), av.getValue());

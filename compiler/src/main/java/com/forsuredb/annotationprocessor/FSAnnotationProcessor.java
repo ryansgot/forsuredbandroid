@@ -58,6 +58,7 @@ public class FSAnnotationProcessor extends AbstractProcessor {
             return true;
         }
 
+        AnnotationTranslatorFactory.init(processingEnv);
         processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Running FSAnnotationProcessor.process");
         processFSTableAnnotations(tableTypes);
         return true;

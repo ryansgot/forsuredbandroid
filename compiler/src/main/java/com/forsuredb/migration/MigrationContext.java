@@ -18,6 +18,7 @@
 package com.forsuredb.migration;
 
 import com.forsuredb.annotationprocessor.ColumnInfo;
+import com.forsuredb.annotationprocessor.ForeignKeyInfo;
 import com.forsuredb.annotationprocessor.TableContext;
 import com.forsuredb.annotationprocessor.TableInfo;
 
@@ -94,9 +95,7 @@ public class MigrationContext implements TableContext {
     private void handleAddForeignKeyReference(Migration m, Map<String, ColumnInfo.Builder> columnBuilderMap) {
         columnBuilderMap.put(columnKey(m), ColumnInfo.builder().columnName(m.getColumnName())
                 .qualifiedType(m.getColumnQualifiedType())
-                .foreignKey(true)
-                .foreignKeyColumnName(m.getForeignKeyColumn())
-                .foreignKeyTableName(m.getForeignKeyTable()));
+                .foreignKey(m.getForeignKey()));
     }
 
     private void handleAddUniqueColumn(Migration m, Map<String, ColumnInfo.Builder> columnBuilderMap) {

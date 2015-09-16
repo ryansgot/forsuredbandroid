@@ -54,4 +54,20 @@ public @interface ForeignKey {
      * which this {@link ForeignKey ForeignKey} points
      */
     String columnName();
+
+    /**
+     * <p>
+     *     default behavior is to cascade updates
+     * </p>
+     * @return true if updates should be cascaded; false if updates should not be cascaded
+     */
+    boolean cascadeUpdate() default true;
+
+    /**
+     * <p>
+     *     default behavior is to cascade deletes
+     * </p>
+     * @return true if deletes should be cascaded; false if deletes should not be cascaded
+     */
+    boolean cascadeDelete() default true;
 }

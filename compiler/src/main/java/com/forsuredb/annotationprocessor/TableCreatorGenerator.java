@@ -91,7 +91,7 @@ public class TableCreatorGenerator extends BaseGenerator<JavaFileObject> {
         }
 
         for (ColumnInfo column : tableInfo.getForeignKeyColumns()) {
-            buf.append(", ").append(column.getForeignKeyApiClassName()).append(".class");
+            buf.append(", ").append(column.getForeignKey().getForeignKeyApiClassName()).append(".class");
         }
 
         return buf.append("));").toString();

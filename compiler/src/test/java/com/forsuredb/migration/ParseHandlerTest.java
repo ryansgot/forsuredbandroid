@@ -74,7 +74,7 @@ public class ParseHandlerTest {
                 },
                 // all possible fields on the migration
                 {
-                        "<migrations><migration table_name=\"" + TestData.TABLE_NAME + "\" query=\"blank\" db_version=\"3\" migration_type=\"" + QueryGenerator.MigrationType.ADD_FOREIGN_KEY_REFERENCE.toString() + "\" column=\"test_column\" column_type=\"java.lang.String\" foreign_key_column=\"f_key_column\" foreign_key_table=\"f_key_table\" is_last_in_set=\"true\" /></migrations>",
+                        "<migrations><migration table_name=\"" + TestData.TABLE_NAME + "\" query=\"blank\" db_version=\"3\" migration_type=\"" + QueryGenerator.MigrationType.ADD_FOREIGN_KEY_REFERENCE.toString() + "\" column=\"test_column\" column_type=\"java.lang.String\" foreign_key_column=\"f_key_column\" foreign_key_table=\"f_key_table\" cascade_delete=\"true\" cascade_update=\"true\" is_last_in_set=\"true\" /></migrations>",
                         Migration.builder().tableName(TestData.TABLE_NAME)
                                 .query("blank")
                                 .dbVersion(3)
@@ -83,6 +83,8 @@ public class ParseHandlerTest {
                                 .columnQualifiedType("java.lang.String")
                                 .foreignKeyColumn("f_key_column")
                                 .foreignKeyTable("f_key_table")
+                                .foreignKeyCascadeDelete(true)
+                                .foreignKeyCascadeUpdate(true)
                                 .isLastInSet(true)
                                 .build()
                 }

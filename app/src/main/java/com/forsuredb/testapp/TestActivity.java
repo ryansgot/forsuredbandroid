@@ -59,6 +59,22 @@ public class TestActivity extends ActionBarActivity {
                 try {
                     long id = getIdFromDialog(dialogInterface);
                     inputRandomDataForUser(id);
+                    userCursorAdapter.changeCursor(ForSure.queryAll("user"));
+                } catch (NumberFormatException nfe) {
+                    return;
+                } finally {
+                    dialogInterface.dismiss();
+                }
+            }
+        }, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int which) {
+                try {
+                    long id = getIdFromDialog(dialogInterface);
+                    Uri recordUri = ForSure.resolve("user").table().getSpecificRecordUri(id);
+                    Log.i("TestActivity", "user rows deleted: " + ForSure.resolve(recordUri).setter().hardDelete(null));
+                    profileInfoCursorAdapter.changeCursor(ForSure.queryAll("profile_info"));
+                    userCursorAdapter.changeCursor(ForSure.queryAll("user"));
                 } catch (NumberFormatException nfe) {
                     return;
                 } finally {
@@ -69,12 +85,28 @@ public class TestActivity extends ActionBarActivity {
     }
 
     public void onEditProfileInfoTableClicked(View v) {
-        showDialog("Randomize Profile Info", new DialogInterface.OnClickListener() {
+        showDialog("Profile Info", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 try {
                     long id = getIdFromDialog(dialogInterface);
                     inputRandomDataForProfileInfo(id);
+                    userCursorAdapter.changeCursor(ForSure.queryAll("user"));
+                } catch (NumberFormatException nfe) {
+                    return;
+                } finally {
+                    dialogInterface.dismiss();
+                }
+            }
+        }, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int which) {
+                try {
+                    long id = getIdFromDialog(dialogInterface);
+                    Uri recordUri = ForSure.resolve("profile_info").table().getSpecificRecordUri(id);
+                    logResult(ForSure.resolve(recordUri).setter().softDelete());
+                    profileInfoCursorAdapter.changeCursor(ForSure.queryAll("profile_info"));
+                    userCursorAdapter.changeCursor(ForSure.queryAll("user"));
                 } catch (NumberFormatException nfe) {
                     return;
                 } finally {
@@ -91,13 +123,12 @@ public class TestActivity extends ActionBarActivity {
          * This block demonstrates saving a newly created record routed via the table name
          */
         UserTableSetter setter = ForSure.resolve("user").setter();
-        SaveResult<Uri> sr = setter.appRating(generator.nextDouble())
+        logResult(setter.appRating(generator.nextDouble())
                 .competitorAppRating(new BigDecimal(generator.nextFloat()))
                 .globalId(generator.nextLong())
-                .id(id)
+                .id(generator.nextLong())
                 .loginCount(generator.nextInt())
-                .save();
-        Log.i("ForSureTest", "SaveResult<Uri>{inserted=" + sr.inserted() + ", rowsAffected=" + sr.rowsAffected() + ", exception=" + sr.exception() + "}");
+                .save());
         /*
          * The new record will be upserted--in other words, if a record with the specified id already exists, it will be
          * overwritten. Otherwise, it will insert.
@@ -113,12 +144,10 @@ public class TestActivity extends ActionBarActivity {
         /*
          * This block demonstrates saving a newly created record as a method call chain
          */
-        SaveResult<Uri> sr = ForSure.setApi(ProfileInfoTableSetter.class).id(id)
+        logResult(ForSure.setApi(ProfileInfoTableSetter.class).id(id)
                 .emailAddress("user" + userId + "@email.com")
-                .userId(userId)
-                .binaryData(new byte[] {(byte) (generator.nextInt() & 0xFF), (byte) (generator.nextInt() & 0xFF), (byte) 0})
-                .save();
-        Log.i("ForSureTest", "SaveResult<Uri>{inserted=" + sr.inserted() + ", rowsAffected=" + sr.rowsAffected() + ", exception=" + sr.exception() + "}");
+                .binaryData(new byte[]{(byte) (generator.nextInt() & 0xFF), (byte) (generator.nextInt() & 0xFF), (byte) 0})
+                .save());
         /*
          * The new record will be upserted--in other words, if a record with the specified id already exists, it will be
          * overwritten. Otherwise, it will insert.
@@ -132,7 +161,7 @@ public class TestActivity extends ActionBarActivity {
         return Long.parseLong(idText.getText().toString());
     }
 
-    private void showDialog(String title, DialogInterface.OnClickListener positiveButtonClickListener) {
+    private void showDialog(String title, DialogInterface.OnClickListener saveListener, DialogInterface.OnClickListener deleteListener) {
         new AlertDialog.Builder(this).setTitle(title)
                 .setView(LayoutInflater.from(this).inflate(R.layout.enter_id_layout, null))
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -141,8 +170,13 @@ public class TestActivity extends ActionBarActivity {
                         dialogInterface.dismiss();
                     }
                 })
-                .setPositiveButton("Save", positiveButtonClickListener)
+                .setPositiveButton("Save", saveListener)
+                .setNeutralButton("Delete", deleteListener)
                 .create()
                 .show();
+    }
+
+    private void logResult(SaveResult<Uri> result) {
+        Log.d("TestActivity", "SaveResult<Uri>{inserted=" + result.inserted() + ", exception=" + result.exception() + ", rowsAffected=" + result.rowsAffected() + "}");
     }
 }

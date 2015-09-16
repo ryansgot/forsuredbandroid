@@ -17,6 +17,8 @@
  */
 package com.forsuredb.migration;
 
+import com.forsuredb.annotationprocessor.ForeignKeyInfo;
+
 public class Migration {
 
     private final String tableName;
@@ -25,8 +27,7 @@ public class Migration {
     private final QueryGenerator.MigrationType migrationType;
     private final String columnName;
     private final String columnQualifiedType;
-    private final String foreignKeyTable;
-    private final String foreignKeyColumn;
+    private final ForeignKeyInfo foreignKey;
     private final boolean isLastInSet;
 
     private Migration(int dbVersion,
@@ -35,8 +36,7 @@ public class Migration {
                       QueryGenerator.MigrationType migrationType,
                       String columnName,
                       String columnQualifiedType,
-                      String foreignKeyTable,
-                      String foreignKeyColumn,
+                      ForeignKeyInfo foreignKey,
                       boolean isLastInSet) {
         this.dbVersion = dbVersion;
         this.tableName = tableName;
@@ -44,8 +44,7 @@ public class Migration {
         this.migrationType = migrationType;
         this.columnName = columnName;
         this.columnQualifiedType = columnQualifiedType;
-        this.foreignKeyTable = foreignKeyTable;
-        this.foreignKeyColumn = foreignKeyColumn;
+        this.foreignKey = foreignKey;
         this.isLastInSet = isLastInSet;
     }
 
@@ -56,8 +55,7 @@ public class Migration {
                                                                 .append(", migrationType=").append(migrationType == null ? "null" : migrationType.name())
                                                                 .append(", columnName=").append(columnName)
                                                                 .append(", columnQualifiedType=").append(columnQualifiedType)
-                                                                .append(", foreignKeyTable=").append(foreignKeyTable)
-                                                                .append(", foreignKeyColumn=").append(foreignKeyColumn)
+                                                                .append(", foreignKey=").append(foreignKey == null ? "null" : foreignKey.toString())
                                                                 .append(", query=").append(query)
                                                                 .append(", isLastInSet=").append(isLastInSet)
                                                                 .append("}").toString();
@@ -88,10 +86,7 @@ public class Migration {
         if (!isSame(columnQualifiedType, other.getColumnQualifiedType())) {
             return false;
         }
-        if (!isSame(foreignKeyTable, other.getForeignKeyTable())) {
-            return false;
-        }
-        if (!isSame(foreignKeyColumn, other.getForeignKeyColumn())) {
+        if (!isSame(foreignKey, other.getForeignKey())) {
             return false;
         }
 
@@ -107,8 +102,7 @@ public class Migration {
         result = 37 * result + (migrationType == null ? 0 : migrationType.hashCode());
         result = 37 * result + (columnName == null ? 0 : columnName.hashCode());
         result = 37 * result + (columnQualifiedType == null ? 0 : columnQualifiedType.hashCode());
-        result = 37 * result + (foreignKeyTable == null ? 0 : foreignKeyTable.hashCode());
-        result = 37 * result + (foreignKeyColumn == null ? 0 : foreignKeyColumn.hashCode());
+        result = 37 * result + (foreignKey == null ? 0 : foreignKey.hashCode());
         result = 37 * result + (isLastInSet ?  0 : 1);
         return result;
     }
@@ -141,32 +135,20 @@ public class Migration {
         return columnQualifiedType;
     }
 
-    public String getForeignKeyTable() {
-        return foreignKeyTable;
-    }
-
-    public String getForeignKeyColumn() {
-        return foreignKeyColumn;
+    public ForeignKeyInfo getForeignKey() {
+        return foreignKey;
     }
 
     public boolean isLastInSet() {
         return isLastInSet;
     }
 
-    // Helpers for the equals method
-
-    private boolean isSame(String thisObjectString, String otherObjectString) {
-        if (thisObjectString == null) {
-            return otherObjectString == null;
+    // Helpers for the equals method that is type agnostic
+    private boolean isSame(Object thisMember, Object otherMember) {
+        if (thisMember == null) {
+            return otherMember == null;
         }
-        return thisObjectString.equals(otherObjectString);
-    }
-
-    private boolean isSame(QueryGenerator.MigrationType thisMigrationType, QueryGenerator.MigrationType otherMigrationType) {
-        if (thisMigrationType == null) {
-            return otherMigrationType == null;
-        }
-        return thisMigrationType == otherMigrationType;
+        return thisMember.equals(otherMember);
     }
 
     public static class Builder {
@@ -179,6 +161,8 @@ public class Migration {
         private String columnQualifiedType;
         private String foreignKeyTable;
         private String foreignKeyColumn;
+        private boolean foreignKeyCascadeDelete;
+        private boolean foreignKeyCascadeUpdate;
         private boolean isLastInSet;
 
         private Builder() {}
@@ -223,6 +207,16 @@ public class Migration {
             return this;
         }
 
+        public Builder foreignKeyCascadeUpdate(boolean foreignKeyCascadeUpdate) {
+            this.foreignKeyCascadeUpdate = foreignKeyCascadeUpdate;
+            return this;
+        }
+
+        public Builder foreignKeyCascadeDelete(boolean foreignKeyCascadeDelete) {
+            this.foreignKeyCascadeDelete = foreignKeyCascadeDelete;
+            return this;
+        }
+
         public Builder isLastInSet(Boolean isLastInSet) {
             this.isLastInSet = isLastInSet;
             return this;
@@ -232,11 +226,23 @@ public class Migration {
             if (!canBuild()) {
                 throw new IllegalStateException("Cannot build migration with null or empty table name or query");
             }
-            return new Migration(dbVersion, tableName, query, migrationType, columnName, columnQualifiedType, foreignKeyTable, foreignKeyColumn, isLastInSet);
+            return new Migration(dbVersion, tableName, query, migrationType, columnName, columnQualifiedType, getForeignKey(), isLastInSet);
         }
 
         private boolean canBuild() {
             return tableName != null && !tableName.isEmpty() && query != null && !query.isEmpty();
+        }
+
+        private ForeignKeyInfo getForeignKey() {
+            try {
+                return ForeignKeyInfo.builder().foreignKeyColumnName(foreignKeyColumn)
+                        .foreignKeyTableName(foreignKeyTable)
+                        .cascadeDelete(foreignKeyCascadeDelete)
+                        .cascadeUpdate(foreignKeyCascadeUpdate)
+                        .build();
+            } catch (Exception e) {}
+
+            return null;
         }
     }
 }

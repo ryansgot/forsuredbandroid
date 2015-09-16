@@ -31,4 +31,21 @@ public interface FSSaveApi<U> {
     * @return A descriptor of the result of the save operation
     */
     SaveResult<U> save();
+
+    /**
+     * <p>
+     *     A soft delete flips the deleted flag on the record to true.
+     * </p>
+     * @return A descriptor of the result of the softDelete operation
+     */
+    SaveResult<U> softDelete();
+
+    /**
+     * <p>
+     *     A hard delete actually deletes the record
+     * </p>
+     * @param selection The selection of rows to delete
+     * @return the number of rows deleted
+     */
+    int hardDelete(FSSelection selection);
 }

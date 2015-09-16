@@ -18,6 +18,7 @@
 package com.forsuredb;
 
 import com.forsuredb.annotationprocessor.ColumnInfo;
+import com.forsuredb.annotationprocessor.ForeignKeyInfo;
 import com.forsuredb.annotationprocessor.TableInfo;
 import com.forsuredb.migration.sqlite.TypeTranslator;
 
@@ -88,6 +89,13 @@ public class TestData {
 
     public static ColumnInfo.Builder dateCol() {
         return columnFrom(TypeTranslator.DATE);
+    }
+
+    public static ForeignKeyInfo.Builder defaultFKI(String foreignKeyTableName) {
+        return ForeignKeyInfo.builder().cascadeUpdate(true)
+                .cascadeDelete(true)
+                .foreignKeyColumnName("_id")
+                .foreignKeyTableName(foreignKeyTableName);
     }
 
     // Helpers for covenience methods

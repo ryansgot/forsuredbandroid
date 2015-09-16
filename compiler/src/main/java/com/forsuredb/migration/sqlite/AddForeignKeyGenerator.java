@@ -17,6 +17,7 @@
  */
 package com.forsuredb.migration.sqlite;
 
+import com.forsuredb.annotationprocessor.ForeignKeyInfo;
 import com.forsuredb.migration.QueryGenerator;
 import com.forsuredb.annotationprocessor.ColumnInfo;
 import com.forsuredb.annotationprocessor.TableInfo;
@@ -57,8 +58,10 @@ public class AddForeignKeyGenerator extends QueryGenerator {
         Map<String, String> ret = new HashMap<>();
         ret.put("column", column.getColumnName());
         ret.put("column_type", column.getQualifiedType());
-        ret.put("foreign_key_table", column.getForeignKeyTableName());
-        ret.put("foreign_key_column", column.getForeignKeyColumnName());
+        ret.put("foreign_key_table", column.getForeignKey().getForeignKeyTableName());
+        ret.put("foreign_key_column", column.getForeignKey().getForeignKeyColumnName());
+        ret.put("cascade_delete", Boolean.toString(column.getForeignKey().cascadeDelete()));
+        ret.put("cascade_update", Boolean.toString(column.getForeignKey().cascadeUpdate()));
         return ret;
     }
 
@@ -130,18 +133,20 @@ public class AddForeignKeyGenerator extends QueryGenerator {
                 .append(" ").append(TypeTranslator.from(column.getQualifiedType()).getSqlString());
     }
 
-    private void addForeignKeyDefinitionsToBuffer(StringBuffer buf, List<ColumnInfo> foreignKeyColumns) {
-        for (ColumnInfo foreignKeyColumn : foreignKeyColumns) {
-            if (!foreignKeyColumn.getColumnName().equals(column.getColumnName())) {
-                addForeignKeyDefinitionToBuffer(buf, foreignKeyColumn);
+    private void addForeignKeyDefinitionsToBuffer(StringBuffer buf, List<ColumnInfo> columns) {
+        for (ColumnInfo column : columns) {
+            if (!column.getColumnName().equals(this.column.getColumnName())) {
+                addForeignKeyDefinitionToBuffer(buf, column);
             }
         }
     }
 
-    private void addForeignKeyDefinitionToBuffer(StringBuffer buf, ColumnInfo foreignKeyColumn) {
-        buf.append(", FOREIGN KEY(").append(foreignKeyColumn.getColumnName())
-                .append(") REFERENCES ").append(foreignKeyColumn.getForeignKeyTableName())
-                .append("(").append(foreignKeyColumn.getForeignKeyColumnName())
-                .append(")");
+    private void addForeignKeyDefinitionToBuffer(StringBuffer buf, ColumnInfo column) {
+        buf.append(", FOREIGN KEY(").append(column.getColumnName())
+                .append(") REFERENCES ").append(column.getForeignKey().getForeignKeyTableName())
+                .append("(").append(column.getForeignKey().getForeignKeyColumnName())
+                .append(")")
+                .append(column.getForeignKey().cascadeUpdate() ? " ON UPDATE CASCADE" : "")
+                .append(column.getForeignKey().cascadeDelete() ? " ON DELETE CASCADE" : "");
     }
 }
