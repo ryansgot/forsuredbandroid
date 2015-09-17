@@ -18,6 +18,7 @@
 package com.forsuredb.migration.sqlite;
 
 import com.forsuredb.TestData;
+import com.forsuredb.annotation.ForeignKey;
 import com.forsuredb.annotationprocessor.ColumnInfo;
 import com.forsuredb.annotationprocessor.TableInfo;
 import com.forsuredb.migration.QueryGenerator;
@@ -47,9 +48,9 @@ public class AddForeignKeyGeneratorTest extends BaseSQLiteGeneratorTest {
         return Arrays.asList(new Object[][]{
                 // Add a foreign key to a basic table with no extra columns
                 {
-                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.defaultFKI("user").build()).build())
+                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.cascadeFKI("user").build()).build())
                                 .build(),
-                        TestData.longCol().foreignKey(TestData.defaultFKI("user").build()).build(),
+                        TestData.longCol().foreignKey(TestData.cascadeFKI("user").build()).build(),
                         new String[]{
                                 "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";",
                                 "CREATE TEMP TABLE temp_" + TestData.TABLE_NAME + " AS SELECT _id, created, deleted, modified FROM " + TestData.TABLE_NAME + ";",
@@ -62,10 +63,10 @@ public class AddForeignKeyGeneratorTest extends BaseSQLiteGeneratorTest {
                 },
                 // Add a foreign key to a basic table with one extra non-foreign key column
                 {
-                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.defaultFKI("user").build()).build())
+                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.cascadeFKI("user").build()).build())
                                 .addColumn(TestData.intCol().build())
                                 .build(),
-                        TestData.longCol().foreignKey(TestData.defaultFKI("user").build()).build(),
+                        TestData.longCol().foreignKey(TestData.cascadeFKI("user").build()).build(),
                         new String[]{
                                 "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";",
                                 "CREATE TEMP TABLE temp_" + TestData.TABLE_NAME + " AS SELECT _id, created, deleted, modified, int_column FROM " + TestData.TABLE_NAME + ";",
@@ -77,12 +78,97 @@ public class AddForeignKeyGeneratorTest extends BaseSQLiteGeneratorTest {
                                 "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";"
                         }
                 },
+                // Add a foreign key with NO_ACTION as its delete and update action
+                {
+                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.noActionFKI("user").build()).build())
+                                .addColumn(TestData.intCol().build())
+                                .build(),
+                        TestData.longCol().foreignKey(TestData.noActionFKI("user").build()).build(),
+                        new String[]{
+                                "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";",
+                                "CREATE TEMP TABLE temp_" + TestData.TABLE_NAME + " AS SELECT _id, created, deleted, modified, int_column FROM " + TestData.TABLE_NAME + ";",
+                                "DROP TABLE IF EXISTS " + TestData.TABLE_NAME + ";",
+                                "CREATE TABLE " + TestData.TABLE_NAME + "(_id INTEGER PRIMARY KEY, created DATETIME DEFAULT CURRENT_TIMESTAMP, deleted INTEGER DEFAULT 0, modified DATETIME DEFAULT CURRENT_TIMESTAMP, long_column INTEGER, FOREIGN KEY(long_column) REFERENCES user(_id) ON UPDATE NO ACTION ON DELETE NO ACTION);",
+                                "CREATE TRIGGER " + TestData.TABLE_NAME + "_updated_trigger AFTER UPDATE ON " + TestData.TABLE_NAME + " BEGIN UPDATE " + TestData.TABLE_NAME + " SET modified=CURRENT_TIMESTAMP WHERE _id=NEW._id; END;",
+                                "ALTER TABLE " + TestData.TABLE_NAME + " ADD COLUMN int_column INTEGER;",
+                                "INSERT INTO " + TestData.TABLE_NAME + " SELECT _id, created, deleted, modified, null AS long_column, int_column FROM temp_" + TestData.TABLE_NAME + ";",
+                                "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";"
+                        }
+                },
+                // Add a foreign key with RESTRICT as its delete and update action
+                {
+                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.restrictFKI("user").build()).build())
+                                .addColumn(TestData.intCol().build())
+                                .build(),
+                        TestData.longCol().foreignKey(TestData.restrictFKI("user").build()).build(),
+                        new String[]{
+                                "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";",
+                                "CREATE TEMP TABLE temp_" + TestData.TABLE_NAME + " AS SELECT _id, created, deleted, modified, int_column FROM " + TestData.TABLE_NAME + ";",
+                                "DROP TABLE IF EXISTS " + TestData.TABLE_NAME + ";",
+                                "CREATE TABLE " + TestData.TABLE_NAME + "(_id INTEGER PRIMARY KEY, created DATETIME DEFAULT CURRENT_TIMESTAMP, deleted INTEGER DEFAULT 0, modified DATETIME DEFAULT CURRENT_TIMESTAMP, long_column INTEGER, FOREIGN KEY(long_column) REFERENCES user(_id) ON UPDATE RESTRICT ON DELETE RESTRICT);",
+                                "CREATE TRIGGER " + TestData.TABLE_NAME + "_updated_trigger AFTER UPDATE ON " + TestData.TABLE_NAME + " BEGIN UPDATE " + TestData.TABLE_NAME + " SET modified=CURRENT_TIMESTAMP WHERE _id=NEW._id; END;",
+                                "ALTER TABLE " + TestData.TABLE_NAME + " ADD COLUMN int_column INTEGER;",
+                                "INSERT INTO " + TestData.TABLE_NAME + " SELECT _id, created, deleted, modified, null AS long_column, int_column FROM temp_" + TestData.TABLE_NAME + ";",
+                                "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";"
+                        }
+                },
+                // Add a foreign key with SET_NULL as its delete and update action
+                {
+                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.setNullFKI("user").build()).build())
+                                .addColumn(TestData.intCol().build())
+                                .build(),
+                        TestData.longCol().foreignKey(TestData.setNullFKI("user").build()).build(),
+                        new String[]{
+                                "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";",
+                                "CREATE TEMP TABLE temp_" + TestData.TABLE_NAME + " AS SELECT _id, created, deleted, modified, int_column FROM " + TestData.TABLE_NAME + ";",
+                                "DROP TABLE IF EXISTS " + TestData.TABLE_NAME + ";",
+                                "CREATE TABLE " + TestData.TABLE_NAME + "(_id INTEGER PRIMARY KEY, created DATETIME DEFAULT CURRENT_TIMESTAMP, deleted INTEGER DEFAULT 0, modified DATETIME DEFAULT CURRENT_TIMESTAMP, long_column INTEGER, FOREIGN KEY(long_column) REFERENCES user(_id) ON UPDATE SET NULL ON DELETE SET NULL);",
+                                "CREATE TRIGGER " + TestData.TABLE_NAME + "_updated_trigger AFTER UPDATE ON " + TestData.TABLE_NAME + " BEGIN UPDATE " + TestData.TABLE_NAME + " SET modified=CURRENT_TIMESTAMP WHERE _id=NEW._id; END;",
+                                "ALTER TABLE " + TestData.TABLE_NAME + " ADD COLUMN int_column INTEGER;",
+                                "INSERT INTO " + TestData.TABLE_NAME + " SELECT _id, created, deleted, modified, null AS long_column, int_column FROM temp_" + TestData.TABLE_NAME + ";",
+                                "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";"
+                        }
+                },
+                // Add a foreign key with SET_DEFAULT as its delete and update action
+                {
+                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.setDefaultFKI("user").build()).build())
+                                .addColumn(TestData.intCol().build())
+                                .build(),
+                        TestData.longCol().foreignKey(TestData.setDefaultFKI("user").build()).build(),
+                        new String[]{
+                                "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";",
+                                "CREATE TEMP TABLE temp_" + TestData.TABLE_NAME + " AS SELECT _id, created, deleted, modified, int_column FROM " + TestData.TABLE_NAME + ";",
+                                "DROP TABLE IF EXISTS " + TestData.TABLE_NAME + ";",
+                                "CREATE TABLE " + TestData.TABLE_NAME + "(_id INTEGER PRIMARY KEY, created DATETIME DEFAULT CURRENT_TIMESTAMP, deleted INTEGER DEFAULT 0, modified DATETIME DEFAULT CURRENT_TIMESTAMP, long_column INTEGER, FOREIGN KEY(long_column) REFERENCES user(_id) ON UPDATE SET DEFAULT ON DELETE SET DEFAULT);",
+                                "CREATE TRIGGER " + TestData.TABLE_NAME + "_updated_trigger AFTER UPDATE ON " + TestData.TABLE_NAME + " BEGIN UPDATE " + TestData.TABLE_NAME + " SET modified=CURRENT_TIMESTAMP WHERE _id=NEW._id; END;",
+                                "ALTER TABLE " + TestData.TABLE_NAME + " ADD COLUMN int_column INTEGER;",
+                                "INSERT INTO " + TestData.TABLE_NAME + " SELECT _id, created, deleted, modified, null AS long_column, int_column FROM temp_" + TestData.TABLE_NAME + ";",
+                                "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";"
+                        }
+                },
+                // Add a foreign key with SET_DEFAULT as its delete action and SET_NULL as its update action
+                {
+                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.setDefaultFKI("user").updateAction(ForeignKey.ChangeAction.SET_NULL).build()).build())
+                                .addColumn(TestData.intCol().build())
+                                .build(),
+                        TestData.longCol().foreignKey(TestData.setDefaultFKI("user").updateAction(ForeignKey.ChangeAction.SET_NULL).build()).build(),
+                        new String[]{
+                                "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";",
+                                "CREATE TEMP TABLE temp_" + TestData.TABLE_NAME + " AS SELECT _id, created, deleted, modified, int_column FROM " + TestData.TABLE_NAME + ";",
+                                "DROP TABLE IF EXISTS " + TestData.TABLE_NAME + ";",
+                                "CREATE TABLE " + TestData.TABLE_NAME + "(_id INTEGER PRIMARY KEY, created DATETIME DEFAULT CURRENT_TIMESTAMP, deleted INTEGER DEFAULT 0, modified DATETIME DEFAULT CURRENT_TIMESTAMP, long_column INTEGER, FOREIGN KEY(long_column) REFERENCES user(_id) ON UPDATE SET NULL ON DELETE SET DEFAULT);",
+                                "CREATE TRIGGER " + TestData.TABLE_NAME + "_updated_trigger AFTER UPDATE ON " + TestData.TABLE_NAME + " BEGIN UPDATE " + TestData.TABLE_NAME + " SET modified=CURRENT_TIMESTAMP WHERE _id=NEW._id; END;",
+                                "ALTER TABLE " + TestData.TABLE_NAME + " ADD COLUMN int_column INTEGER;",
+                                "INSERT INTO " + TestData.TABLE_NAME + " SELECT _id, created, deleted, modified, null AS long_column, int_column FROM temp_" + TestData.TABLE_NAME + ";",
+                                "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";"
+                        }
+                },
                 // Add a foreign key to a basic table with one extra foreign key
                 {
-                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.defaultFKI("user").build()).build())
-                                .addColumn(TestData.intCol().foreignKey(TestData.defaultFKI("profile_info").build()).build())
+                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.cascadeFKI("user").build()).build())
+                                .addColumn(TestData.intCol().foreignKey(TestData.cascadeFKI("profile_info").build()).build())
                                 .build(),
-                        TestData.longCol().foreignKey(TestData.defaultFKI("user").build()).build(),
+                        TestData.longCol().foreignKey(TestData.cascadeFKI("user").build()).build(),
                         new String[]{
                                 "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";",
                                 "CREATE TEMP TABLE temp_" + TestData.TABLE_NAME + " AS SELECT _id, created, deleted, modified, int_column FROM " + TestData.TABLE_NAME + ";",

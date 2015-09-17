@@ -126,7 +126,7 @@ public class TestActivity extends ActionBarActivity {
         logResult(setter.appRating(generator.nextDouble())
                 .competitorAppRating(new BigDecimal(generator.nextFloat()))
                 .globalId(generator.nextLong())
-                .id(generator.nextLong())
+                .id(id)
                 .loginCount(generator.nextInt())
                 .save());
         /*

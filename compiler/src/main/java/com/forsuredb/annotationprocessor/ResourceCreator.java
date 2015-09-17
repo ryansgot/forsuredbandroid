@@ -33,6 +33,8 @@ import javax.tools.StandardLocation;
  */
 /*package*/ class ResourceCreator {
 
+    private static final String LOG_TAG = ResourceCreator.class.getSimpleName();
+
     private final JavaFileManager.Location location;
     private final CharSequence pkg;
     private final CharSequence relativeName;
@@ -48,7 +50,7 @@ import javax.tools.StandardLocation;
     }
 
     public FileObject create(ProcessingEnvironment processingEnv) throws IOException {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "creating resource at location: " + location.getName());
+        APLog.i(LOG_TAG, "creating resource at location: " + location.getName());
         return processingEnv.getFiler().createResource(location, pkg, relativeName);
     }
 }

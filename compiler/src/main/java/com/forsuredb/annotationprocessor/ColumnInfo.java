@@ -23,15 +23,11 @@ import com.forsuredb.annotation.PrimaryKey;
 import com.forsuredb.annotation.Unique;
 
 import java.util.List;
-import java.util.Map;
 
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
 
 /**
  * <p>
@@ -39,6 +35,8 @@ import javax.tools.Diagnostic;
  * </p>
  */
 public class ColumnInfo implements Comparable<ColumnInfo> {
+
+    private static final String LOG_TAG = ColumnInfo.class.getSimpleName();
 
     private final String methodName;
     private final String columnName;
@@ -175,8 +173,8 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
 
     private String setForeignKeyTableName(List<TableInfo> allTables) {
         for (TableInfo table : allTables) {
-            if (table.getQualifiedClassName().equals(foreignKey.getForeignKeyApiClassName())) {
-                foreignKey.setForeignKeyTableName(table.getTableName());
+            if (table.getQualifiedClassName().equals(foreignKey.getApiClassName())) {
+                foreignKey.setTableName(table.getTableName());
                 break;
             }
         }
@@ -191,10 +189,10 @@ public class ColumnInfo implements Comparable<ColumnInfo> {
         if (annotationClass.equals(FSColumn.class.getName())) {
             builder.columnName(at.property("value").as(String.class));
         } else if (annotationClass.equals(ForeignKey.class.getName())) {
-            builder.foreignKey(ForeignKeyInfo.builder().foreignKeyColumnName(at.property("columnName").as(String.class))
-                    .foreignKeyApiClassName(at.property("apiClass").uncasted().toString())
-                    .cascadeDelete(at.property("cascadeDelete").as(boolean.class))
-                    .cascadeUpdate(at.property("cascadeUpdate").as(boolean.class))
+            builder.foreignKey(ForeignKeyInfo.builder().columnName(at.property("columnName").asString())
+                    .foreignKeyApiClassName(at.property("apiClass").asString())
+                    .deleteAction(ForeignKey.ChangeAction.from(at.property("deleteAction").asString()))
+                    .updateAction(ForeignKey.ChangeAction.from(at.property("updateAction").asString()))
                     .build());
         } else if (annotationClass.equals(PrimaryKey.class.getName())) {
             builder.primaryKey(true);

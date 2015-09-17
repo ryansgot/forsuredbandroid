@@ -23,6 +23,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.forsuredb.api.FSGetApi;
+import com.forsuredb.api.FSContentResolver;
 import com.forsuredb.api.FSSaveApi;
 import com.forsuredb.api.FSTableCreator;
 
@@ -183,7 +184,7 @@ public class ForSure {
      *     Resolve a table by table name so that you can gain access to interact with it
      *</p>
      * @param tableName The name of the table you would like to resolve
-     * @return an {@link FSResolver} capable of providing access to {@link FSTableDescriber},
+     * @return an {@link FSContentResolver} capable of providing access to {@link FSTableDescriber},
      * {@link FSGetApi}, and {@link FSSaveApi} objects associated with the table
      * @throws UnresolvableTableException when the table cannot be resolved
      * @throws IllegalStateException if {@link ForSure} was not yet initialized
@@ -203,7 +204,7 @@ public class ForSure {
      *     Resolve a table by a {@link Uri} so that you can gain access to interact with it.
      * </p>
      * @param resource the {@link Uri} you would like to resolve
-     * @return an {@link FSResolver} capable of providing access to {@link FSTableDescriber},
+     * @return an {@link FSContentResolver} capable of providing access to {@link FSTableDescriber},
      * {@link FSGetApi}, and {@link FSSaveApi} objects associated with the table
      * @throws UnresolvableTableException when the table cannot be resolved
      * @throws IllegalStateException if {@link ForSure} was not yet initialized

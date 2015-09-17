@@ -28,11 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.Modifier;
-import javax.tools.Diagnostic;
 
 /**
  * <p>
@@ -43,13 +41,13 @@ import javax.tools.Diagnostic;
  */
 public class ProcessingContext implements TableContext {
 
+    private static final String LOG_TAG = ProcessingContext.class.getSimpleName();
+
     private final Set<TypeElement> tableTypes = new HashSet<>();
-    private final ProcessingEnvironment processingEnv;
     private Map<String, TableInfo> tableMap;
 
-    public ProcessingContext(Set<TypeElement> tableTypes, ProcessingEnvironment processingEnv) {
+    public ProcessingContext(Set<TypeElement> tableTypes) {
         this.tableTypes.addAll(tableTypes);
-        this.processingEnv = processingEnv;
     }
 
     @Override
@@ -82,9 +80,7 @@ public class ProcessingContext implements TableContext {
                 column.enrichWithForeignTableInfo(allTables);
             }
             tableMap.put(table.getTableName(), table);
-            if (processingEnv != null) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, table.toString());
-            }
+            APLog.i(LOG_TAG, "created table: " + table.toString());
         }
     }
 

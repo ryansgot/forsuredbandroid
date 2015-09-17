@@ -17,6 +17,7 @@
  */
 package com.forsuredb.migration;
 
+import com.forsuredb.annotation.ForeignKey;
 import com.forsuredb.api.FSLogger;
 
 import org.xml.sax.Attributes;
@@ -99,11 +100,11 @@ import org.xml.sax.helpers.DefaultHandler;
                 case "is_last_in_set":
                     mb.isLastInSet(Boolean.valueOf(attributes.getValue(i)));
                     break;
-                case "cascade_delete":
-                    mb.foreignKeyCascadeDelete(Boolean.valueOf(attributes.getValue(i)));
+                case "foreign_key_delete_action":
+                    mb.foreignKeyDeleteAction(ForeignKey.ChangeAction.from(attributes.getValue(i)));
                     break;
-                case "cascade_update":
-                    mb.foreignKeyCascadeUpdate(Boolean.valueOf(attributes.getValue(i)));
+                case "foreign_key_update_action":
+                    mb.foreignKeyUpdateAction(ForeignKey.ChangeAction.from(attributes.getValue(i)));
                     break;
                 default:
                     log.i("ParseHandler not using: " + attributes.getQName(i) + "=" + attributes.getValue(i));

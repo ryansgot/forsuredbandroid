@@ -73,6 +73,10 @@ import javax.lang.model.element.ExecutableElement;
             return uncasted;
         }
 
+        public String asString() {
+            return uncasted == null ? "null" : uncasted.toString();
+        }
+
         /**
          * <p>
          *     Throws a {@link ClassCastException ClassCastException} if the type parameter cannot

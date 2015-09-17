@@ -1,25 +1,27 @@
 package com.forsuredb.annotationprocessor;
 
+import com.forsuredb.annotation.ForeignKey;
+
 import javax.lang.model.element.ExecutableElement;
 
 public class ForeignKeyInfo {
 
-    private final boolean cascadeUpdate;
-    private final boolean cascadeDelete;
-    private String foreignKeyTableName;     // <-- may not be known on creation
-    private final String foreignKeyColumnName;
-    private final String foreignKeyApiClassName;
+    private final ForeignKey.ChangeAction updateAction;
+    private final ForeignKey.ChangeAction deleteAction;
+    private String tableName;     // <-- may not be known on creation
+    private final String columnName;
+    private final String apiClassName;     // <-- may not be known on creation
 
-    public ForeignKeyInfo(boolean cascadeUpdate,
-                          boolean cascadeDelete,
-                          String foreignKeyTableName,
-                          String foreignKeyColumnName,
-                          String foreignKeyApiClassName) {
-        this.cascadeUpdate = cascadeUpdate;
-        this.cascadeDelete = cascadeDelete;
-        this.foreignKeyTableName = foreignKeyTableName;
-        this.foreignKeyColumnName = foreignKeyColumnName;
-        this.foreignKeyApiClassName = foreignKeyApiClassName;
+    public ForeignKeyInfo(ForeignKey.ChangeAction updateAction,
+                          ForeignKey.ChangeAction deleteAction,
+                          String tableName,
+                          String columnName,
+                          String apiClassName) {
+        this.updateAction = updateAction;
+        this.deleteAction = deleteAction;
+        this.tableName = tableName;
+        this.columnName = columnName;
+        this.apiClassName = apiClassName;
     }
 
     public static Builder builder() {
@@ -33,11 +35,11 @@ public class ForeignKeyInfo {
     @Override
     public String toString() {
         return new StringBuilder(ForeignKeyInfo.class.getSimpleName())
-                .append("{cascadeUpdate=").append(cascadeUpdate)
-                .append(", cascadeDelete=").append(cascadeDelete)
-                .append(", foreignKeyTableName=").append(foreignKeyTableName)
-                .append(", foreignKeyColumnName=").append(foreignKeyColumnName)
-                .append(", foreignKeyApiClassName=").append(foreignKeyApiClassName)
+                .append("{updateAction=").append(updateAction.toString())
+                .append(", deleteAction=").append(deleteAction.toString())
+                .append(", tableName=").append(tableName)
+                .append(", columnName=").append(columnName)
+                .append(", apiClassName=").append(apiClassName)
                 .append("}").toString();
     }
 
@@ -48,54 +50,54 @@ public class ForeignKeyInfo {
         }
 
         ForeignKeyInfo other = (ForeignKeyInfo) o;
-        if (cascadeUpdate != other.cascadeUpdate()) {
+        if (!isSame(updateAction, other.getUpdateAction())) {
             return false;
         }
-        if (cascadeDelete != other.cascadeDelete()) {
+        if (!isSame(deleteAction, other.getDeleteAction())) {
             return false;
         }
-        if (!isSame(foreignKeyTableName, other.getForeignKeyTableName())) {
+        if (!isSame(tableName, other.getTableName())) {
             return false;
         }
-        if (!isSame(foreignKeyApiClassName, other.getForeignKeyApiClassName())) {
+        if (!isSame(apiClassName, other.getApiClassName())) {
             return false;
         }
-        return isSame(foreignKeyColumnName, other.getForeignKeyColumnName());
+        return isSame(columnName, other.getColumnName());
     }
 
     @Override
     public int hashCode() {
         int result = 41;
-        result = 37 * result + (cascadeDelete ? 1 : 0);
-        result = 37 * result + (cascadeUpdate ? 1 : 0);
-        result = 37 * result + (foreignKeyTableName == null ? 0 : foreignKeyTableName.hashCode());
-        result = 37 * result + (foreignKeyApiClassName == null ? 0 : foreignKeyApiClassName.hashCode());
-        result = 37 * result + (foreignKeyColumnName == null ? 0 : foreignKeyColumnName.hashCode());
+        result = 37 * result + deleteAction.getValue();
+        result = 37 * result + updateAction.getValue();
+        result = 37 * result + (tableName == null ? 0 : tableName.hashCode());
+        result = 37 * result + (apiClassName == null ? 0 : apiClassName.hashCode());
+        result = 37 * result + (columnName == null ? 0 : columnName.hashCode());
         return result;
     }
 
-    public void setForeignKeyTableName(String foreignKeyTableName) {
-        this.foreignKeyTableName = foreignKeyTableName;
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
     }
 
-    public boolean cascadeUpdate() {
-        return cascadeUpdate;
+    public ForeignKey.ChangeAction getUpdateAction() {
+        return updateAction;
     }
 
-    public boolean cascadeDelete() {
-        return cascadeDelete;
+    public ForeignKey.ChangeAction getDeleteAction() {
+        return deleteAction;
     }
 
-    public String getForeignKeyTableName() {
-        return foreignKeyTableName;
+    public String getTableName() {
+        return tableName;
     }
 
-    public String getForeignKeyColumnName() {
-        return foreignKeyColumnName;
+    public String getColumnName() {
+        return columnName;
     }
 
-    public String getForeignKeyApiClassName() {
-        return foreignKeyApiClassName;
+    public String getApiClassName() {
+        return apiClassName;
     }
 
     private boolean isSame(Object thisMember, Object otherMember) {
@@ -107,50 +109,52 @@ public class ForeignKeyInfo {
 
     public static class Builder {
 
-        private boolean cascadeUpdate = true;
-        private boolean cascadeDelete = true;
-        private String foreignKeyTableName;
-        private String foreignKeyColumnName;
-        private String foreignKeyApiClassName;
+        private ForeignKey.ChangeAction updateAction = ForeignKey.ChangeAction.CASCADE;
+        private ForeignKey.ChangeAction deleteAction = ForeignKey.ChangeAction.CASCADE;
+        private String tableName;
+        private String columnName;
+        private String apiClassName;
 
-        public Builder cascadeUpdate(boolean cascadeUpdate) {
-            this.cascadeUpdate = cascadeUpdate;
+        public Builder updateAction(ForeignKey.ChangeAction updateAction) {
+            this.updateAction = updateAction;
             return this;
         }
 
-        public Builder cascadeDelete(boolean cascadeDelete) {
-            this.cascadeDelete = cascadeDelete;
+        public Builder deleteAction(ForeignKey.ChangeAction deleteAction) {
+            this.deleteAction = deleteAction;
             return this;
         }
 
-        public Builder foreignKeyTableName(String foreignKeyTableName) {
-            this.foreignKeyTableName = foreignKeyTableName;
+        public Builder tableName(String foreignKeyTableName) {
+            this.tableName = foreignKeyTableName;
             return this;
         }
 
-        public Builder foreignKeyColumnName(String foreignKeyColumnName) {
-            this.foreignKeyColumnName = foreignKeyColumnName;
+        public Builder columnName(String foreignKeyColumnName) {
+            this.columnName = foreignKeyColumnName;
             return this;
         }
 
         public Builder foreignKeyApiClassName(String foreignKeyApiClassName) {
-            this.foreignKeyApiClassName = foreignKeyApiClassName;
+            this.apiClassName = foreignKeyApiClassName;
             return this;
         }
 
         public ForeignKeyInfo build() {
             if (!canBuild()) {
-                ForeignKeyInfo badInfo = new ForeignKeyInfo(cascadeUpdate, cascadeDelete, foreignKeyTableName, foreignKeyColumnName, foreignKeyApiClassName);
-                throw new IllegalStateException("Cannot build: foreignKeyColumnName cannot be null or empty and either\n1. foreignKeyApiClassName is neither null nor empty, or\n2. foreignKeyTableName is neither null nor empty.\nWould have built: " + badInfo.toString());
+                ForeignKeyInfo badInfo = new ForeignKeyInfo(updateAction, deleteAction, tableName, columnName, apiClassName);
+                throw new IllegalStateException("Cannot build: columnName cannot be null or empty and either\n1. apiClassName is neither null nor empty, or\n2. tableName is neither null nor empty.\nWould have built: " + badInfo.toString());
             }
-            return new ForeignKeyInfo(cascadeUpdate, cascadeDelete, foreignKeyTableName, foreignKeyColumnName, foreignKeyApiClassName);
+            return new ForeignKeyInfo(updateAction, deleteAction, tableName, columnName, apiClassName);
         }
 
         private boolean canBuild() {
-            return foreignKeyColumnName != null
-                    && !foreignKeyColumnName.isEmpty()
-                    && (foreignKeyApiClassName != null && !foreignKeyApiClassName.isEmpty())
-                        || (foreignKeyTableName != null && !foreignKeyTableName.isEmpty());
+            return columnName != null
+                    && !columnName.isEmpty()
+                    && updateAction != null
+                    && deleteAction != null
+                    && (apiClassName != null && !apiClassName.isEmpty())
+                        || (tableName != null && !tableName.isEmpty());
         }
     }
 }

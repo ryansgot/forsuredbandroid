@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ColumnInfoTest {
 
-    private static ColumnInfo longColumnWithForeignKey = TestData.longCol().foreignKey(TestData.defaultFKI("user").build()).build();
+    private static ColumnInfo longColumnWithForeignKey = TestData.longCol().foreignKey(TestData.cascadeFKI("user").build()).build();
 
     @Test
     public void shouldPutIdColumnFirst() {

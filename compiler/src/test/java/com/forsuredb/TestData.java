@@ -17,6 +17,7 @@
  */
 package com.forsuredb;
 
+import com.forsuredb.annotation.ForeignKey;
 import com.forsuredb.annotationprocessor.ColumnInfo;
 import com.forsuredb.annotationprocessor.ForeignKeyInfo;
 import com.forsuredb.annotationprocessor.TableInfo;
@@ -91,11 +92,39 @@ public class TestData {
         return columnFrom(TypeTranslator.DATE);
     }
 
-    public static ForeignKeyInfo.Builder defaultFKI(String foreignKeyTableName) {
-        return ForeignKeyInfo.builder().cascadeUpdate(true)
-                .cascadeDelete(true)
-                .foreignKeyColumnName("_id")
-                .foreignKeyTableName(foreignKeyTableName);
+    public static ForeignKeyInfo.Builder cascadeFKI(String foreignKeyTableName) {
+        return ForeignKeyInfo.builder().updateAction(ForeignKey.ChangeAction.CASCADE)
+                .deleteAction(ForeignKey.ChangeAction.CASCADE)
+                .columnName("_id")
+                .tableName(foreignKeyTableName);
+    }
+
+    public static ForeignKeyInfo.Builder noActionFKI(String foreignKeyTableName) {
+        return ForeignKeyInfo.builder().updateAction(ForeignKey.ChangeAction.NO_ACTION)
+                .deleteAction(ForeignKey.ChangeAction.NO_ACTION)
+                .columnName("_id")
+                .tableName(foreignKeyTableName);
+    }
+
+    public static ForeignKeyInfo.Builder setNullFKI(String foreignKeyTableName) {
+        return ForeignKeyInfo.builder().updateAction(ForeignKey.ChangeAction.SET_NULL)
+                .deleteAction(ForeignKey.ChangeAction.SET_NULL)
+                .columnName("_id")
+                .tableName(foreignKeyTableName);
+    }
+
+    public static ForeignKeyInfo.Builder setDefaultFKI(String foreignKeyTableName) {
+        return ForeignKeyInfo.builder().updateAction(ForeignKey.ChangeAction.SET_DEFAULT)
+                .deleteAction(ForeignKey.ChangeAction.SET_DEFAULT)
+                .columnName("_id")
+                .tableName(foreignKeyTableName);
+    }
+
+    public static ForeignKeyInfo.Builder restrictFKI(String foreignKeyTableName) {
+        return ForeignKeyInfo.builder().updateAction(ForeignKey.ChangeAction.RESTRICT)
+                .deleteAction(ForeignKey.ChangeAction.RESTRICT)
+                .columnName("_id")
+                .tableName(foreignKeyTableName);
     }
 
     // Helpers for covenience methods

@@ -46,7 +46,7 @@ public class QueryGeneratorFactoryTest {
 
     @Test
     public void shouldCreateAddColumnGeneratorForForeignKeyColumn() {
-        QueryGenerator qg = QueryGeneratorFactory.createForColumn(TestData.table().build(), TestData.intCol().foreignKey(TestData.defaultFKI("user").build()).build());
+        QueryGenerator qg = QueryGeneratorFactory.createForColumn(TestData.table().build(), TestData.intCol().foreignKey(TestData.cascadeFKI("user").build()).build());
         assertTrue("When column was foreign key, the returned query generator was not an instance of AddForeignKeyGenerator", qg instanceof AddForeignKeyGenerator);
     }
 }

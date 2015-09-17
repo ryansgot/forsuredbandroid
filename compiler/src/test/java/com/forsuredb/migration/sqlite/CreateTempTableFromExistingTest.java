@@ -56,7 +56,7 @@ public class CreateTempTableFromExistingTest extends BaseSQLiteGeneratorTest {
                 },
                 // Copy a table with a foreign key column
                 {
-                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.defaultFKI("user").build()).build()).build(),
+                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.cascadeFKI("user").build()).build()).build(),
                         new ColumnInfo[] {},
                         new String[] {
                                 "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";",
@@ -65,9 +65,9 @@ public class CreateTempTableFromExistingTest extends BaseSQLiteGeneratorTest {
                 },
                 // Copy a table with an excluded column
                 {
-                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.defaultFKI("user").build()).build()).build(),
+                        TestData.table().addColumn(TestData.longCol().foreignKey(TestData.cascadeFKI("user").build()).build()).build(),
                         new ColumnInfo[] {
-                                TestData.longCol().foreignKey(TestData.defaultFKI("user").build()).build()
+                                TestData.longCol().foreignKey(TestData.cascadeFKI("user").build()).build()
                         },
                         new String[] {
                                 "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";",

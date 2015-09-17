@@ -26,11 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.tools.Diagnostic;
-
 // TODO: make this TableContext and MigrationContext agnostic.
-// TODO: use FSLogger instead of the processingEnv
 /**
  * <p>
  *     Analyzes the diff between two {@link TableContext TableContext} objects--the one used to
@@ -41,16 +37,12 @@ import javax.tools.Diagnostic;
  */
 public class DiffGenerator {
 
+    private static final String LOG_TAG = DiffGenerator.class.getSimpleName();
+
     private final TableContext context;
-    private final ProcessingEnvironment processingEnv;
 
     public DiffGenerator(MigrationContext context) {
-        this(context, null);
-    }
-
-    public DiffGenerator(MigrationContext context, ProcessingEnvironment processingEnv) {
         this.context = context;
-        this.processingEnv = processingEnv;
     }
 
     /**
@@ -66,11 +58,11 @@ public class DiffGenerator {
      * to that of the {@link TableContext TableContext} argument.
      */
     public PriorityQueue<QueryGenerator> analyzeDiff(TableContext targetContext) {
-        printMessage(Diagnostic.Kind.NOTE, "analyzing diff: targetContext.allTables().size() = " + targetContext.allTables().size());
+        APLog.i(LOG_TAG, "analyzing diff: targetContext.allTables().size() = " + targetContext.allTables().size());
         PriorityQueue<QueryGenerator> retQueue = new PriorityQueue<>();
         for (TableInfo targetTable : targetContext.allTables()) {
             if (tableCreateQueryAppended(retQueue, targetTable)) {
-                printMessage(Diagnostic.Kind.NOTE, "Not checking column diffs for table: " + targetTable.getTableName());
+                APLog.i(LOG_TAG, "Not checking column diffs for table: " + targetTable.getTableName());
                 continue;
             }
             retQueue.addAll(getColumnChangeQueryGenerators(context.getTable(targetTable.getTableName()), targetTable));
@@ -80,13 +72,13 @@ public class DiffGenerator {
     }
 
     private boolean tableCreateQueryAppended(PriorityQueue<QueryGenerator> retQueue, TableInfo table) {
-        printMessage(Diagnostic.Kind.NOTE, "checking whether migration context has table: " + table.getTableName());
+        APLog.i(LOG_TAG, "checking whether migration context has table: " + table.getTableName());
         if (context.hasTable(table.getTableName())) {
-            printMessage(Diagnostic.Kind.NOTE, table.getTableName() + " table PREVIOUSLY EXISTED. NOT creating a migration for it");
+            APLog.i(LOG_TAG, table.getTableName() + " table PREVIOUSLY EXISTED. NOT creating a migration for it");
             return false;
         }
 
-        printMessage(Diagnostic.Kind.NOTE, table.getTableName() + " table did not previously exist. Creating migration for it");
+        APLog.i(LOG_TAG, table.getTableName() + " table did not previously exist. Creating migration for it");
         retQueue.add(QueryGeneratorFactory.createForTable(table));
         retQueue.addAll(getColumnChangeQueryGenerators(null, table));
 
@@ -104,11 +96,5 @@ public class DiffGenerator {
             }
         }
         return retList;
-    }
-
-    private void printMessage(Diagnostic.Kind kind, String message) {
-        if (processingEnv != null) {
-            processingEnv.getMessager().printMessage(kind, message);
-        }
     }
 }

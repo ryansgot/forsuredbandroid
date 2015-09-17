@@ -28,10 +28,6 @@ import java.io.IOException;
 import java.io.Writer;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
-import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 
 /**
@@ -62,14 +58,14 @@ public abstract class BaseGenerator<F extends FileObject> {
      */
     public boolean generate(String templateResource, VelocityEngine ve) {
         if (templateResource == null || templateResource.isEmpty()) {
-            printMessage(Diagnostic.Kind.ERROR, "error creating from resource: " + templateResource);
+            APLog.e(this.getClass().getSimpleName(), "error creating from resource: " + templateResource);
             return false;
         }
 
         try {
             applyTemplate(templateResource, ve);
         } catch (ResourceNotFoundException | ParseErrorException | MethodInvocationException exception) {
-            printMessage(Diagnostic.Kind.ERROR, "error creating from resource: " + templateResource + ": " + exception.getMessage());
+            APLog.e(this.getClass().getSimpleName(), "error creating from resource: " + templateResource + ": " + exception.getMessage());
             return false;
         }
 
@@ -86,13 +82,13 @@ public abstract class BaseGenerator<F extends FileObject> {
         try {
             final Template template = ve.getTemplate(templateResource);
             F fo = createFileObject(processingEnv);
-            printMessage(Diagnostic.Kind.NOTE, "creating source file: " + fo.getName());
+            APLog.i(this.getClass().getSimpleName(), "creating source file: " + fo.getName());
             writer = fo.openWriter();
 
-            printMessage(Diagnostic.Kind.NOTE, "applying velocity template: " + template.getName());
+            APLog.i(this.getClass().getSimpleName(), "applying velocity template: " + template.getName());
             template.merge(vc, writer);
         } catch (IOException ioe) {
-            printMessage(Diagnostic.Kind.ERROR, "Could not output to file: " + ioe.getMessage());
+            APLog.e(this.getClass().getSimpleName(), "Could not output to file: " + ioe.getMessage());
         } finally {
             if (writer != null) {
                 try {
@@ -118,56 +114,4 @@ public abstract class BaseGenerator<F extends FileObject> {
      * template file
      */
     protected abstract VelocityContext createVelocityContext();
-
-    // TODO: eliminate the need for this method by just using an FSLogger
-    protected ProcessingEnvironment getProcessingEnv() {
-        return processingEnv;
-    }
-
-    //TODO: eliminate the need for these convenience methods by just using an FSLogger
-    // Wrap the processing environment for the purpose of making the printing code more readable.
-
-    /**
-     * <p>
-     *     Convenience method for printing message to the console
-     * </p>
-     * @param kind
-     * @param message
-     */
-    protected void printMessage(Diagnostic.Kind kind, String message) {
-        processingEnv.getMessager().printMessage(kind, message);
-    }
-
-    /**
-     * <p>
-     *     Convenience method for printing message to the console
-     * </p>
-     * @param kind
-     * @param message
-     */
-    protected void printMessage(Diagnostic.Kind kind, String message, Element e) {
-        processingEnv.getMessager().printMessage(kind, message, e);
-    }
-
-    /**
-     * <p>
-     *     Convenience method for printing message to the console
-     * </p>
-     * @param kind
-     * @param message
-     */
-    protected void printMessage(Diagnostic.Kind kind, String message, Element e, AnnotationMirror am) {
-        processingEnv.getMessager().printMessage(kind, message, e, am);
-    }
-
-    /**
-     * <p>
-     *     Convenience method for printing message to the console
-     * </p>
-     * @param kind
-     * @param message
-     */
-    protected void printMessage(Diagnostic.Kind kind, String message, Element e, AnnotationMirror am, AnnotationValue av) {
-        processingEnv.getMessager().printMessage(kind, message, e, am, av);
-    }
 }

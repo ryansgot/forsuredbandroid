@@ -17,6 +17,7 @@
  */
 package com.forsuredb.migration;
 
+import com.forsuredb.annotation.ForeignKey;
 import com.forsuredb.annotationprocessor.ForeignKeyInfo;
 
 public class Migration {
@@ -159,10 +160,10 @@ public class Migration {
         private QueryGenerator.MigrationType migrationType;
         private String columnName;
         private String columnQualifiedType;
-        private String foreignKeyTable;
+        private String foreignKeyTableName;
         private String foreignKeyColumn;
-        private boolean foreignKeyCascadeDelete;
-        private boolean foreignKeyCascadeUpdate;
+        private ForeignKey.ChangeAction foreignKeyDeleteAction;
+        private ForeignKey.ChangeAction foreignKeyUpdateAction;
         private boolean isLastInSet;
 
         private Builder() {}
@@ -198,7 +199,7 @@ public class Migration {
         }
 
         public Builder foreignKeyTable(String foreignKeyTable) {
-            this.foreignKeyTable = foreignKeyTable;
+            this.foreignKeyTableName = foreignKeyTable;
             return this;
         }
 
@@ -207,13 +208,13 @@ public class Migration {
             return this;
         }
 
-        public Builder foreignKeyCascadeUpdate(boolean foreignKeyCascadeUpdate) {
-            this.foreignKeyCascadeUpdate = foreignKeyCascadeUpdate;
+        public Builder foreignKeyDeleteAction(ForeignKey.ChangeAction foreignKeyDeleteAction) {
+            this.foreignKeyDeleteAction = foreignKeyDeleteAction;
             return this;
         }
 
-        public Builder foreignKeyCascadeDelete(boolean foreignKeyCascadeDelete) {
-            this.foreignKeyCascadeDelete = foreignKeyCascadeDelete;
+        public Builder foreignKeyUpdateAction(ForeignKey.ChangeAction foreignKeyUpdateAction) {
+            this.foreignKeyUpdateAction = foreignKeyUpdateAction;
             return this;
         }
 
@@ -235,10 +236,10 @@ public class Migration {
 
         private ForeignKeyInfo getForeignKey() {
             try {
-                return ForeignKeyInfo.builder().foreignKeyColumnName(foreignKeyColumn)
-                        .foreignKeyTableName(foreignKeyTable)
-                        .cascadeDelete(foreignKeyCascadeDelete)
-                        .cascadeUpdate(foreignKeyCascadeUpdate)
+                return ForeignKeyInfo.builder().columnName(foreignKeyColumn)
+                        .tableName(foreignKeyTableName)
+                        .deleteAction(foreignKeyUpdateAction)
+                        .updateAction(foreignKeyDeleteAction)
                         .build();
             } catch (Exception e) {}
 

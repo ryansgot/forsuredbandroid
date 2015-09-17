@@ -18,7 +18,6 @@
 package com.forsuredb.migration;
 
 import com.forsuredb.annotationprocessor.ColumnInfo;
-import com.forsuredb.annotationprocessor.ForeignKeyInfo;
 import com.forsuredb.annotationprocessor.TableContext;
 import com.forsuredb.annotationprocessor.TableInfo;
 

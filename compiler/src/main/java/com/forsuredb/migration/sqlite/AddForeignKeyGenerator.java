@@ -17,7 +17,7 @@
  */
 package com.forsuredb.migration.sqlite;
 
-import com.forsuredb.annotationprocessor.ForeignKeyInfo;
+import com.forsuredb.annotation.ForeignKey;
 import com.forsuredb.migration.QueryGenerator;
 import com.forsuredb.annotationprocessor.ColumnInfo;
 import com.forsuredb.annotationprocessor.TableInfo;
@@ -58,10 +58,10 @@ public class AddForeignKeyGenerator extends QueryGenerator {
         Map<String, String> ret = new HashMap<>();
         ret.put("column", column.getColumnName());
         ret.put("column_type", column.getQualifiedType());
-        ret.put("foreign_key_table", column.getForeignKey().getForeignKeyTableName());
-        ret.put("foreign_key_column", column.getForeignKey().getForeignKeyColumnName());
-        ret.put("cascade_delete", Boolean.toString(column.getForeignKey().cascadeDelete()));
-        ret.put("cascade_update", Boolean.toString(column.getForeignKey().cascadeUpdate()));
+        ret.put("foreign_key_table", column.getForeignKey().getTableName());
+        ret.put("foreign_key_column", column.getForeignKey().getColumnName());
+        ret.put("foreign_key_delete_action", column.getForeignKey().getDeleteAction().toString());
+        ret.put("foreign_key_update_action", column.getForeignKey().getUpdateAction().toString());
         return ret;
     }
 
@@ -143,10 +143,10 @@ public class AddForeignKeyGenerator extends QueryGenerator {
 
     private void addForeignKeyDefinitionToBuffer(StringBuffer buf, ColumnInfo column) {
         buf.append(", FOREIGN KEY(").append(column.getColumnName())
-                .append(") REFERENCES ").append(column.getForeignKey().getForeignKeyTableName())
-                .append("(").append(column.getForeignKey().getForeignKeyColumnName())
+                .append(") REFERENCES ").append(column.getForeignKey().getTableName())
+                .append("(").append(column.getForeignKey().getColumnName())
                 .append(")")
-                .append(column.getForeignKey().cascadeUpdate() ? " ON UPDATE CASCADE" : "")
-                .append(column.getForeignKey().cascadeDelete() ? " ON DELETE CASCADE" : "");
+                .append(" ON UPDATE ").append(column.getForeignKey().getUpdateAction().toString())
+                .append(" ON DELETE ").append(column.getForeignKey().getDeleteAction().toString());
     }
 }
