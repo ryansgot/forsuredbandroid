@@ -41,9 +41,11 @@ import javax.tools.FileObject;
 public abstract class BaseGenerator<F extends FileObject> {
 
     private final ProcessingEnvironment processingEnv;
+    private final String templateResource;
 
     // TODO: make the constructor take the templateResource argument instead of the generate method
-    public BaseGenerator(ProcessingEnvironment processingEnv) {
+    public BaseGenerator(String templateResource, ProcessingEnvironment processingEnv) {
+        this.templateResource = templateResource;
         this.processingEnv = processingEnv;
     }
 
@@ -52,18 +54,17 @@ public abstract class BaseGenerator<F extends FileObject> {
      *     Use the {@link VelocityEngine} to generate a new class, source, or resource file based upon
      *     the template passed in
      * </p>
-     * @param templateResource The Velocity Templating Language (VTL) resource to use
      * @param ve The {@link VelocityEngine} used to create the class, source, or resource file
      * @return the success/failure status of the generation. true if successful--false if unsuccessful.
      */
-    public boolean generate(String templateResource, VelocityEngine ve) {
+    public boolean generate(VelocityEngine ve) {
         if (templateResource == null || templateResource.isEmpty()) {
             APLog.e(this.getClass().getSimpleName(), "error creating from resource: " + templateResource);
             return false;
         }
 
         try {
-            applyTemplate(templateResource, ve);
+            applyTemplate(ve);
         } catch (ResourceNotFoundException | ParseErrorException | MethodInvocationException exception) {
             APLog.e(this.getClass().getSimpleName(), "error creating from resource: " + templateResource + ": " + exception.getMessage());
             return false;
@@ -72,7 +73,7 @@ public abstract class BaseGenerator<F extends FileObject> {
         return true;
     }
 
-    private void applyTemplate(String templateResource, VelocityEngine ve) throws ResourceNotFoundException, ParseErrorException, MethodInvocationException {
+    private void applyTemplate(VelocityEngine ve) throws ResourceNotFoundException, ParseErrorException, MethodInvocationException {
         Writer writer = null;
         VelocityContext vc = createVelocityContext();
         if (vc == null) {

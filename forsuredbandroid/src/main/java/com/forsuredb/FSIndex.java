@@ -20,6 +20,7 @@ package com.forsuredb;
 import android.net.Uri;
 import android.util.Log;
 
+import com.forsuredb.api.FSFilter;
 import com.forsuredb.api.FSGetApi;
 import com.forsuredb.api.FSSaveApi;
 import com.forsuredb.api.FSTableCreator;

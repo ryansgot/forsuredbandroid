@@ -11,11 +11,15 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.forsuredb.AndroidRecordResolver;
 import com.forsuredb.ForSure;
+import com.forsuredb.api.Retriever;
 import com.forsuredb.api.SaveResult;
 import com.forsuredb.testapp.adapter.TestProfileInfoCursorAdapter;
 import com.forsuredb.testapp.adapter.TestUserCursorAdapter;
 import com.forsuredb.testapp.model.ProfileInfoTableSetter;
+import com.forsuredb.testapp.model.UserTable;
+import com.forsuredb.testapp.model.UserTableFilter;
 import com.forsuredb.testapp.model.UserTableSetter;
 
 import java.math.BigDecimal;
@@ -36,6 +40,18 @@ public class TestActivity extends ActionBarActivity {
         ((ListView) findViewById(R.id.user_list_view)).setAdapter(userCursorAdapter);
         profileInfoCursorAdapter = new TestProfileInfoCursorAdapter(this);
         ((ListView) findViewById(R.id.profile_info_list_view)).setAdapter(profileInfoCursorAdapter);
+
+        AndroidRecordResolver<UserTableFilter> userTableApi = ForSure.resolve("user");
+        Retriever retriever = userTableApi.find().byAppRatingBetweenInclusive(4.5D).and(5.3D)
+                .also().byCompetitorAppRatingBetween(new BigDecimal("0.6")).andInclusive(new BigDecimal("0.9"))
+                .retrieve();
+        UserTable userTable = userTableApi.getter();
+        if (!retriever.isClosed() && retriever.moveToFirst()) {
+            do {
+                logUser(userTable, retriever);
+            } while (retriever.moveToNext());
+        }
+        retriever.close();
     }
 
     @Override
@@ -134,6 +150,7 @@ public class TestActivity extends ActionBarActivity {
          * overwritten. Otherwise, it will insert.
          */
 
+//        ForSure.filter(UserTableFilter.class).byAppRating(1D)
         userCursorAdapter.changeCursor(ForSure.queryAll("user"));   // <-- Update user list
     }
 
@@ -178,5 +195,17 @@ public class TestActivity extends ActionBarActivity {
 
     private void logResult(SaveResult<Uri> result) {
         Log.d("TestActivity", "SaveResult<Uri>{inserted=" + result.inserted() + ", exception=" + result.exception() + ", rowsAffected=" + result.rowsAffected() + "}");
+    }
+
+    private void logUser(UserTable userTable, Retriever retriever) {
+        Log.i("TestActivity", new StringBuilder("_id = ").append(userTable.id(retriever))
+                .append("; created = ").append(userTable.created(retriever))
+                .append("; deleted = ").append(userTable.deleted(retriever))
+                .append("; modified = ").append(userTable.modified(retriever))
+                .append("; global_id = ").append(userTable.globalId(retriever))
+                .append("; login_count = ").append(userTable.loginCount(retriever))
+                .append("; app_rating = ").append(userTable.appRating(retriever))
+                .append("; competitor_app_rating = ").append(userTable.competitorAppRating(retriever))
+                .toString());
     }
 }

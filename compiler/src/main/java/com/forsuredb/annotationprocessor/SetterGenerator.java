@@ -39,7 +39,7 @@ import javax.tools.JavaFileObject;
     private final String resultParameter;
 
     public SetterGenerator(TableInfo tableInfo, String resultParameter, ProcessingEnvironment processingEnv) {
-        super(processingEnv);
+        super("setter_interface.vm", processingEnv);
         this.tableInfo = tableInfo;
         this.resultParameter = resultParameter;
     }
@@ -76,8 +76,8 @@ import javax.tools.JavaFileObject;
 
     private String createMethodDefinition(ColumnInfo column) {
         return new StringBuilder("@FSColumn(\"").append(column.getColumnName())
-                .append("\") ") .append(getOutputClassName(false))
-                .append(" ") .append(column.getMethodName())
+                .append("\") ").append(getOutputClassName(false))
+                .append(" ").append(column.getMethodName())
                 .append("(").append(column.getQualifiedType().toString())
                 .append(" ").append(column.getMethodName()).append(");")
                 .toString();

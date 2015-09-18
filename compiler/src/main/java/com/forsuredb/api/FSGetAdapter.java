@@ -42,9 +42,6 @@ public class FSGetAdapter {
 
     /*package*/ static final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
-    /**
-     *
-     */
     /*package*/ static final Map<Type, Method> methodMap = new HashMap<>();
     static {
         try {

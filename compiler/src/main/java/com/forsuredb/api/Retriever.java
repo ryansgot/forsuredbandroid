@@ -30,5 +30,20 @@ public interface Retriever {
     double getDouble(String column);
     byte[] getBlob(String column);
     int getCount();
+
+    boolean isClosed();
     void close();
+
+    // navigation methods
+    boolean moveToPrevious();
+    boolean moveToFirst();
+    boolean moveToNext();
+    boolean moveToPosition(int position);
+    boolean move(int offset);
+    boolean moveToLast();
+    boolean isAfterLast();
+    boolean isBeforeFirst();
+    boolean isFirst();
+    boolean isLast();
+    int getPosition();
 }

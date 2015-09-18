@@ -52,6 +52,7 @@ public class FSAnnotationProcessor extends AbstractProcessor {
     private static boolean setterApisCreated = false;          // <-- maintain state so setter APIs don't have to be created more than once
     private static boolean migrationsCreated = false;          // <-- maintain state so migrations don't have to be created more than once
     private static boolean tableCreatorClassCreated = false;   // <-- maintain state so TableCreator class does not have to be created more than once
+    private static boolean filterApisCreated = false;          // <-- maintain state so filter APIs don't have to be created more than once
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
@@ -82,12 +83,15 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         if (!tableCreatorClassCreated) {
             createTableCreatorClass(ve, pc);
         }
+        if (!filterApisCreated) {
+            createFilterApis(ve, pc);
+        }
     }
 
     private void createSetterApis(VelocityEngine ve, ProcessingContext pc) {
         String resultParameter = System.getProperty("resultParameter");
         for (TableInfo tableInfo : pc.allTables()) {
-            new SetterGenerator(tableInfo, resultParameter, processingEnv).generate("setter_interface.vm", ve);
+            new SetterGenerator(tableInfo, resultParameter, processingEnv).generate(ve);
         }
         setterApisCreated = true;   // <-- maintain state so setter APIs don't have to be created more than once
     }
@@ -95,15 +99,23 @@ public class FSAnnotationProcessor extends AbstractProcessor {
     private void createMigrations(VelocityEngine ve, ProcessingContext pc) {
         String migrationDirectory = System.getProperty("migrationDirectory");
         APLog.i(LOG_TAG, "got migration directory: " + migrationDirectory);
-        new MigrationGenerator(pc, migrationDirectory, processingEnv).generate("migration_resource.vm", ve);
+        new MigrationGenerator(pc, migrationDirectory, processingEnv).generate(ve);
         migrationsCreated = true;   // <-- maintain state so migrations don't have to be created more than once
     }
 
     private void createTableCreatorClass(VelocityEngine ve, ProcessingContext pc) {
         String applicationPackageName = System.getProperty("applicationPackageName");
         APLog.i(LOG_TAG, "got applicationPackageName: " + applicationPackageName);
-        new TableCreatorGenerator(processingEnv, applicationPackageName, pc).generate("table_creator.vm", ve);
+        new TableCreatorGenerator(processingEnv, applicationPackageName, pc).generate(ve);
         tableCreatorClassCreated = true;    // <-- maintain state so TableCreator class does not have to be created more than once
+    }
+
+    private void createFilterApis(VelocityEngine ve, ProcessingContext pc) {
+        String resultParameter = System.getProperty("resultParameter");
+        for (TableInfo tableInfo : pc.allTables()) {
+            new FilterGenerator(tableInfo, resultParameter, processingEnv).generate(ve);
+        }
+        filterApisCreated = true;   // <-- maintain state so filter APIs don't have to be created more than once
     }
 
     private VelocityEngine createVelocityEngine() {

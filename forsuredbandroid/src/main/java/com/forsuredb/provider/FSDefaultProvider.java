@@ -29,7 +29,7 @@ public class FSDefaultProvider extends ContentProvider {
         if (!ForSure.canResolve(uri)) {
             return null;
         }
-        return ForSure.resolve(uri).table().getMimeType();
+        return null;    // TODO: resolve this;
     }
 
     @Override

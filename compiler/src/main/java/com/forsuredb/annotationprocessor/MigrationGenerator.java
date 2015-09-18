@@ -51,7 +51,7 @@ import javax.tools.FileObject;
     private final MigrationRetriever mr;
 
     public MigrationGenerator(ProcessingContext pContext, String migrationDirectory, ProcessingEnvironment processingEnv)  {
-            super(processingEnv);
+            super("migration_resource.vm", processingEnv);
             date = new Date();
             this.pContext = pContext;
             mr = new MigrationRetrieverFactory().fromDirectory(migrationDirectory);

@@ -47,7 +47,7 @@ public class TableCreatorGenerator extends BaseGenerator<JavaFileObject> {
     public TableCreatorGenerator(ProcessingEnvironment processingEnv,
                                  String applicationPackageName,
                                  ProcessingContext pContext) {
-        super(processingEnv);
+        super("table_creator.vm", processingEnv);
         this.applicationPackageName = applicationPackageName;
         this.pContext = pContext;
     }

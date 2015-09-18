@@ -22,10 +22,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.util.Log;
 
+import com.forsuredb.api.FSFilter;
 import com.forsuredb.api.FSGetApi;
-import com.forsuredb.api.FSContentResolver;
+import com.forsuredb.api.FSRecordResolver;
 import com.forsuredb.api.FSSaveApi;
 import com.forsuredb.api.FSTableCreator;
+import com.forsuredb.api.Retriever;
 
 import java.util.List;
 
@@ -128,7 +130,7 @@ public class ForSure {
      * @throws IllegalStateException if {@link ForSure} was not yet initialized
      */
     public static Uri all(String tableName) {
-        return resolve(tableName).table().getAllRecordsUri();
+        return index.getByName(tableName).getAllRecordsUri();
     }
 
     /**
@@ -184,13 +186,14 @@ public class ForSure {
      *     Resolve a table by table name so that you can gain access to interact with it
      *</p>
      * @param tableName The name of the table you would like to resolve
-     * @return an {@link FSContentResolver} capable of providing access to {@link FSTableDescriber},
-     * {@link FSGetApi}, and {@link FSSaveApi} objects associated with the table
+     * @return an {@link AndroidRecordResolver} capable of resolving records and providing
+     * access to {@link FSTableDescriber}, and {@link FSSaveApi} objects associated with the
+     * table specified by the table name passed in
      * @throws UnresolvableTableException when the table cannot be resolved
      * @throws IllegalStateException if {@link ForSure} was not yet initialized
      * @see #resolve(Uri)
      */
-    public static FSResolver resolve(final String tableName) {
+    public static <F extends FSFilter<Uri>> AndroidRecordResolver<F> resolve(final String tableName) {
         if (!canResolve(tableName)) {
             UnresolvableTableException ute = new UnresolvableTableException(tableName);
             Log.e(LOG_TAG, "Could not resolve table: " + tableName, ute);
@@ -204,38 +207,23 @@ public class ForSure {
      *     Resolve a table by a {@link Uri} so that you can gain access to interact with it.
      * </p>
      * @param resource the {@link Uri} you would like to resolve
-     * @return an {@link FSContentResolver} capable of providing access to {@link FSTableDescriber},
+     * @return an {@link FSFilter<Uri>} capable of providing access to {@link FSTableDescriber},
      * {@link FSGetApi}, and {@link FSSaveApi} objects associated with the table
      * @throws UnresolvableTableException when the table cannot be resolved
      * @throws IllegalStateException if {@link ForSure} was not yet initialized
      * @see #resolve(String)
      */
-    public static FSResolver resolve(final Uri resource) {
+    public static <F extends FSFilter<Uri>> AndroidRecordResolver<F> resolve(final Uri resource) {
         throwIfUninitialized("resolve");
         final FSTableDescriber table = index.getByUri(resource);
+        final ContentProviderQueryable cpq = new ContentProviderQueryable(appContext, resource);
         if (table == null) {
             UnresolvableTableException ute = new UnresolvableTableException(resource);
             Log.e(LOG_TAG, "Resource could not be resolved", ute);
             throw ute;
         }
 
-        return new FSResolver() {
-
-            @Override
-            public FSTableDescriber table() {
-                return table;
-            }
-
-            @Override
-            public <T extends FSSaveApi<Uri>> T setter() {
-                return (T) table.set(new ContentProviderQueryable(appContext, resource));
-            }
-
-            @Override
-            public <T extends FSGetApi> T getter() {
-                return (T) table.get();
-            }
-        };
+        return new AndroidRecordResolver<F>(table, cpq);
     }
 
     /**

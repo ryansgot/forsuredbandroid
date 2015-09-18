@@ -21,11 +21,16 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.forsuredb.annotation.FSTable;
+import com.forsuredb.api.FSFilter;
+import com.forsuredb.api.FSFilterAdapter;
 import com.forsuredb.api.FSGetAdapter;
 import com.forsuredb.api.FSGetApi;
+import com.forsuredb.api.FSRecordResolver;
 import com.forsuredb.api.FSSaveAdapter;
 import com.forsuredb.api.FSSaveApi;
+import com.forsuredb.api.FSSelection;
 import com.forsuredb.api.FSTableCreator;
+import com.forsuredb.api.Retriever;
 import com.google.common.base.Strings;
 
 /**
@@ -43,6 +48,7 @@ public class FSTableDescriber {
     private final String name;
     private final Class<? extends FSGetApi> getApiClass;
     private Class<? extends FSSaveApi<Uri>> saveApiClass;
+    private Class<? extends FSFilter<Uri>> filterClass;
     private final String mimeType;
     private final Uri allRecordsUri;
 
@@ -89,6 +95,10 @@ public class FSTableDescriber {
         return Uri.withAppendedPath(allRecordsUri, Long.toString(id));
     }
 
+    public <F extends FSFilter<Uri>> F getNewFilter(FSRecordResolver<Uri, F> recordResolver) {
+        return FSFilterAdapter.create((Class<F>) getFilterClass(), recordResolver);
+    }
+
     /**
      * @return an object of the {@link FSGetApi} extension associated with this table.
      * You should cast this to the desired extension in order to use it.
@@ -129,6 +139,13 @@ public class FSTableDescriber {
         return saveApiClass;
     }
 
+    public Class<? extends FSFilter<Uri>> getFilterClass() {
+        if (filterClass == null) {
+            initFilterClass();
+        }
+        return filterClass;
+    }
+
     private void initSaveApi() {
         final String className = getApiClass.getName() + "Setter";
         Class<?> loaded = null;
@@ -140,6 +157,23 @@ public class FSTableDescriber {
         }
         try {
             saveApiClass = (Class<? extends com.forsuredb.api.FSSaveApi<Uri>>) loaded;
+        } catch (ClassCastException cce) {
+            Log.e(LOG_TAG, "Could not cast: " + loaded.getName() + " to correct class");
+            throw cce;
+        }
+    }
+
+    private void initFilterClass() {
+        final String className = getApiClass.getName() + "Filter";
+        Class<?> loaded = null;
+        try {
+            loaded = Class.forName(className);
+        } catch (ClassNotFoundException cnfe) {
+            Log.e(LOG_TAG, "Could not find class: " + className, cnfe);
+            throw new IllegalStateException("Cannot load the filter api class because it was not found.");
+        }
+        try {
+            filterClass = (Class<? extends FSFilter<Uri>>) loaded;
         } catch (ClassCastException cce) {
             Log.e(LOG_TAG, "Could not cast: " + loaded.getName() + " to correct class");
             throw cce;
