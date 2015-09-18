@@ -52,6 +52,9 @@ public class TestActivity extends ActionBarActivity {
             } while (retriever.moveToNext());
         }
         retriever.close();
+
+        UserTableSetter setter = userTableApi.find().byAppRatingBetweenInclusive(4.5D).and(5.3D).setter();
+        logResult(setter.appRating(5.0D).save());
     }
 
     @Override

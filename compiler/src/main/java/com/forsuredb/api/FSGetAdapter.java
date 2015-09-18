@@ -113,7 +113,8 @@ public class FSGetAdapter {
         private Date getDateFrom(Method cursorMethod, Retriever retriever, String column)
                                                                         throws InvocationTargetException, IllegalAccessException {
             try {
-                return DATETIME_FORMAT.parse((String) cursorMethod.invoke(retriever, column));
+                final Object returned = cursorMethod.invoke(retriever, column);
+                return returned == null ? null : DATETIME_FORMAT.parse((String) returned);
             } catch (ParseException pe) {
                 pe.printStackTrace();
             }
@@ -123,7 +124,8 @@ public class FSGetAdapter {
         private BigDecimal getBigDecimalFrom(Method retrieverMethod, Retriever retriever, String column)
                                                                         throws InvocationTargetException, IllegalAccessException {
             try {
-                return new BigDecimal((String) retrieverMethod.invoke(retriever, column));
+                final Object returned = retrieverMethod.invoke(retriever, column);
+                return returned == null ? null : new BigDecimal((String) returned);
             } catch (NumberFormatException nfe) {
                 nfe.printStackTrace();
             }

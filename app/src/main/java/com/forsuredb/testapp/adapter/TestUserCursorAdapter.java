@@ -1,7 +1,6 @@
 package com.forsuredb.testapp.adapter;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -143,7 +142,7 @@ public class TestUserCursorAdapter extends BaseAdapter {
             ((TextView) targetLayout.findViewById(R.id.user_global_id_text)).setText(Long.toString(globalId));
             ((TextView) targetLayout.findViewById(R.id.login_count_text)).setText(Integer.toString(loginCount));
             ((TextView) targetLayout.findViewById(R.id.app_rating_text)).setText(Double.toString(appRating));
-            ((TextView) targetLayout.findViewById(R.id.competitor_app_rating)).setText(competitorAppRating.toString());
+            ((TextView) targetLayout.findViewById(R.id.competitor_app_rating)).setText(competitorAppRating == null ? "null" : competitorAppRating.toString());
             ((TextView) targetLayout.findViewById(R.id.user_created_text)).setText(Strings.nullToEmpty(created));
             ((TextView) targetLayout.findViewById(R.id.user_modified_text)).setText(Strings.nullToEmpty(modified));
             ((TextView) targetLayout.findViewById(R.id.user_deleted_text)).setText(Boolean.toString(deleted));
