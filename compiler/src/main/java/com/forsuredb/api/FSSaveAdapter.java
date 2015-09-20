@@ -29,9 +29,9 @@ import java.util.Map;
 
 /**
  * <p>
- *     Adapter capable of creating an implementation of any {@link FSSaveApi FSSaveApi}
- *     extension
+ *     Adapter capable of creating an implementation of any {@link FSSaveApi} extension
  * </p>
+ * @author Ryan Scott
  */
 public class FSSaveAdapter {
 
@@ -44,23 +44,35 @@ public class FSSaveAdapter {
 
     /**
      * <p>
-     *     Create an api object capable of saving a row.
+     *     Creates a fluent API capable of performing insert, update, and delete operations into the database.
+     *     There are three ways to terminate the method call chain:
      * </p>
-     *
-     * @param queryable An {@link FSQueryable} that can be used to insert/update records in the database
-     * @param emptyRecord this will be emptied anyway
+     * <ol>
+     *     <li>{@link FSSaveApi#save()}</li>
+     *     <li>{@link FSSaveApi#softDelete()}</li>
+     *     <li>{@link FSSaveApi#hardDelete()}</li>
+     * </ol>
+     * @param queryable An {@link FSQueryable} that can be used to insert/update/delete records in the database
+     * @param selection an {@link FSSelection} that can be used to narrow down the records you're talking about
+     * @param emptyRecord an {@link RecordContainer} extension that represents the record prior to being
+     *                    inserted/updated or a delete operation is run. It does not matter whether this record
+     *                    is empty or not because it will be emptied for you.
      * @param api The {@link FSSaveApi FSSaveApi} class for which you would like an object
-     * @param <T> The type of an {@link FSSaveApi} which was generated from an {@link FSGetApi} definition
+     * @param <T> The type of an {@link FSSaveApi} which was generated at compile time from an
+     * {@link FSGetApi} definition
      * @param <U> The class by which records are located
-     * @param <R> An extension of {@link RecordContainer} that holds records prior to their insertion/update in the database
-     * @return An implementation of the api class passed in.
+     * @param <R> An extension of {@link RecordContainer} that holds records prior to their insertion/update
+     *           in the database
+     * @return An implementation of the {@link FSSaveApi} class object passed in
+     * @see FSSaveApi
      */
     public static <T extends FSSaveApi<U>, U, R extends RecordContainer> T create(FSQueryable<U, R> queryable,
+                                                                                  FSSelection selection,
                                                                                   R emptyRecord,
                                                                                   Class<T> api) {
         return (T) Proxy.newProxyInstance(api.getClassLoader(),
                                           new Class<?>[]{api},
-                                          new Handler(queryable, emptyRecord, getColumnTypeMapFor(api)));
+                                          new Handler(queryable, selection, emptyRecord, getColumnTypeMapFor(api)));
     }
 
     // lazily create the column type maps for each api so that they are not created each time a new handler is created
@@ -88,11 +100,13 @@ public class FSSaveAdapter {
     private static class Handler<U, R extends RecordContainer> implements InvocationHandler {
 
         private final FSQueryable<U, R> queryable;
+        private final FSSelection selection;
         private final R recordContainer;
         private final Map<String, Type> columnTypeMap;
 
-        public Handler(FSQueryable<U, R> queryable, R recordContainer, Map<String, Type> columnTypeMap) {
+        public Handler(FSQueryable<U, R> queryable, FSSelection selection, R recordContainer, Map<String, Type> columnTypeMap) {
             this.queryable = queryable;
+            this.selection = selection;
             this.recordContainer = recordContainer;
             this.columnTypeMap = columnTypeMap;
         }
@@ -110,10 +124,10 @@ public class FSSaveAdapter {
                 case "softDelete":
                     recordContainer.clear();
                     recordContainer.put("deleted", 1);
-                    return performUpsert();
+                    return performUpdate();
                 case "hardDelete":
                     recordContainer.clear();
-                    return queryable.delete((FSSelection) args[0]);
+                    return queryable.delete(selection);
             }
 
             performSet(getColumnName(method), args[0]);
@@ -121,10 +135,27 @@ public class FSSaveAdapter {
         }
 
         private SaveResult<U> performSave() {
-            if (!idStored()) {
+            if (selection == null) {
                 return performInsert();
             }
             return performUpsert();
+        }
+
+        private SaveResult<U> performUpsert() {
+            Retriever cursor = queryable.query(null, selection, null);
+            try {
+                if (cursor == null || cursor.getCount() < 1) {
+                    return performInsert();
+                }
+                return performUpdate();
+            } catch (Exception e) {
+                return ResultFactory.create(null, 0, e);
+            } finally {
+                recordContainer.clear();
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
         }
 
         private SaveResult<U> performInsert() {
@@ -138,24 +169,9 @@ public class FSSaveAdapter {
             }
         }
 
-        private SaveResult<U> performUpsert() {
-            final String id = (String) recordContainer.get("_id");
-            FSSelection selection = id == null ? null : new Selection("_id = ?", new String[]{id});
-            Retriever cursor = queryable.query(null, selection == null ? null : selection, null);
-            try {
-                if (cursor == null || cursor.getCount() < 1) {
-                    return performInsert();
-                }
-                int rowsAffected = queryable.update(recordContainer, selection);
-                return ResultFactory.create(null, rowsAffected, null);
-            } catch (Exception e) {
-                return ResultFactory.create(null, 0, e);
-            } finally {
-                recordContainer.clear();
-                if (cursor != null) {
-                    cursor.close();
-                }
-            }
+        private SaveResult<U> performUpdate() {
+            int rowsAffected = queryable.update(recordContainer, selection);
+            return ResultFactory.create(null, rowsAffected, null);
         }
 
         private void performSet(String column, Object arg) {
@@ -169,31 +185,6 @@ public class FSSaveAdapter {
             } else {
                 recordContainer.put(column, arg.toString());
             }
-        }
-
-        private boolean idStored() {
-            return recordContainer.get("_id") != null;
-        }
-    }
-
-    private static class Selection implements FSSelection {
-
-        private final String where;
-        private final String[] replacements;
-
-        public Selection(String where, String[] replacements) {
-            this.where = where;
-            this.replacements = replacements;
-        }
-
-        @Override
-        public String where() {
-            return where;
-        }
-
-        @Override
-        public String[] replacements() {
-            return replacements;
         }
     }
 

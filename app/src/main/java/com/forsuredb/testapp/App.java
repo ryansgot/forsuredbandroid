@@ -2,7 +2,8 @@ package com.forsuredb.testapp;
 
 import android.app.Application;
 
-import com.forsuredb.ForSure;
+import com.forsuredb.FSDBHelper;
+import com.forsuredb.ForSureAndroidInfoFactory;
 
 public class App extends Application {
 
@@ -10,7 +11,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
 
-        // initialize ForSure. You can choose to pass in a database name or not.
-        ForSure.init(this, TableGenerator.generate());
+        FSDBHelper.init(this, "testapp.db", TableGenerator.generate());
+        ForSure.init(new ForSureAndroidInfoFactory(this));
     }
 }

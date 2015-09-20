@@ -27,25 +27,45 @@ package com.forsuredb.api;
  * @author Ryan Scott
  */
 public interface FSSaveApi<U> {
+
    /**
+    * <p>
+    *     Performs either an insertion or an update of the fields you have set. The operation
+    *     will be an . . .
+    * </p>
+    * <ul>
+    *     <li>
+    *         Insertion if you either did not set any selection criteria or the search criteria
+    *         you specified matches no records.
+    *     </li>
+    *     <li>
+    *         Update if you both set selection criteria and that criteria matches at least one
+    *         record.
+    *     </li>
+    * </ul>
     * @return A descriptor of the result of the save operation
+    * @see FSSaveAdapter
     */
     SaveResult<U> save();
 
     /**
      * <p>
-     *     A soft delete flips the deleted flag on the record to true.
+     *     Attempts an update to the database. However, any fields that you've set prior to
+     *     calling this method will not be saved.
      * </p>
      * @return A descriptor of the result of the softDelete operation
+     * @see FSSaveAdapter
      */
     SaveResult<U> softDelete();
 
     /**
      * <p>
-     *     A hard delete actually deletes the record
+     *     A hard delete actually deletes the record(s) from the database. If there is a
+     *     foreign key pointing to any of the matching records, then the
+     *     {@link com.forsuredb.annotation.ForeignKey.ChangeAction} you will be executed.
      * </p>
-     * @param selection The selection of rows to delete
      * @return the number of rows deleted
+     * @see FSSaveAdapter
      */
-    int hardDelete(FSSelection selection);
+    int hardDelete();
 }

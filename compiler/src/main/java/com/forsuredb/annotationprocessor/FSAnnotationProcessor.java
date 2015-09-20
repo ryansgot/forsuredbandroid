@@ -34,7 +34,6 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
-import javax.tools.Diagnostic;
 
 /**
  * <p>
@@ -52,7 +51,8 @@ public class FSAnnotationProcessor extends AbstractProcessor {
     private static boolean setterApisCreated = false;          // <-- maintain state so setter APIs don't have to be created more than once
     private static boolean migrationsCreated = false;          // <-- maintain state so migrations don't have to be created more than once
     private static boolean tableCreatorClassCreated = false;   // <-- maintain state so TableCreator class does not have to be created more than once
-    private static boolean filterApisCreated = false;          // <-- maintain state so filter APIs don't have to be created more than once
+    private static boolean finderClassesCreated = false;       // <-- maintain state so finder classes don't have to be created more than once
+    private static boolean forSureClassCreated = false;        // <-- maintain state so ForSure doesn't have to be created more than once
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
@@ -64,7 +64,7 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         APLog.init(processingEnv);
         AnnotationTranslatorFactory.init(processingEnv);
 
-        APLog.i(LOG_TAG, "Running FSAnnotationProcessor.process");
+        APLog.i(LOG_TAG, "Running FSAnnotationProcessor");
         processFSTableAnnotations(tableTypes);
 
         return true;
@@ -83,8 +83,11 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         if (!tableCreatorClassCreated) {
             createTableCreatorClass(ve, pc);
         }
-        if (!filterApisCreated) {
-            createFilterApis(ve, pc);
+        if (!finderClassesCreated) {
+            createFinderClasses(ve, pc);
+        }
+        if (!forSureClassCreated) {
+            createForSureClass(ve, pc);
         }
     }
 
@@ -110,12 +113,19 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         tableCreatorClassCreated = true;    // <-- maintain state so TableCreator class does not have to be created more than once
     }
 
-    private void createFilterApis(VelocityEngine ve, ProcessingContext pc) {
+    private void createFinderClasses(VelocityEngine ve, ProcessingContext pc) {
         String resultParameter = System.getProperty("resultParameter");
         for (TableInfo tableInfo : pc.allTables()) {
-            new FilterGenerator(tableInfo, resultParameter, processingEnv).generate(ve);
+            new FinderGenerator(tableInfo, resultParameter, processingEnv).generate(ve);
         }
-        filterApisCreated = true;   // <-- maintain state so filter APIs don't have to be created more than once
+        finderClassesCreated = true;    // <-- maintain state so finder classes don't have to be created more than once
+    }
+
+    private void createForSureClass(VelocityEngine ve, ProcessingContext pc) {
+        String resultParameter = System.getProperty("resultParameter");
+        String applicationPackageName = System.getProperty("applicationPackageName");
+        new ForSureGenerator(pc.allTables(), applicationPackageName, resultParameter, processingEnv).generate(ve);
+        forSureClassCreated = true; // <-- maintain state so ForSure doesn't have to be created more than once
     }
 
     private VelocityEngine createVelocityEngine() {

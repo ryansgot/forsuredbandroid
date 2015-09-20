@@ -28,7 +28,7 @@ import com.forsuredb.migration.Migration;
 import java.util.Collections;
 import java.util.List;
 
-/*package*/ class FSDBHelper extends SQLiteOpenHelper {
+public class FSDBHelper extends SQLiteOpenHelper {
 
     private static final String LOG_TAG = FSDBHelper.class.getSimpleName();
 

@@ -7,7 +7,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
-import com.forsuredb.ForSure;
+import com.forsuredb.FSDBHelper;
+import com.forsuredb.ForSureAndroidInfoFactory;
 
 /**
  * <p>
@@ -17,29 +18,25 @@ import com.forsuredb.ForSure;
  */
 public class FSDefaultProvider extends ContentProvider {
 
+    private ForSureAndroidInfoFactory infoFactory;
+
     public FSDefaultProvider() {}
 
     @Override
     public boolean onCreate() {
+        infoFactory = new ForSureAndroidInfoFactory(getContext());
         return true;
     }
 
     @Override
     public String getType(Uri uri) {
-        if (!ForSure.canResolve(uri)) {
-            return null;
-        }
-        return null;    // TODO: resolve this;
+        return "vnd.android.cursor/" + infoFactory.tableName(uri);
     }
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        if (!ForSure.canResolve(uri)) {
-            return null;
-        }
-
-        final String tableName = ForSure.resolve(uri).table().getName();
-        long rowId = ForSure.getWritableDatabase().insertWithOnConflict(tableName, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+        final String tableName = infoFactory.tableName(uri);
+        long rowId = FSDBHelper.inst().getWritableDatabase().insertWithOnConflict(tableName, null, values, SQLiteDatabase.CONFLICT_IGNORE);
         if (rowId != -1) {
             final Uri insertedItemUri = ContentUris.withAppendedId(uri, rowId);
             getContext().getContentResolver().notifyChange(insertedItemUri, null);
@@ -50,13 +47,9 @@ public class FSDefaultProvider extends ContentProvider {
 
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-        if (!ForSure.canResolve(uri)) {
-            return 0;
-        }
-
-        final String tableName = ForSure.resolve(uri).table().getName();
+        final String tableName = infoFactory.tableName(uri);
         final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
-        final int rowsAffected = ForSure.getWritableDatabase().update(tableName, values, qc.getSelection(), qc.getSelectionArgs());
+        final int rowsAffected = FSDBHelper.inst().getWritableDatabase().update(tableName, values, qc.getSelection(), qc.getSelectionArgs());
         if (rowsAffected != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
         }
@@ -65,13 +58,9 @@ public class FSDefaultProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        if (!ForSure.canResolve(uri)) {
-            return 0;
-        }
-
-        final String tableName = ForSure.resolve(uri).table().getName();
+        final String tableName = infoFactory.tableName(uri);
         final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
-        final int rowsAffected = ForSure.getWritableDatabase().delete(tableName, qc.getSelection(), qc.getSelectionArgs());
+        final int rowsAffected = FSDBHelper.inst().getWritableDatabase().delete(tableName, qc.getSelection(), qc.getSelectionArgs());
         if (rowsAffected != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
         }
@@ -80,13 +69,9 @@ public class FSDefaultProvider extends ContentProvider {
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-        if (!ForSure.canResolve(uri)) {
-            return null;
-        }
-
-        final String tableName = ForSure.resolve(uri).table().getName();
+        final String tableName = infoFactory.tableName(uri);
         final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
-        final Cursor cursor = ForSure.getReadableDatabase().query(tableName, projection, qc.getSelection(), qc.getSelectionArgs(), null, null, sortOrder);
+        final Cursor cursor = FSDBHelper.inst().getReadableDatabase().query(tableName, projection, qc.getSelection(), qc.getSelectionArgs(), null, null, sortOrder);
         cursor.setNotificationUri(getContext().getContentResolver(), uri);  // <-- allows CursorLoader to auto reload
         return cursor;
     }

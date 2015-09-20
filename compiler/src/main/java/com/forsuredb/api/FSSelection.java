@@ -26,6 +26,19 @@ package com.forsuredb.api;
  */
 public interface FSSelection {
 
+    class SelectAll implements FSSelection {
+
+        @Override
+        public String where() {
+            return "";
+        }
+
+        @Override
+        public String[] replacements() {
+            return new String[0];
+        }
+    }
+
     /**
      * @return the String where clause, possibly including '?' characters to be replaced by Strings
      * in the {@link #replacements() replacements()} String array

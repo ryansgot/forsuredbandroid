@@ -17,10 +17,9 @@
  */
 package com.forsuredb.api;
 
-public interface FSRecordResolver<U, F extends FSFilter<U>> {
-    <T extends FSSaveApi<U>> T setter();
-    <T extends FSGetApi> T getter();
-    <T extends Retriever> T retrieve();
-    F find();
-    F also();
+public interface ForSureInfoFactory<U, R extends RecordContainer> {
+    FSQueryable<U, R> createQueryable(U resource);
+    R createRecordContainer();
+    U tableResource(String tableName);
+    String tableName(U resource);
 }

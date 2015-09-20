@@ -7,8 +7,8 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import com.forsuredb.FSCursor;
-import com.forsuredb.ForSure;
+import com.forsuredb.api.Retriever;
+import com.forsuredb.testapp.ForSure;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.ProfileInfoTable;
 import com.google.common.base.Strings;
@@ -18,7 +18,7 @@ import java.util.Arrays;
 public class TestProfileInfoCursorAdapter extends BaseAdapter {
 
     private Context context;
-    private FSCursor retriever;
+    private Retriever retriever;
 
     public TestProfileInfoCursorAdapter(Context context) {
         this.context = context;
@@ -45,19 +45,20 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
         if (retriever == null || !retriever.moveToPosition(position)) {
             return null;
         }
-        final ProfileInfoTable api = ForSure.resolve("profile_info").getter();
-        return new ViewBuilder().id(api.id(retriever))
-                                .userId(api.userId(retriever))
-                                .emalAddress(api.emailAddress(retriever))
-                                .binaryData(api.binaryData(retriever))
-                                .created(api.created(retriever).toString())
-                                .modified(api.modified(retriever).toString())
-                                .deleted(api.deleted(retriever))
+
+        ProfileInfoTable profileInfoTable = ForSure.profileInfoTable().getApi();
+        return new ViewBuilder().id(profileInfoTable.id(retriever))
+                                .userId(profileInfoTable.userId(retriever))
+                                .emalAddress(profileInfoTable.emailAddress(retriever))
+                                .binaryData(profileInfoTable.binaryData(retriever))
+                                .created(profileInfoTable.created(retriever).toString())
+                                .modified(profileInfoTable.modified(retriever).toString())
+                                .deleted(profileInfoTable.deleted(retriever))
                                 .targetLayout(view)
                                 .build(context);
     }
 
-    public void changeCursor(FSCursor newCursor) {
+    public void changeCursor(Retriever newCursor) {
         if (retriever != null) {
             retriever.close();
         }

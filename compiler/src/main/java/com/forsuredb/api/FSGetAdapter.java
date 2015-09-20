@@ -34,7 +34,7 @@ import java.util.Map;
 
 /**
  * <p>
- *     Able to create an instance of any {@link FSGetApi FSGetApi} extension.
+ *     Able to create an instance of any {@link FSGetApi} extension.
  * </p>
  * @author Ryan Scott
  */

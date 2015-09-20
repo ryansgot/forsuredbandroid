@@ -26,6 +26,7 @@ import java.util.Map;
  *     A RecordContainer backed by Map&lt;String, String&gt; that remembers the original type and
  *     offers a convenience method of {@link #typedGet(String)}.
  * </p>
+ * @author Ryan Scott
  */
 public final class TypedRecordContainer implements RecordContainer {
 

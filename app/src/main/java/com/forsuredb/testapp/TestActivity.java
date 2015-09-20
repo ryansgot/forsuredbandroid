@@ -11,16 +11,11 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import com.forsuredb.AndroidRecordResolver;
-import com.forsuredb.ForSure;
 import com.forsuredb.api.Retriever;
 import com.forsuredb.api.SaveResult;
 import com.forsuredb.testapp.adapter.TestProfileInfoCursorAdapter;
 import com.forsuredb.testapp.adapter.TestUserCursorAdapter;
-import com.forsuredb.testapp.model.ProfileInfoTableSetter;
 import com.forsuredb.testapp.model.UserTable;
-import com.forsuredb.testapp.model.UserTableFilter;
-import com.forsuredb.testapp.model.UserTableSetter;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -41,27 +36,20 @@ public class TestActivity extends ActionBarActivity {
         profileInfoCursorAdapter = new TestProfileInfoCursorAdapter(this);
         ((ListView) findViewById(R.id.profile_info_list_view)).setAdapter(profileInfoCursorAdapter);
 
-        AndroidRecordResolver<UserTableFilter> userTableApi = ForSure.resolve("user");
-        Retriever retriever = userTableApi.find().byAppRatingBetweenInclusive(4.5D).and(5.3D)
-                .also().byCompetitorAppRatingBetween(new BigDecimal("0.6")).andInclusive(new BigDecimal("0.9"))
-                .retrieve();
-        UserTable userTable = userTableApi.getter();
-        if (!retriever.isClosed() && retriever.moveToFirst()) {
+        Retriever retriever = ForSure.userTable().find().byAppRatingBetween(4.5D).andInclusive(5.3D).andFinally().get();
+        if (retriever.moveToFirst()) {
             do {
-                logUser(userTable, retriever);
-            } while (retriever.moveToNext());
+                logUser(ForSure.userTable().getApi(), retriever);
+            } while(retriever.moveToNext());
         }
         retriever.close();
-
-        UserTableSetter setter = userTableApi.find().byAppRatingBetweenInclusive(4.5D).and(5.3D).setter();
-        logResult(setter.appRating(5.0D).save());
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        userCursorAdapter.changeCursor(ForSure.queryAll("user"));   // <-- Update user list
-        profileInfoCursorAdapter.changeCursor(ForSure.queryAll("profile_info"));    // <-- Update profile info list
+        userCursorAdapter.changeCursor(ForSure.userTable().get());
+        profileInfoCursorAdapter.changeCursor(ForSure.profileInfoTable().get());
     }
 
     @Override
@@ -78,7 +66,7 @@ public class TestActivity extends ActionBarActivity {
                 try {
                     long id = getIdFromDialog(dialogInterface);
                     inputRandomDataForUser(id);
-                    userCursorAdapter.changeCursor(ForSure.queryAll("user"));
+                    profileInfoCursorAdapter.changeCursor(ForSure.profileInfoTable().get());
                 } catch (NumberFormatException nfe) {
                     return;
                 } finally {
@@ -90,10 +78,9 @@ public class TestActivity extends ActionBarActivity {
             public void onClick(DialogInterface dialogInterface, int which) {
                 try {
                     long id = getIdFromDialog(dialogInterface);
-                    Uri recordUri = ForSure.resolve("user").table().getSpecificRecordUri(id);
-                    Log.i("TestActivity", "user rows deleted: " + ForSure.resolve(recordUri).setter().hardDelete(null));
-                    profileInfoCursorAdapter.changeCursor(ForSure.queryAll("profile_info"));
-                    userCursorAdapter.changeCursor(ForSure.queryAll("user"));
+                    Log.i("TestActivity", "user rows deleted: " + ForSure.userTable().find().byId(id).andFinally().set().hardDelete());
+                    profileInfoCursorAdapter.changeCursor(ForSure.profileInfoTable().get());
+                    userCursorAdapter.changeCursor(ForSure.userTable().get());
                 } catch (NumberFormatException nfe) {
                     return;
                 } finally {
@@ -110,7 +97,7 @@ public class TestActivity extends ActionBarActivity {
                 try {
                     long id = getIdFromDialog(dialogInterface);
                     inputRandomDataForProfileInfo(id);
-                    userCursorAdapter.changeCursor(ForSure.queryAll("user"));
+                    userCursorAdapter.changeCursor(ForSure.userTable().get());
                 } catch (NumberFormatException nfe) {
                     return;
                 } finally {
@@ -122,10 +109,9 @@ public class TestActivity extends ActionBarActivity {
             public void onClick(DialogInterface dialogInterface, int which) {
                 try {
                     long id = getIdFromDialog(dialogInterface);
-                    Uri recordUri = ForSure.resolve("profile_info").table().getSpecificRecordUri(id);
-                    logResult(ForSure.resolve(recordUri).setter().softDelete());
-                    profileInfoCursorAdapter.changeCursor(ForSure.queryAll("profile_info"));
-                    userCursorAdapter.changeCursor(ForSure.queryAll("user"));
+                    logResult(ForSure.profileInfoTable().find().byId(id).andFinally().set().softDelete());
+                    profileInfoCursorAdapter.changeCursor(ForSure.profileInfoTable().get());
+                    userCursorAdapter.changeCursor(ForSure.userTable().get());
                 } catch (NumberFormatException nfe) {
                     return;
                 } finally {
@@ -141,8 +127,8 @@ public class TestActivity extends ActionBarActivity {
         /*
          * This block demonstrates saving a newly created record routed via the table name
          */
-        UserTableSetter setter = ForSure.resolve("user").setter();
-        logResult(setter.appRating(generator.nextDouble())
+//        UserTableSetter setter = OldForSure.resolve("user").setter();
+        logResult(ForSure.userTable().set().appRating(generator.nextDouble())
                 .competitorAppRating(new BigDecimal(generator.nextFloat()))
                 .globalId(generator.nextLong())
                 .id(id)
@@ -153,8 +139,7 @@ public class TestActivity extends ActionBarActivity {
          * overwritten. Otherwise, it will insert.
          */
 
-//        ForSure.filter(UserTableFilter.class).byAppRating(1D)
-        userCursorAdapter.changeCursor(ForSure.queryAll("user"));   // <-- Update user list
+        userCursorAdapter.changeCursor(ForSure.userTable().get());   // <-- Update user list
     }
 
     private void inputRandomDataForProfileInfo(long id) {
@@ -164,7 +149,7 @@ public class TestActivity extends ActionBarActivity {
         /*
          * This block demonstrates saving a newly created record as a method call chain
          */
-        logResult(ForSure.setApi(ProfileInfoTableSetter.class).id(id)
+        logResult(ForSure.profileInfoTable().set().id(id)
                 .emailAddress("user" + userId + "@email.com")
                 .binaryData(new byte[]{(byte) (generator.nextInt() & 0xFF), (byte) (generator.nextInt() & 0xFF), (byte) 0})
                 .save());
@@ -173,7 +158,7 @@ public class TestActivity extends ActionBarActivity {
          * overwritten. Otherwise, it will insert.
          */
 
-        profileInfoCursorAdapter.changeCursor(ForSure.queryAll("profile_info"));    // <-- Update profile info list
+        profileInfoCursorAdapter.changeCursor(ForSure.profileInfoTable().get());    // <-- Update profile info list
     }
 
     private long getIdFromDialog(DialogInterface dialogInterface) throws NumberFormatException {

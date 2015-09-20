@@ -28,7 +28,8 @@ import java.lang.annotation.Target;
  * <p>
  *     Use the ForeignKey annotation on methods in your {@link FSGetApi} extension in order
  *     to indicate that a column is a foreign key to another table, defined by
- *     {@link #apiClass()}, on its column, defined by {@link #columnName()}.
+ *     {@link #apiClass()}, on its column, defined by {@link #columnName()}. The default
+ *     {@link ChangeAction} is CASCADE.
  * </p>
  * <p>
  *     Note that there is currently a limitation that you can only put one ForeignKey annotation per

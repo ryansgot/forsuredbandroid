@@ -7,8 +7,8 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import com.forsuredb.FSCursor;
-import com.forsuredb.ForSure;
+import com.forsuredb.api.Retriever;
+import com.forsuredb.testapp.ForSure;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.UserTable;
 import com.google.common.base.Strings;
@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 public class TestUserCursorAdapter extends BaseAdapter {
 
     private Context context;
-    private FSCursor retriever;
+    private Retriever retriever;
 
     public TestUserCursorAdapter(Context context) {
         this.context = context;
@@ -45,7 +45,8 @@ public class TestUserCursorAdapter extends BaseAdapter {
         if (retriever == null || !retriever.moveToPosition(position)) {
             return null;
         }
-        UserTable userTable = ForSure.resolve("user").getter();
+
+        UserTable userTable = ForSure.userTable().getApi();
         return new ViewBuilder().id(userTable.id(retriever))
                                 .globalId(userTable.globalId(retriever))
                                 .loginCount(userTable.loginCount(retriever))
@@ -58,7 +59,7 @@ public class TestUserCursorAdapter extends BaseAdapter {
                                 .build(context);
     }
 
-    public void changeCursor(FSCursor newCursor) {
+    public void changeCursor(Retriever newCursor) {
         if (retriever != null) {
             retriever.close();
         }

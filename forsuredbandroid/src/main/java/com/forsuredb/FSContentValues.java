@@ -29,7 +29,7 @@ import com.forsuredb.api.RecordContainer;
  * </p>
  * @author Ryan Scott
  */
-/*package*/ class FSContentValues implements RecordContainer {
+public class FSContentValues implements RecordContainer {
 
     private final ContentValues cv;
 
@@ -52,7 +52,7 @@ import com.forsuredb.api.RecordContainer;
      * </p>
      * @return a new empty {@link FSContentValues}.
      */
-    /*package*/ static FSContentValues getNew() {
+    public static FSContentValues getNew() {
         return new FSContentValues(new ContentValues());
     }
 
