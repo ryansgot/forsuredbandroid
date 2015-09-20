@@ -1,11 +1,13 @@
 # forsuredb
 forsuredb is a project designed to take a lot of the work out of database programming. Inspired mainly by the retrofit project (https://github.com/square/retrofit) and ActiveRecord (https://github.com/rails/rails/tree/master/activerecord), forsuredb is intended to be a typesafe, quick means of defining and working with data. It is not intended to replace existing frameworks, but to work within them (see the Android Development subheading below).
 
+Note that if you're upgrading from forsuredbandroid 0.0.3 and forsuredbcompiler 0.0.3 to 0.1.0 of both, then you have to clear all migrations and run ```./gradlew dbmigrate```. You'll also have to change all calls to ```ForSure.resolve```. This sucks, but it's a consequence of getting better. The API will be solid when version 1.0.0 is released.
+
 ## Possible Use Cases
 1. Android Development
   * The integration work has already been done for you in the forsuredbandroid module
 2. Some other java project
-  * There is some integration work remaining, but you should be able to get a handle for how to do it by taking a look at the forsuredbandroid module. See the 'Some other Java Project' subheading below for instructions.
+  * There is some integration work remaining, but you should be able to get a handle for how to do it by taking a look at the forsuredbandroid module.
 
 ### Android Development
 If you always follow the examples available to you via http://developer.android.com/ or many other instructional sites, then you will find yourself writing highly verbose code that works its way into being unreadable quickly. You'll also end up writing one-off code a lot of places when you do migrations. The code in the compiler java library and the forsuredbandroid android library make this sort of programming quite a bit easier.
