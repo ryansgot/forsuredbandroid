@@ -22,15 +22,47 @@ import android.net.Uri;
 
 import com.forsuredb.api.FSQueryable;
 import com.forsuredb.api.ForSureInfoFactory;
+import com.google.common.base.Strings;
 
+/**
+ * <p>
+ *     This is the main integration point for Android and ForSure. It tells ForSure the necessary
+ *     information to resolve tables and query the underlying database. You should create an
+ *     an instance of this class in your application's onCreate callback method and pass it to
+ *     ForSure.init.
+ * </p>
+ * @author Ryan Scott
+ */
 public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSContentValues> {
 
-    private static final String URI_PREFIX = "content://com.forsuredb.testapp.content";
+    private static ForSureAndroidInfoFactory instance;
 
     private final Context appContext;
+    private final String uriPrefix;
 
-    public ForSureAndroidInfoFactory(Context appContext) {
+    private ForSureAndroidInfoFactory(Context appContext, String authority) {
         this.appContext = appContext.getApplicationContext();
+        this.uriPrefix = "content://" + authority;
+    }
+
+    /**
+     * @param appContext Your application's {@link Context}
+     * @param authority the authority of your {@link android.content.ContentProvider}. This cannot be null.
+     */
+    public static void init(Context appContext, String authority) {
+        if (Strings.isNullOrEmpty(authority)) {
+            throw new IllegalArgumentException("authority cannot be null.");
+        }
+        if (instance == null) {
+            instance = new ForSureAndroidInfoFactory(appContext, authority);
+        }
+    }
+
+    public static ForSureAndroidInfoFactory inst() {
+        if (instance == null) {
+            throw new IllegalStateException("Must call init before inst");
+        }
+        return instance;
     }
 
     @Override
@@ -45,7 +77,7 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
 
     @Override
     public Uri tableResource(String tableName) {
-        return Uri.parse(URI_PREFIX + "/" + tableName);
+        return Uri.parse(uriPrefix + "/" + tableName);
     }
 
     @Override

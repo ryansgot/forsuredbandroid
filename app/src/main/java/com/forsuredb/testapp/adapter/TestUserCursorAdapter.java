@@ -8,12 +8,13 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.forsuredb.api.Retriever;
-import com.forsuredb.testapp.ForSure;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.UserTable;
 import com.google.common.base.Strings;
 
 import java.math.BigDecimal;
+
+import static com.forsuredb.testapp.ForSure.userTable;
 
 public class TestUserCursorAdapter extends BaseAdapter {
 
@@ -46,7 +47,7 @@ public class TestUserCursorAdapter extends BaseAdapter {
             return null;
         }
 
-        UserTable userTable = ForSure.userTable().getApi();
+        UserTable userTable = userTable().getApi();
         return new ViewBuilder().id(userTable.id(retriever))
                                 .globalId(userTable.globalId(retriever))
                                 .loginCount(userTable.loginCount(retriever))

@@ -12,6 +12,7 @@ public class App extends Application {
         super.onCreate();
 
         FSDBHelper.init(this, "testapp.db", TableGenerator.generate());
-        ForSure.init(new ForSureAndroidInfoFactory(this));
+        ForSureAndroidInfoFactory.init(this, "com.forsuredb.testapp.content");
+        ForSure.init(ForSureAndroidInfoFactory.inst());
     }
 }

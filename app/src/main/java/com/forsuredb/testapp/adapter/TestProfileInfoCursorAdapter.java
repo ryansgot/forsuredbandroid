@@ -8,12 +8,13 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.forsuredb.api.Retriever;
-import com.forsuredb.testapp.ForSure;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.ProfileInfoTable;
 import com.google.common.base.Strings;
 
 import java.util.Arrays;
+
+import static com.forsuredb.testapp.ForSure.profileInfoTable;
 
 public class TestProfileInfoCursorAdapter extends BaseAdapter {
 
@@ -46,7 +47,7 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
             return null;
         }
 
-        ProfileInfoTable profileInfoTable = ForSure.profileInfoTable().getApi();
+        ProfileInfoTable profileInfoTable = profileInfoTable().getApi();
         return new ViewBuilder().id(profileInfoTable.id(retriever))
                                 .userId(profileInfoTable.userId(retriever))
                                 .emalAddress(profileInfoTable.emailAddress(retriever))
