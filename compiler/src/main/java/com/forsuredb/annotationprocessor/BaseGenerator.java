@@ -43,7 +43,6 @@ public abstract class BaseGenerator<F extends FileObject> {
     private final ProcessingEnvironment processingEnv;
     private final String templateResource;
 
-    // TODO: make the constructor take the templateResource argument instead of the generate method
     public BaseGenerator(String templateResource, ProcessingEnvironment processingEnv) {
         this.templateResource = templateResource;
         this.processingEnv = processingEnv;
@@ -102,7 +101,7 @@ public abstract class BaseGenerator<F extends FileObject> {
     }
 
     /**
-     * @param processingEnv use this to get the {@link javax.annotation.processing.Filer Filer}
+     * @param processingEnv use this to get the {@link javax.annotation.processing.Filer}
      *                      for creating the new class, source, or resource
      * @return Some extension of FileObject for a class, source, or resource file. This should be
      * JavaObject for generating java source files
