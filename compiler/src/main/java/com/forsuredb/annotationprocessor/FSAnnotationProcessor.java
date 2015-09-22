@@ -49,9 +49,11 @@ public class FSAnnotationProcessor extends AbstractProcessor {
     private static final String LOG_TAG = FSAnnotationProcessor.class.getSimpleName();
 
     private static boolean setterApisCreated = false;          // <-- maintain state so setter APIs don't have to be created more than once
+    private static boolean joinApisCreated = false;            // <-- maintain state so join APIs don't have to be created more than once
     private static boolean migrationsCreated = false;          // <-- maintain state so migrations don't have to be created more than once
     private static boolean tableCreatorClassCreated = false;   // <-- maintain state so TableCreator class does not have to be created more than once
     private static boolean finderClassesCreated = false;       // <-- maintain state so finder classes don't have to be created more than once
+    private static boolean resolverClassesCreated = false;     // <-- maintain state so resolver classes don't have to be created more than once
     private static boolean forSureClassCreated = false;        // <-- maintain state so ForSure doesn't have to be created more than once
 
     @Override
@@ -77,6 +79,9 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         if (!setterApisCreated) {
             createSetterApis(ve, pc);
         }
+        if (!joinApisCreated) {
+            createJoinApis(ve, pc);
+        }
         if (!migrationsCreated && Boolean.getBoolean("createMigrations")) {
             createMigrations(ve, pc);
         }
@@ -86,9 +91,20 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         if (!finderClassesCreated) {
             createFinderClasses(ve, pc);
         }
+        if (!resolverClassesCreated) {
+            createResolverClasses(ve, pc);
+        }
         if (!forSureClassCreated) {
             createForSureClass(ve, pc);
         }
+    }
+
+    private void createJoinApis(VelocityEngine ve, ProcessingContext pc) {
+        String resultParameter = System.getProperty("resultParameter");
+        for (JoinInfo join : pc.allJoins()) {
+            new JoinGenerator(join, resultParameter, processingEnv).generate(ve);
+        }
+        joinApisCreated = true; // <-- maintain state so join APIs don't have to be created more than once
     }
 
     private void createSetterApis(VelocityEngine ve, ProcessingContext pc) {
@@ -121,10 +137,18 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         finderClassesCreated = true;    // <-- maintain state so finder classes don't have to be created more than once
     }
 
+    private void createResolverClasses(VelocityEngine ve, ProcessingContext pc) {
+        String resultParameter = System.getProperty("resultParameter");
+        for (TableInfo tableInfo : pc.allTables()) {
+            new ResolverGenerator(tableInfo, resultParameter, processingEnv).generate(ve);
+        }
+        resolverClassesCreated = true;
+    }
+
     private void createForSureClass(VelocityEngine ve, ProcessingContext pc) {
         String resultParameter = System.getProperty("resultParameter");
         String applicationPackageName = System.getProperty("applicationPackageName");
-        new ForSureGenerator(pc.allTables(), applicationPackageName, resultParameter, processingEnv).generate(ve);
+        new ForSureGenerator(pc.allTables(), pc.allJoins(), applicationPackageName, resultParameter, processingEnv).generate(ve);
         forSureClassCreated = true; // <-- maintain state so ForSure doesn't have to be created more than once
     }
 

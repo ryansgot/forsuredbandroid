@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,6 +46,7 @@ public class ProcessingContext implements TableContext {
 
     private final Set<TypeElement> tableTypes = new HashSet<>();
     private Map<String, TableInfo> tableMap;
+    private List<JoinInfo> joins;
 
     public ProcessingContext(Set<TypeElement> tableTypes) {
         this.tableTypes.addAll(tableTypes);
@@ -59,7 +61,7 @@ public class ProcessingContext implements TableContext {
     @Override
     public boolean hasTable(String tableName) {
         createTableMapIfNecessary();
-        return tableName == null ? false : tableMap.containsKey(tableName);
+        return tableName != null && tableMap.containsKey(tableName);
     }
 
     @Override
@@ -68,10 +70,17 @@ public class ProcessingContext implements TableContext {
         return tableName == null ? null : tableMap.get(tableName);
     }
 
+    //TODO: @Override
+    public List<JoinInfo> allJoins() {
+        createTableMapIfNecessary();
+        return joins;
+    }
+
     private void createTableMapIfNecessary() {
         if (tableMap != null) {
             return;
         }
+        joins = new LinkedList<>();
 
         tableMap = new HashMap<String, TableInfo>();
         List<TableInfo> allTables = gatherInitialInfo();
@@ -82,6 +91,26 @@ public class ProcessingContext implements TableContext {
             tableMap.put(table.getTableName(), table);
             APLog.i(LOG_TAG, "created table: " + table.toString());
         }
+        createJoinInfo();
+    }
+
+    private void createJoinInfo() {
+        for (TableInfo table : tableMap.values()) {
+            for (ColumnInfo column : table.getForeignKeyColumns()) {
+                addToJoins(table, column);
+            }
+        }
+    }
+
+    private void addToJoins(TableInfo childTable, ColumnInfo childColumn) {
+        TableInfo parent = tableMap.get(childColumn.getForeignKey().getTableName());
+        JoinInfo join = JoinInfo.builder().childTable(childTable)
+                .childColumn(childColumn)
+                .parentTable(parent)
+                .parentColumn(parent.getColumn(childColumn.getForeignKey().getColumnName()))
+                .build();
+        joins.add(join);
+        APLog.i(LOG_TAG, "found join: " + join.toString());
     }
 
     private List<TableInfo> gatherInitialInfo() {

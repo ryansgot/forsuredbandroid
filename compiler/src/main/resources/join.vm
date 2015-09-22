@@ -1,0 +1,103 @@
+package ${packageName};
+
+import com.forsuredb.api.FSGetAdapter;
+import com.forsuredb.api.FSJoin;
+import com.forsuredb.api.Finder;
+import com.forsuredb.api.Retriever;
+import com.forsuredb.api.FSProjection;
+import com.forsuredb.api.ForSureInfoFactory;
+import com.forsuredb.api.Joiner;
+
+import ${parentApiClassImport};
+
+public class ${className} implements Joiner<${parentGetApiClass}, ${childGetApiClass}> {
+
+    private static final String PARENT_TABLE_NAME = "${parentTableName}";
+    private static final String REFERENCED_COLUMN = "${parentColumnName}";
+    private static final String CHILD_TABLE_NAME = "${childTableName}";
+    private static final String REFERENCING_COLUMN = "${childColumnName}";
+
+    private static final String[] parentColumns = new String[] {
+#foreach($columnName in $parentColumnNames)
+        "${columnName}",
+#end
+    };
+    private static final String[] childColumns = new String[] {
+#foreach($columnName in $childColumnNames)
+        "${columnName}",
+#end
+    };
+
+    private static final FSProjection parentProjection = new FSProjection() {
+        @Override
+        public String[] columns() {
+            return parentColumns;
+        }
+    };
+
+    private static final FSProjection childProjection = new FSProjection() {
+        @Override
+        public String[] columns() {
+            return childColumns;
+        }
+    };
+
+    private final ForSureInfoFactory infoFactory;
+    private final ${resultParameter} parentResource;
+    private final ${resultParameter} childResource;
+
+    private ${parentGetApiClass} parentGetApi;
+    private ${childGetApiClass} childGetApi;
+
+    public ${className}(${resultParameter} parentResource, ${resultParameter} childResource, ForSureInfoFactory infoFactory) {
+        this.parentResource = parentResource;
+        this.childResource = childResource;
+        this.infoFactory = infoFactory;
+    }
+
+    @Override
+    public ${parentGetApiClass} parentApi() {
+        if (parentGetApi == null) {
+            parentGetApi = FSGetAdapter.createUnambiguous(${parentGetApiClass}.class);
+        }
+        return parentGetApi;
+    }
+
+    @Override
+    public ${childGetApiClass} childApi() {
+        if (childGetApi == null) {
+            childGetApi = FSGetAdapter.createUnambiguous(${childGetApiClass}.class);
+        }
+        return childGetApi;
+    }
+
+    @Override
+    public Retriever join() {
+        return infoFactory.createQueryable(parentResource).query(new FSJoin<${resultParameter}>() {
+            public Finder.Operator operator() {
+                return Finder.Operator.EQ;
+            }
+            public Kind kind() {
+                return FSJoin.Kind.INNER_JOIN;
+            }
+            public String parentTable() {
+                return PARENT_TABLE_NAME;
+            }
+            public String parentColumn() {
+                return REFERENCED_COLUMN;
+            }
+            public String childTable() {
+                return CHILD_TABLE_NAME;
+            }
+            public String childColumn() {
+                return REFERENCING_COLUMN;
+            }
+            public ${resultParameter} parentResource() {
+                return parentResource;
+            }
+            public ${resultParameter} childResource() {
+                return childResource;
+            }
+        }, parentProjection, childProjection, null, null);
+    }
+}

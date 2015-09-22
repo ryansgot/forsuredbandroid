@@ -33,14 +33,16 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
     private static final String CLASS_NAME = "ForSure";
 
     private final Collection<TableInfo> allTables;
+    private final List<JoinResolver> allJoinResolvers;
     private final String applicationPackageName;
     private final String resultParameter;
 
-    public ForSureGenerator(Collection<TableInfo> allTables, String applicationPackageName, String resultParameter, ProcessingEnvironment processingEnv) {
+    public ForSureGenerator(Collection<TableInfo> allTables, List<JoinInfo> allJoins, String applicationPackageName, String resultParameter, ProcessingEnvironment processingEnv) {
         super("forsure.vm", processingEnv);
-        this.allTables = allTables;
-        this.applicationPackageName = applicationPackageName;
         this.resultParameter = resultParameter;
+        this.allTables = allTables;
+        this.allJoinResolvers = createJoinResolvers(allJoins);
+        this.applicationPackageName = applicationPackageName;
     }
 
     @Override
@@ -54,7 +56,9 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
         vc.put("packageName", applicationPackageName);
         vc.put("resultParameter", resultParameter);
         vc.put("modelClassImports", createModelClassImports());
-        vc.put("tableResolvers", createTableResolvers());
+        vc.put("joinClassImports", createJoinClassImports());
+        vc.put("tableResolverMethods", createTableResolverMethods());
+        vc.put("joinResolvers", allJoinResolvers);
         return vc;
     }
 
@@ -66,10 +70,26 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
         return ret;
     }
 
-    private List<TableResolver> createTableResolvers() {
+    private List<String> createJoinClassImports() {
+        List<String> ret = new ArrayList<>();
+        for (JoinResolver joinResolver : allJoinResolvers) {
+            ret.add(joinResolver.getFullyQualifiedClassName());
+        }
+        return ret;
+    }
+
+    private List<TableResolver> createTableResolverMethods() {
         List<TableResolver> ret = new ArrayList<>();
         for (TableInfo table : allTables) {
             ret.add(new TableResolver(table, resultParameter));
+        }
+        return ret;
+    }
+
+    private List<JoinResolver> createJoinResolvers(List<JoinInfo> allJoins) {
+        List<JoinResolver> ret = new ArrayList<>();
+        for (JoinInfo join : allJoins) {
+            ret.add(new JoinResolver(join, resultParameter));
         }
         return ret;
     }
@@ -81,75 +101,28 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
     private static class TableResolver {
 
         private final String tableName;
+        private final String resultParameter;
         private final String getApiClass;
+        private final String resolverClass;
         private final String setApiClass;
         private final String finderClass;
-        private final String resolverParametrization;
 
         public TableResolver(TableInfo table, String resultParameter) {
             this.tableName = table.getTableName();
+            this.resultParameter = resultParameter;
             getApiClass = table.getSimpleClassName();
+            resolverClass = getApiClass + "Resolver";
             setApiClass = getApiClass + "Setter";
             finderClass = getApiClass + "Finder";
-            resolverParametrization = createResolverParameterization(resultParameter);
-        }
-
-        private String createResolverParameterization(String resultParameter) {
-            return new StringBuilder("Resolver<").append(resultParameter)
-                    .append(", ").append(getApiClass)
-                    .append(", ").append(setApiClass)
-                    .append(", ").append(finderClass)
-                    .append(">").toString();
         }
 
         @Override
         public String toString() {
-            return new StringBuilder(doc()).append(outerMethodSignature()).append(" {").append(newLine(1))
-                    .append("return new ").append(resolverParametrization).append("() {").append(newLine(2))
-                    .append(newLine(3))
-                    .append("public static final String TABLE_NAME = \"").append(tableName).append("\";").append(newLine(3))
-                    .append(newLine(3))
-                    .append("private ").append(getApiClass).append(" getApi;").append(newLine(3))
-                    .append("private ").append(finderClass).append(" finder;").append(newLine(3))
-                    .append(newLine(3))
-                    .append("@Override").append(newLine(3))
-                    .append("public ").append(getApiClass).append(" getApi() {").append(newLine(4))
-                    .append("if (getApi == null) {").append(newLine(5))
-                    .append("getApi = FSGetAdapter.create(").append(getApiClass).append(".class);").append(newLine(4))
-                    .append("}").append(newLine(4))
-                    .append("return getApi;").append(newLine(3))
-                    .append("}").append(newLine(3))
-                    .append(newLine(3))
-                    .append("@Override").append(newLine(3))
-                    .append("public Retriever get() {").append(newLine(4))
-                    .append("FSSelection selection = finder == null ? new FSSelection.SelectAll() : finder.selection();").append(newLine(4))
-                    .append("finder = null;  // <-- When a finder's selection method is called, it must be nullified").append(newLine(4))
-                    .append("return instance.infoFactory.createQueryable(instance.resourceOf(TABLE_NAME)).query(null, selection, null);").append(newLine(3))
-                    .append("}").append(newLine(3))
-                    .append(newLine(3))
-                    .append("@Override").append(newLine(3))
-                    .append("public ").append(setApiClass).append(" set() {").append(newLine(4))
-                    .append("FSQueryable queryable = instance.infoFactory.createQueryable(instance.resourceOf(TABLE_NAME));").append(newLine(4))
-                    .append("RecordContainer recordContainer = instance.infoFactory.createRecordContainer();").append(newLine(4))
-                    .append("FSSelection selection = finder == null ? null : finder.selection();").append(newLine(4))
-                    .append("finder = null;  // <-- When a finder's selection method is called, it must be nullified").append(newLine(4))
-                    .append("return FSSaveAdapter.create(queryable, selection, recordContainer, ").append(setApiClass).append(".class);").append(newLine(3))
-                    .append("}").append(newLine(3))
-                    .append(newLine(3))
-                    .append("@Override").append(newLine(3))
-                    .append("public ").append(finderClass).append(" find() {").append(newLine(4))
-                    .append("finder = new ").append(finderClass).append("(this);").append(newLine(4))
-                    .append("return finder;").append(newLine(3))
-                    .append("}").append(newLine(2))
-                    .append("};").append(newLine(1))
+            return new StringBuilder(doc()).append(newLine(1))
+                    .append("public static ").append(resolverClass).append(" ").append(WordUtils.uncapitalize(getApiClass)).append("() {").append(newLine(2))
+                    .append("return new ").append(resolverClass).append("((").append(resultParameter).append(") instance.resourceOf(\"").append(tableName).append("\"), instance.infoFactory);").append(newLine(1))
                     .append("}")
                     .toString();
-        }
-
-        private String outerMethodSignature() {
-            return new StringBuilder("public static ").append(resolverParametrization)
-                    .append(" ").append(WordUtils.uncapitalize(getApiClass))
-                    .append("()").toString();
         }
 
         private String doc() {
@@ -158,8 +131,8 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
                     .append(" * @see ").append(getApiClass).append(newLine(1))
                     .append(" * @see ").append(setApiClass).append(newLine(1))
                     .append(" * @see ").append(finderClass).append(newLine(1))
-                    .append(" */").append(newLine(1))
-                    .toString();
+                    .append(" * @see ").append(resolverClass).append(newLine(1))
+                    .append(" */").toString();
         }
 
         private String newLine(int tabs) {
@@ -168,6 +141,37 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
                 buf.append("    ");
             }
             return buf.toString();
+        }
+    }
+
+    private static class JoinResolver {
+
+        private final String className;
+        private final String fullyQualifiedClassName;
+        private final String methodName;
+        private final String parentTableName;
+        private final String childTableName;
+        private final String resultParameter;
+
+        public JoinResolver(JoinInfo join, String resultParameter) {
+            className = join.getChildTable().getSimpleClassName() + "Join" + join.getParentTable().getSimpleClassName();
+            fullyQualifiedClassName = join.getChildTable().getPackageName() + "." + className;
+            methodName = WordUtils.uncapitalize(className);
+            parentTableName = join.getParentTable().getTableName();
+            childTableName = join.getChildTable().getTableName();
+            this.resultParameter = resultParameter;
+        }
+
+        @Override
+        public String toString() {
+            return new StringBuilder("public static ").append(className).append(" ").append(methodName).append("() {\n")
+                    .append("        ").append("return new ").append(className).append("((").append(resultParameter).append(") instance.resourceOf(\"").append(parentTableName).append("\"), (").append(resultParameter).append(") instance.resourceOf(\"").append(childTableName).append("\"), ").append("instance.infoFactory);\n")
+                    .append("    }")
+                    .toString();
+        }
+
+        public String getFullyQualifiedClassName() {
+            return fullyQualifiedClassName;
         }
     }
 }

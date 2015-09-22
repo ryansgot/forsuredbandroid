@@ -18,12 +18,20 @@
 package com.forsuredb;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 
+import com.forsuredb.api.FSJoin;
 import com.forsuredb.api.FSProjection;
 import com.forsuredb.api.FSQueryable;
 import com.forsuredb.api.FSSelection;
 import com.forsuredb.api.Retriever;
+import com.forsuredb.provider.QueryCorrector;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /*package*/ class ContentProviderQueryable implements FSQueryable<Uri, FSContentValues> {
 
@@ -60,5 +68,49 @@ import com.forsuredb.api.Retriever;
         final String s = selection == null ? null : selection.where();
         final String[] sArgs = selection == null ? null : selection.replacements();
         return new FSCursor(appContext.getContentResolver().query(resource, p, s, sArgs, sortOrder));
+    }
+
+    @Override
+    public Retriever query(FSJoin<Uri> join, FSProjection parentProjection, FSProjection childProjection, FSSelection selection, String sortOrder) {
+        QueryCorrector qc = new QueryCorrector(join.parentResource(), selection == null ? null : selection.where(), selection == null ? null : selection.replacements());
+        SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
+        builder.setTables(queryBuilderTables(join));
+        builder.setProjectionMap(queryBuilderProjectionMap(join, parentProjection, childProjection));
+        return new FSCursor(builder.query(FSDBHelper.inst().getReadableDatabase(),
+                null,
+                qc.getSelection(),
+                qc.getSelectionArgs(),
+                null,
+                null,
+                sortOrder));
+    }
+
+    private Map<String, String> queryBuilderProjectionMap(FSJoin<Uri> join, FSProjection parentProjection, FSProjection childProjection) {
+        Map<String, String> projectionMap = new HashMap<>();
+        appendAllToProjectionMap(projectionMap, join.parentTable(), parentProjection);
+        appendAllToProjectionMap(projectionMap, join.childTable(), childProjection);
+        return projectionMap;
+    }
+
+    private void appendAllToProjectionMap(Map<String, String> projectionMap, String tableName, FSProjection projection) {
+        if (projection == null || projection.columns() == null) {
+            return;
+        }
+        for (String column : projection.columns()) {
+            String unambiguousName = tableName + "." + column;
+            projectionMap.put(unambiguousName, unambiguousName + " AS " + tableName + "_" + column);
+        }
+    }
+
+    private String queryBuilderTables(FSJoin<Uri> join) {
+        return String.format("%s %s %s ON (%s.%s %s %s.%s)",
+                join.parentTable(),
+                join.kind().toString(),
+                join.childTable(),
+                join.parentTable(),
+                join.parentColumn(),
+                join.operator().getSymbol(),
+                join.childTable(),
+                join.childColumn());
     }
 }

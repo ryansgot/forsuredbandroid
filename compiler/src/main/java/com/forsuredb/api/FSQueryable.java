@@ -25,6 +25,7 @@ package com.forsuredb.api;
  * @param <R> an extension of {@link RecordContainer}, which contains a record before it is inserted/updated in the database
  */
 public interface FSQueryable<U, R extends RecordContainer> {
+
     /**
      * @param recordContainer An extension of {@link RecordContainer} which contains the record to be inserted
      * @return if you've {@link FSQueryable parameterized this class correctly}, then a record
@@ -52,4 +53,14 @@ public interface FSQueryable<U, R extends RecordContainer> {
      * @return A Retriever that will be able to retrieve records returned by this query
      */
     Retriever query(FSProjection projection, FSSelection selection, String sortOrder);
+
+    /**
+     * @param join The description of the join
+     * @param parentProjection The {@link FSProjection} that defines the subest of parent table columns to return for each record
+     * @param childProjection The {@link FSProjection} that defines the subest of child table columns to return for each record
+     * @param selection The {@link FSSelection} that defines the subset of records to retrieve
+     * @param sortOrder the SQL sort order for the query
+     * @return A Retriever that will be able to retrieve records returned by this join query
+     */
+    Retriever query(FSJoin<U> join, FSProjection parentProjection, FSProjection childProjection, FSSelection selection, String sortOrder);
 }

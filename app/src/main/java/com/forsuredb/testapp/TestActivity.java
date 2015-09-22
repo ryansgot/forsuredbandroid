@@ -15,6 +15,8 @@ import com.forsuredb.api.Retriever;
 import com.forsuredb.api.SaveResult;
 import com.forsuredb.testapp.adapter.TestProfileInfoCursorAdapter;
 import com.forsuredb.testapp.adapter.TestUserCursorAdapter;
+import com.forsuredb.testapp.model.ProfileInfoTable;
+import com.forsuredb.testapp.model.ProfileInfoTableJoinUserTable;
 import com.forsuredb.testapp.model.UserTable;
 
 import java.math.BigDecimal;
@@ -37,14 +39,6 @@ public class TestActivity extends ActionBarActivity {
         ((ListView) findViewById(R.id.user_list_view)).setAdapter(userCursorAdapter);
         profileInfoCursorAdapter = new TestProfileInfoCursorAdapter(this);
         ((ListView) findViewById(R.id.profile_info_list_view)).setAdapter(profileInfoCursorAdapter);
-
-        Retriever retriever = userTable().find().byAppRatingBetween(4.5D).andInclusive(5.3D).andFinally().get();
-        if (retriever.moveToFirst()) {
-            do {
-                logUser(userTable().getApi(), retriever);
-            } while(retriever.moveToNext());
-        }
-        retriever.close();
     }
 
     @Override
@@ -52,6 +46,25 @@ public class TestActivity extends ActionBarActivity {
         super.onResume();
         userCursorAdapter.changeCursor(userTable().get());
         profileInfoCursorAdapter.changeCursor(profileInfoTable().get());
+
+        Log.i("TestActivity", "Example of fluent API");
+        Retriever retriever = userTable().find().byAppRatingBetween(4.5D).andInclusive(5.3D).andFinally().get();
+        if (retriever.moveToFirst()) {
+            do {
+                logUser(userTable().getApi(), retriever);
+            } while(retriever.moveToNext());
+        }
+        retriever.close();
+
+        Log.i("TestActivity", "Example of autojoin");
+        ProfileInfoTableJoinUserTable pitjut = profileInfoTableJoinUserTable();
+        Retriever joinRetriever = pitjut.join();
+        if (joinRetriever.moveToFirst()) {
+            do {
+                logProfileInfoTableJoinUserTable(pitjut.parentApi(), pitjut.childApi(), joinRetriever);
+            } while(joinRetriever.moveToNext());
+        }
+        joinRetriever.close();
     }
 
     @Override
@@ -197,6 +210,25 @@ public class TestActivity extends ActionBarActivity {
                 .append("; login_count = ").append(userTable.loginCount(retriever))
                 .append("; app_rating = ").append(userTable.appRating(retriever))
                 .append("; competitor_app_rating = ").append(userTable.competitorAppRating(retriever))
+                .toString());
+    }
+
+    private void logProfileInfoTableJoinUserTable(UserTable userTable, ProfileInfoTable profileInfoTable, Retriever retriever) {
+        Log.i("TestActivity", new StringBuilder("user_table._id = ").append(userTable.id(retriever))
+                .append("; user_table.created = ").append(userTable.created(retriever))
+                .append("; user_table.deleted = ").append(userTable.deleted(retriever))
+                .append("; user_table.modified = ").append(userTable.modified(retriever))
+                .append("; user_table.global_id = ").append(userTable.globalId(retriever))
+                .append("; user_table.login_count = ").append(userTable.loginCount(retriever))
+                .append("; user_table.app_rating = ").append(userTable.appRating(retriever))
+                .append("; user_table.competitor_app_rating = ").append(userTable.competitorAppRating(retriever))
+                .append("; profile_info_table._id = ").append(profileInfoTable.id(retriever))
+                .append("; profile_info_table.created = ").append(profileInfoTable.created(retriever))
+                .append("; profile_info_table.deleted = ").append(profileInfoTable.deleted(retriever))
+                .append("; profile_info_table.modified = ").append(profileInfoTable.modified(retriever))
+                .append("; profile_info_table.user_id = ").append(profileInfoTable.userId(retriever))
+                .append("; profile_info_table.email_address = ").append(profileInfoTable.emailAddress(retriever))
+                .append("; profile_info_table.binary_data = ").append(profileInfoTable.binaryData(retriever))
                 .toString());
     }
 }

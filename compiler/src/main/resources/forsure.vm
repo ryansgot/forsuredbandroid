@@ -1,20 +1,18 @@
 package ${packageName};
 
 // forsuredb-defined api imports
-import com.forsuredb.api.FSGetAdapter;
-import com.forsuredb.api.FSSaveAdapter;
-import com.forsuredb.api.FSQueryable;
 import com.forsuredb.api.ForSureInfoFactory;
 import com.forsuredb.api.RecordContainer;
-import com.forsuredb.api.Resolver;
-import com.forsuredb.api.Retriever;
-import com.forsuredb.api.FSSelection;
 
 // user-defined model imports
 #foreach($modelClassImport in $modelClassImports)
 import ${modelClassImport};
+import ${modelClassImport}Resolver;
 import ${modelClassImport}Setter;
 import ${modelClassImport}Finder;
+#end
+#foreach($joinClassImport in $joinClassImports)
+import ${joinClassImport};
 #end
 
 /**
@@ -98,9 +96,13 @@ public class ForSure<U, R extends RecordContainer> {
             instance = new ForSure<U, R>(infoFactory);
         }
     }
-#foreach($tableResolver in $tableResolvers)
+#foreach($tableResolverMethod in $tableResolverMethods)
 
-    ${tableResolver}
+    ${tableResolverMethod}
+#end
+#foreach($joinResolver in $joinResolvers)
+
+    ${joinResolver}
 #end
 
     private U resourceOf(String tableName) {
