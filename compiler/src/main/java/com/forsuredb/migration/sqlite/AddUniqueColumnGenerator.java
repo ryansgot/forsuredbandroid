@@ -47,7 +47,7 @@ public class AddUniqueColumnGenerator extends QueryGenerator {
     public List<String> generate() {
         List<String> retList = new LinkedList<>();
         retList.addAll(new AddColumnGenerator(getTableName(), column).generate());
-        retList.add("CREATE UNIQUE INDEX " + column.getColumnName() + " ON " + getTableName() + "(" + column.getColumnName() + ");");
+        retList.add("CREATE UNIQUE INDEX " + getTableName() + "_" + column.getColumnName() + " ON " + getTableName() + "(" + column.getColumnName() + ");");
         return retList;
     }
 }
