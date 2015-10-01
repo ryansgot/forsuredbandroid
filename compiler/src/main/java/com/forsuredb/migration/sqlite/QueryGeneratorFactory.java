@@ -27,7 +27,7 @@ public class QueryGeneratorFactory {
         return new CreateTableGenerator(table.getTableName());
     }
 
-    public static QueryGenerator createForColumn(TableInfo table, ColumnInfo column) {
+    public static QueryGenerator createForNewColumn(TableInfo table, ColumnInfo column) {
         if (column.isForeignKey()) {
             return new AddForeignKeyGenerator(table, column);
         }
@@ -35,5 +35,12 @@ public class QueryGeneratorFactory {
             return new AddUniqueColumnGenerator(table.getTableName(), column);
         }
         return new AddColumnGenerator(table.getTableName(), column);
+    }
+
+    public static QueryGenerator createForExistingColumn(String tableName, ColumnInfo existingColumn, ColumnInfo targetColumn) {
+        if (targetColumn.isUnique() && !existingColumn.isUnique()) {
+            return new AddUniqueIndexGenerator(tableName, targetColumn);
+        }
+        return null;
     }
 }

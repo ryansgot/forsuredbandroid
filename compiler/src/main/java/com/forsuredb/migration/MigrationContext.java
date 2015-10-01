@@ -72,7 +72,6 @@ public class MigrationContext implements TableContext {
             retMap.put(entry.getKey(), entry.getValue().build());
         }
         return retMap;
-
     }
 
     private void update(Migration m, Map<String, TableInfo.Builder> tableBuilderMap, Map<String, ColumnInfo.Builder> columnBuilderMap) {
