@@ -20,8 +20,13 @@ package com.forsuredb;
 import com.forsuredb.annotation.ForeignKey;
 import com.forsuredb.annotationprocessor.ColumnInfo;
 import com.forsuredb.annotationprocessor.ForeignKeyInfo;
+import com.forsuredb.annotationprocessor.TableContext;
 import com.forsuredb.annotationprocessor.TableInfo;
 import com.forsuredb.migration.sqlite.TypeTranslator;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestData {
 
@@ -127,6 +132,10 @@ public class TestData {
                 .tableName(foreignKeyTableName);
     }
 
+    public static TableContextBuilder newTableContext() {
+        return new TableContextBuilder();
+    }
+
     // Helpers for covenience methods
 
     private static ColumnInfo.Builder columnFrom(TypeTranslator tt) {
@@ -135,5 +144,34 @@ public class TestData {
 
     private static String nameFrom(TypeTranslator tt) {
         return tt.name().toLowerCase() + "_column";
+    }
+
+    public static class TableContextBuilder {
+
+        private final Map<String, TableInfo> tableMap = new HashMap<>();
+
+        public TableContextBuilder addTable(TableInfo table) {
+            tableMap.put(table.getTableName(), table);
+            return this;
+        }
+
+        public TableContext build() {
+            return new TableContext() {
+                @Override
+                public boolean hasTable(String tableName) {
+                    return tableMap.containsKey(tableName);
+                }
+
+                @Override
+                public TableInfo getTable(String tableName) {
+                    return tableMap.get(tableName);
+                }
+
+                @Override
+                public Collection<TableInfo> allTables() {
+                    return tableMap.values();
+                }
+            };
+        }
     }
 }

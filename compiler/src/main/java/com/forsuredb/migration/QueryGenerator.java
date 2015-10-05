@@ -64,8 +64,9 @@ public abstract class QueryGenerator implements Comparable<QueryGenerator> {
         ALTER_TABLE_ADD_COLUMN(1),
         ALTER_TABLE_ADD_UNIQUE(1),
         ADD_FOREIGN_KEY_REFERENCE(2),
-        CREATE_TEMP_TABLE_FROM_EXISTING(3),
-        DROP_TABLE(4);
+        ADD_UNIQUE_INDEX(3),
+        CREATE_TEMP_TABLE_FROM_EXISTING(4),
+        DROP_TABLE(5);
 
         private int priority;
 

@@ -45,13 +45,13 @@ public class AddForeignKeyGeneratorTest extends BaseSQLiteGeneratorTest {
 
     @Parameterized.Parameters
     public static Iterable<Object[]> data() {
-        return Arrays.asList(new Object[][]{
+        return Arrays.asList(new Object[][] {
                 // Add a foreign key to a basic table with no extra columns
                 {
                         TestData.table().addColumn(TestData.longCol().foreignKey(TestData.cascadeFKI("user").build()).build())
                                 .build(),
                         TestData.longCol().foreignKey(TestData.cascadeFKI("user").build()).build(),
-                        new String[]{
+                        new String[] {
                                 "DROP TABLE IF EXISTS temp_" + TestData.TABLE_NAME + ";",
                                 "CREATE TEMP TABLE temp_" + TestData.TABLE_NAME + " AS SELECT _id, created, deleted, modified FROM " + TestData.TABLE_NAME + ";",
                                 "DROP TABLE IF EXISTS " + TestData.TABLE_NAME + ";",

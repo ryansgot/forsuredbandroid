@@ -17,8 +17,8 @@
  */
 package com.forsuredb.annotationprocessor;
 
-import com.forsuredb.migration.MigrationContext;
 import com.forsuredb.migration.QueryGenerator;
+import com.forsuredb.migration.sqlite.AddUniqueIndexGenerator;
 import com.forsuredb.migration.sqlite.QueryGeneratorFactory;
 
 import java.util.Collection;
@@ -39,10 +39,14 @@ public class DiffGenerator {
 
     private static final String LOG_TAG = DiffGenerator.class.getSimpleName();
 
-    private final TableContext context;
+    private final TableContext sourceContext;
 
-    public DiffGenerator(MigrationContext context) {
-        this.context = context;
+    /**
+     * @param sourceContext should be the {@link TableContext} generated from the collection of
+     *                 migration files, but there is no restriction on this.
+     */
+    public DiffGenerator(TableContext sourceContext) {
+        this.sourceContext = sourceContext;
     }
 
     /**
@@ -65,15 +69,15 @@ public class DiffGenerator {
                 APLog.i(LOG_TAG, "Not checking column diffs for table: " + targetTable.getTableName());
                 continue;
             }
-            retQueue.addAll(getColumnChangeQueryGenerators(context.getTable(targetTable.getTableName()), targetTable));
+            retQueue.addAll(getColumnChangeQueryGenerators(sourceContext.getTable(targetTable.getTableName()), targetTable));
         }
 
         return retQueue;
     }
 
     private boolean tableCreateQueryAppended(PriorityQueue<QueryGenerator> retQueue, TableInfo table) {
-        APLog.i(LOG_TAG, "checking whether migration context has table: " + table.getTableName());
-        if (context.hasTable(table.getTableName())) {
+        APLog.i(LOG_TAG, "checking whether migration sourceContext has table: " + table.getTableName());
+        if (sourceContext.hasTable(table.getTableName())) {
             APLog.i(LOG_TAG, table.getTableName() + " table PREVIOUSLY EXISTED. NOT creating a migration for it");
             return false;
         }
@@ -92,8 +96,19 @@ public class DiffGenerator {
                 continue;   // <-- columns in the default columns map are added when the table is created
             }
             if (sourceTable == null || !sourceTable.hasColumn(column.getColumnName())) {
-                retList.add(QueryGeneratorFactory.createForColumn(targetTable, column));
+                retList.add(QueryGeneratorFactory.createForNewColumn(targetTable, column));
+                continue;
             }
+            retList.addAll(getExistingColumnQueryGenerators(targetTable.getTableName(), sourceTable.getColumn(column.getColumnName()), column));
+        }
+        return retList;
+    }
+
+    private Collection<? extends QueryGenerator> getExistingColumnQueryGenerators(String tableName, ColumnInfo sourceColumn, ColumnInfo targetColumn) {
+        List<QueryGenerator> retList = new LinkedList<>();
+        QueryGenerator qg = QueryGeneratorFactory.createForExistingColumn(tableName, sourceColumn, targetColumn);
+        if (qg != null) {
+            retList.add(qg);
         }
         return retList;
     }

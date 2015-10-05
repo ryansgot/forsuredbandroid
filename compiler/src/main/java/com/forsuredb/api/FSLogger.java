@@ -24,6 +24,9 @@ package com.forsuredb.api;
  * @author Ryan Scott
  */
 public interface FSLogger {
+
+    SilentLog SILENT_LOG = new SilentLog();
+
     void e(String message);
     void i(String message);
     void w(String message);

@@ -46,7 +46,7 @@ public class AddUniqueColumnGeneratorTest extends BaseSQLiteGeneratorTest {
                         TestData.stringCol().build(),
                         new String[] {
                                 "ALTER TABLE " + TestData.TABLE_NAME + " ADD COLUMN string_column TEXT;",
-                                "CREATE UNIQUE INDEX string_column ON " + TestData.TABLE_NAME + "(string_column);"
+                                "CREATE UNIQUE INDEX " + TestData.TABLE_NAME + "_string_column ON " + TestData.TABLE_NAME + "(string_column);"
                         }
                 },
         });

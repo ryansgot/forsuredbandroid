@@ -22,6 +22,9 @@ import com.forsuredb.migration.QueryGenerator;
 
 import org.junit.Test;
 
+import static junit.framework.TestCase.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class QueryGeneratorFactoryTest {
@@ -34,19 +37,36 @@ public class QueryGeneratorFactoryTest {
 
     @Test
     public void shouldCreateAddColumnGeneratorForNonUniqueColumn() {
-        QueryGenerator qg = QueryGeneratorFactory.createForColumn(TestData.table().build(), TestData.intCol().build());
+        QueryGenerator qg = QueryGeneratorFactory.createForNewColumn(TestData.table().build(), TestData.intCol().build());
         assertTrue("When column was nonUnique, the returned query generator was not an instance of AddColumnGenerator", qg instanceof AddColumnGenerator);
     }
 
     @Test
     public void shouldCreateAddUniqueColumnGeneratorForUniqueColumn() {
-        QueryGenerator qg = QueryGeneratorFactory.createForColumn(TestData.table().build(), TestData.intCol().unique(true).build());
+        QueryGenerator qg = QueryGeneratorFactory.createForNewColumn(TestData.table().build(), TestData.intCol().unique(true).build());
         assertTrue("When column was unique, the returned query generator was not an instance of AddUniqueColumnGenerator", qg instanceof AddUniqueColumnGenerator);
     }
 
     @Test
     public void shouldCreateAddColumnGeneratorForForeignKeyColumn() {
-        QueryGenerator qg = QueryGeneratorFactory.createForColumn(TestData.table().build(), TestData.intCol().foreignKey(TestData.cascadeFKI("user").build()).build());
+        QueryGenerator qg = QueryGeneratorFactory.createForNewColumn(TestData.table().build(), TestData.intCol().foreignKey(TestData.cascadeFKI("user").build()).build());
         assertTrue("When column was foreign key, the returned query generator was not an instance of AddForeignKeyGenerator", qg instanceof AddForeignKeyGenerator);
+    }
+
+    @Test
+    public void shouldCreateAddUniqueIndexGeneratorForExistingColumn() {
+        QueryGenerator qg = QueryGeneratorFactory.createForExistingColumn(TestData.TABLE_NAME,
+                TestData.intCol().build(),
+                TestData.intCol().unique(true).build());
+        assertNotNull(qg);
+        assertTrue(qg instanceof AddUniqueIndexGenerator);
+    }
+
+    @Test
+    public void shouldNotCreateUniqueIndexGeneratorForExistingColumnIfNotUnique() {
+        QueryGenerator qg = QueryGeneratorFactory.createForExistingColumn(TestData.TABLE_NAME,
+                TestData.intCol().build(),
+                TestData.intCol().build());
+        assertFalse(qg instanceof AddUniqueIndexGenerator);
     }
 }
