@@ -23,6 +23,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.forsuredb.api.FSTableCreator;
+import com.forsuredb.cursor.FSCursorFactory;
 import com.forsuredb.migration.Migration;
 
 import java.util.Collections;
@@ -31,13 +32,14 @@ import java.util.List;
 public class FSDBHelper extends SQLiteOpenHelper {
 
     private static final String LOG_TAG = FSDBHelper.class.getSimpleName();
+    private static final SQLiteDatabase.CursorFactory cursorFactory = new FSCursorFactory();
 
     private final List<FSTableCreator> tables;
     private final List<Migration> migrations;
     private final Context context;
 
     private FSDBHelper(Context context, String dbName, List<FSTableCreator> tables, List<Migration> migrations) {
-        super(context, dbName, null, identifyDbVersion(migrations));
+        super(context, dbName, cursorFactory, identifyDbVersion(migrations));
         this.context = context;
         this.tables = tables;
         this.migrations = migrations;
