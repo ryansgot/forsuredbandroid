@@ -100,34 +100,34 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
 
     private static class TableResolver {
 
-        private final String tableName;
         private final String resultParameter;
         private final String getApiClass;
         private final String resolverClass;
         private final String setApiClass;
         private final String finderClass;
+        private final String tableNameReference;
 
         public TableResolver(TableInfo table, String resultParameter) {
-            this.tableName = table.getTableName();
             this.resultParameter = resultParameter;
             getApiClass = table.getSimpleClassName();
             resolverClass = getApiClass + "Resolver";
             setApiClass = getApiClass + "Setter";
             finderClass = getApiClass + "Finder";
+            tableNameReference = resolverClass + ".TABLE_NAME";
         }
 
         @Override
         public String toString() {
             return new StringBuilder(doc()).append(newLine(1))
                     .append("public static ").append(resolverClass).append(" ").append(WordUtils.uncapitalize(getApiClass)).append("() {").append(newLine(2))
-                    .append("return new ").append(resolverClass).append("((").append(resultParameter).append(") instance.resourceOf(\"").append(tableName).append("\"), instance.infoFactory);").append(newLine(1))
+                    .append("return new ").append(resolverClass).append("((").append(resultParameter).append(") instance.resourceOf(").append(tableNameReference).append("), instance.infoFactory);").append(newLine(1))
                     .append("}")
                     .toString();
         }
 
         private String doc() {
             return new StringBuilder("/**").append(newLine(1))
-                    .append(" * Access the querying mechanisms for the ").append(tableName).append(" table.").append(newLine(1))
+                    .append(" * Access the querying mechanisms for the {@link ").append(resolverClass).append("#TABLE_NAME").append(" table.").append(newLine(1))
                     .append(" * @see ").append(getApiClass).append(newLine(1))
                     .append(" * @see ").append(setApiClass).append(newLine(1))
                     .append(" * @see ").append(finderClass).append(newLine(1))
@@ -149,23 +149,23 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
         private final String className;
         private final String fullyQualifiedClassName;
         private final String methodName;
-        private final String parentTableName;
-        private final String childTableName;
+        private final String parentTableNameReference;
+        private final String childTableNameReference;
         private final String resultParameter;
 
         public JoinResolver(JoinInfo join, String resultParameter) {
             className = join.getChildTable().getSimpleClassName() + "Join" + join.getParentTable().getSimpleClassName();
             fullyQualifiedClassName = join.getChildTable().getPackageName() + "." + className;
             methodName = WordUtils.uncapitalize(className);
-            parentTableName = join.getParentTable().getTableName();
-            childTableName = join.getChildTable().getTableName();
+            parentTableNameReference = join.getParentTable().getSimpleClassName() + "Resolver.TABLE_NAME";
+            childTableNameReference = join.getChildTable().getSimpleClassName() + "Resolver.TABLE_NAME";
             this.resultParameter = resultParameter;
         }
 
         @Override
         public String toString() {
             return new StringBuilder("public static ").append(className).append(" ").append(methodName).append("() {\n")
-                    .append("        ").append("return new ").append(className).append("((").append(resultParameter).append(") instance.resourceOf(\"").append(parentTableName).append("\"), (").append(resultParameter).append(") instance.resourceOf(\"").append(childTableName).append("\"), ").append("instance.infoFactory);\n")
+                    .append("        ").append("return new ").append(className).append("((").append(resultParameter).append(") instance.resourceOf(").append(parentTableNameReference).append("), (").append(resultParameter).append(") instance.resourceOf(").append(childTableNameReference).append("), ").append("instance.infoFactory);\n")
                     .append("    }")
                     .toString();
         }
