@@ -22,4 +22,6 @@ public interface Resolver<U, G extends FSGetApi, S extends FSSaveApi<U>, F exten
     Retriever get();
     S set();
     F find();
+    U tableLocator();
+    U recordLocator(long id);
 }

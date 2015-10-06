@@ -26,11 +26,11 @@ import com.forsuredb.api.FSProjection;
 import com.forsuredb.api.FSQueryable;
 import com.forsuredb.api.FSSelection;
 import com.forsuredb.api.Retriever;
+import com.forsuredb.cursor.FSCursor;
+import com.forsuredb.provider.FSContentValues;
 import com.forsuredb.provider.QueryCorrector;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /*package*/ class ContentProviderQueryable implements FSQueryable<Uri, FSContentValues> {

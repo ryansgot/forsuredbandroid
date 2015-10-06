@@ -13,15 +13,15 @@ public class ${className} implements Resolver<${resultParameter}, ${getApiClass}
 
     public static final String TABLE_NAME = "${tableName}";
 
-    private final ${resultParameter} resource;
     private final ForSureInfoFactory infoFactory;
+    private ${resultParameter} lookupResource;
 
     private ${getApiClass} getApi;
     private ${finderClass} finder;
 
-    public ${className}(${resultParameter} resource, ForSureInfoFactory infoFactory) {
-        this.resource = resource;
+    public ${className}(ForSureInfoFactory infoFactory) {
         this.infoFactory = infoFactory;
+        lookupResource = tableLocator();
     }
 
     @Override
@@ -36,12 +36,12 @@ public class ${className} implements Resolver<${resultParameter}, ${getApiClass}
     public Retriever get() {
         FSSelection selection = finder == null ? new FSSelection.SelectAll() : finder.selection();
         finder = null;  // <-- When a finder's selection method is called, it must be nullified
-        return infoFactory.createQueryable(resource).query(null, selection, null);
+        return infoFactory.createQueryable(lookupResource).query(null, selection, null);
     }
 
     @Override
     public ${setApiClass} set() {
-        FSQueryable queryable = infoFactory.createQueryable(resource);
+        FSQueryable queryable = infoFactory.createQueryable(lookupResource);
         RecordContainer recordContainer = infoFactory.createRecordContainer();
         FSSelection selection = finder == null ? null : finder.selection();
         finder = null;  // <-- When a finder's selection method is called, it must be nullified
@@ -52,5 +52,15 @@ public class ${className} implements Resolver<${resultParameter}, ${getApiClass}
     public ${finderClass} find() {
         finder = new ${finderClass}(this);
         return finder;
+    }
+
+    @Override
+    public ${resultParameter} tableLocator() {
+        return (${resultParameter}) infoFactory.tableResource(TABLE_NAME);
+    }
+
+    @Override
+    public ${resultParameter} recordLocator(long id) {
+        return (${resultParameter}) infoFactory.locatorFor(TABLE_NAME, id);
     }
 }

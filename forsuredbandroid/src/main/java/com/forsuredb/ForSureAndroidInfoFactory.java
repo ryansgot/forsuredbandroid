@@ -22,6 +22,7 @@ import android.net.Uri;
 
 import com.forsuredb.api.FSQueryable;
 import com.forsuredb.api.ForSureInfoFactory;
+import com.forsuredb.provider.FSContentValues;
 import com.google.common.base.Strings;
 
 /**
@@ -78,6 +79,11 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
     @Override
     public Uri tableResource(String tableName) {
         return Uri.parse(uriPrefix + "/" + tableName);
+    }
+
+    @Override
+    public Uri locatorFor(String tableName, long id) {
+        return Uri.withAppendedPath(tableResource(tableName), Long.toString(id));
     }
 
     @Override

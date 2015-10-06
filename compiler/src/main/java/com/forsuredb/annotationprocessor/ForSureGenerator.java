@@ -120,7 +120,7 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
         public String toString() {
             return new StringBuilder(doc()).append(newLine(1))
                     .append("public static ").append(resolverClass).append(" ").append(WordUtils.uncapitalize(getApiClass)).append("() {").append(newLine(2))
-                    .append("return new ").append(resolverClass).append("((").append(resultParameter).append(") instance.resourceOf(").append(tableNameReference).append("), instance.infoFactory);").append(newLine(1))
+                    .append("return new ").append(resolverClass).append("(instance.infoFactory);").append(newLine(1))
                     .append("}")
                     .toString();
         }
