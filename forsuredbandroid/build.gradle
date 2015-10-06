@@ -29,6 +29,11 @@ android {
     testOptions {
         unitTests.returnDefaultValues = true    // <-- Uri.parse() now returns null
     }
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
 }
 
 configurations {

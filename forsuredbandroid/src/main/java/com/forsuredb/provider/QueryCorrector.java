@@ -42,7 +42,7 @@ public class QueryCorrector {
     private final String[] selectionArgs;
 
     public QueryCorrector(Uri uri, String selection, String[] selectionArgs) {
-        final boolean isSingleRecordQuery = isSingleRecord(uri);
+        final boolean isSingleRecordQuery = UriEvaluator.isSpecificRecordUri(uri);
         this.selection = isSingleRecordQuery ? ensureIdInSelection(selection) : selection;
         this.selectionArgs = isSingleRecordQuery ? ensureIdInSelectionArgs(uri, selectionArgs) : selectionArgs;
     }
@@ -53,16 +53,6 @@ public class QueryCorrector {
 
     public String[] getSelectionArgs() {
         return selectionArgs;
-    }
-
-    private boolean isSingleRecord(Uri uri) {
-        try {
-            Long.parseLong(uri.getLastPathSegment());
-            return true;
-        } catch (Exception e) {
-            // do nothing
-        }
-        return false;
     }
 
     private String ensureIdInSelection(String selection) {

@@ -19,6 +19,8 @@ package com.forsuredb.provider;
 
 import android.net.Uri;
 
+import com.forsuredb.util.UriUtil;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,7 +66,7 @@ public class QueryCorrectorTest {
     public static Iterable<Object[]> data() {
         return Arrays.asList(new Object[][] {
                 // an all records uri with empty selection and empty selection args
-                {allRecordsUri(), emptySelection, emptySelectionArgs, emptySelection, emptySelectionArgs},
+                {UriUtil.allRecordsUri(), emptySelection, emptySelectionArgs, emptySelection, emptySelectionArgs},
                 // TODO: throw an exception when all records uri with id selection and empty selection args
 //                {
 //                        allRecordsUri(),
@@ -82,19 +84,19 @@ public class QueryCorrectorTest {
 //                        emptySelectionArgs
 //                },
                 // a specific record uri with = selection and correct selection args
-                {specificRecordUri(1L), idEqualsSelection, new String[] {"1"}, idEqualsSelection, new String[] {"1"}},
+                {UriUtil.specificRecordUri(1L), idEqualsSelection, new String[] {"1"}, idEqualsSelection, new String[] {"1"}},
                 // a specific record uri with IS selection and correct selection args
-                {specificRecordUri(1L), idIsSelection, new String[] {"1"}, idIsSelection, new String[] {"1"}},
+                {UriUtil.specificRecordUri(1L), idIsSelection, new String[] {"1"}, idIsSelection, new String[] {"1"}},
                 // a specific record uri with empty selection and empty selection args
-                {specificRecordUri(1L), emptySelection, emptySelectionArgs, idEqualsSelection, new String[] {"1"}},
+                {UriUtil.specificRecordUri(1L), emptySelection, emptySelectionArgs, idEqualsSelection, new String[] {"1"}},
                 // a specific record uri with empty selection and a correct _id selection arg
-                {specificRecordUri(1L), emptySelection, new String[] {"1"}, idEqualsSelection, new String[] {"1"}},
+                {UriUtil.specificRecordUri(1L), emptySelection, new String[] {"1"}, idEqualsSelection, new String[] {"1"}},
                 // a specific record uri with correct selection and no selection args
-                {specificRecordUri(1L), idEqualsSelection, emptySelectionArgs, idEqualsSelection, new String[] {"1"}},
+                {UriUtil.specificRecordUri(1L), idEqualsSelection, emptySelectionArgs, idEqualsSelection, new String[] {"1"}},
                 // a specific record uri with an existing selection and that does not include the _id and selectionArgs that does not include the _id
-                {specificRecordUri(1L), "something = ?", new String[] {"something"}, "_id = ? AND (something = ?)", new String[] {"1", "something"}},
+                {UriUtil.specificRecordUri(1L), "something = ?", new String[] {"something"}, "_id = ? AND (something = ?)", new String[] {"1", "something"}},
                 // a specific record uri with multiple existing selections and that does not include the _id and selectionArgs that does not include the _id
-                {specificRecordUri(1L), "something = ? OR something_else = ?", new String[] {"something", "something_else"}, "_id = ? AND (something = ? OR something_else = ?)", new String[] {"1", "something", "something_else"}},
+                {UriUtil.specificRecordUri(1L), "something = ? OR something_else = ?", new String[] {"something", "something_else"}, "_id = ? AND (something = ? OR something_else = ?)", new String[] {"1", "something", "something_else"}},
         });
     }
 
@@ -118,17 +120,5 @@ public class QueryCorrectorTest {
         for (int i = 0; i < expectedSelectionArgs.length; i++) {
             assertEquals(expectedSelectionArgs[i], queryCorrectorUnderTest.getSelectionArgs()[i]);
         }
-    }
-
-    private static Uri allRecordsUri() {
-        Uri uri = Mockito.mock(Uri.class);
-        Mockito.when(uri.getLastPathSegment()).thenReturn("directory");
-        return uri;
-    }
-
-    private static Uri specificRecordUri(long id) {
-        Uri uri = Mockito.mock(Uri.class);
-        Mockito.when(uri.getLastPathSegment()).thenReturn(Long.toString(id));
-        return uri;
     }
 }
