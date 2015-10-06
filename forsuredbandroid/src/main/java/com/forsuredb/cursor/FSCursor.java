@@ -20,6 +20,8 @@ package com.forsuredb.cursor;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 
+import com.forsuredb.api.Retriever;
+
 /**
  * <p>
  *     Wraps a {@link Cursor}, getting its implementation from {@link CursorWrapper}
@@ -27,7 +29,7 @@ import android.database.CursorWrapper;
  *     {@link com.forsuredb.api.FSGetApi FSGetApi} methods.
  * </p>
  */
-public class FSCursor extends CursorWrapper implements com.forsuredb.api.Retriever {
+public class FSCursor extends CursorWrapper implements Retriever {
 
     public FSCursor(Cursor cursor) {
         super(cursor);
