@@ -27,6 +27,8 @@ import static com.forsuredb.testapp.ForSure.*;
 
 public class TestActivity extends ActionBarActivity {
 
+    private static final String LOG_TAG = TestActivity.class.getSimpleName();
+
     private TestUserCursorAdapter userCursorAdapter;
     private TestProfileInfoCursorAdapter profileInfoCursorAdapter;
 
@@ -47,7 +49,8 @@ public class TestActivity extends ActionBarActivity {
         userCursorAdapter.changeCursor(userTable().get());
         profileInfoCursorAdapter.changeCursor(profileInfoTable().get());
 
-        Log.i("TestActivity", "Example of fluent API");
+        Log.i(LOG_TAG, "userTable().tableLocator() = " + userTable().tableLocator());
+        Log.i(LOG_TAG, "Example of fluent API");
         Retriever retriever = userTable().find().byAppRatingBetween(4.5D).andInclusive(5.3D).andFinally().get();
         if (retriever.moveToFirst()) {
             do {
@@ -56,7 +59,7 @@ public class TestActivity extends ActionBarActivity {
         }
         retriever.close();
 
-        Log.i("TestActivity", "Example of autojoin");
+        Log.i(LOG_TAG, "Example of autojoin");
         ProfileInfoTableJoinUserTable pitjut = profileInfoTableJoinUserTable();
         Retriever joinRetriever = pitjut.join();
         if (joinRetriever.moveToFirst()) {
@@ -93,7 +96,7 @@ public class TestActivity extends ActionBarActivity {
             public void onClick(DialogInterface dialogInterface, int which) {
                 try {
                     long id = getIdFromDialog(dialogInterface);
-                    Log.i("TestActivity", "user rows deleted: " + userTable().find().byId(id).andFinally().set().hardDelete());
+                    Log.i(LOG_TAG, "user rows deleted: " + userTable().find().byId(id).andFinally().set().hardDelete());
                     profileInfoCursorAdapter.changeCursor(profileInfoTable().get());
                     userCursorAdapter.changeCursor(userTable().get());
                 } catch (NumberFormatException nfe) {
@@ -198,11 +201,11 @@ public class TestActivity extends ActionBarActivity {
     }
 
     private void logResult(SaveResult<Uri> result) {
-        Log.d("TestActivity", "SaveResult<Uri>{inserted=" + result.inserted() + ", exception=" + result.exception() + ", rowsAffected=" + result.rowsAffected() + "}");
+        Log.d(LOG_TAG, "SaveResult<Uri>{inserted=" + result.inserted() + ", exception=" + result.exception() + ", rowsAffected=" + result.rowsAffected() + "}");
     }
 
     private void logUser(UserTable userTable, Retriever retriever) {
-        Log.i("TestActivity", new StringBuilder("_id = ").append(userTable.id(retriever))
+        Log.i(LOG_TAG, new StringBuilder("_id = ").append(userTable.id(retriever))
                 .append("; created = ").append(userTable.created(retriever))
                 .append("; deleted = ").append(userTable.deleted(retriever))
                 .append("; modified = ").append(userTable.modified(retriever))
@@ -214,7 +217,7 @@ public class TestActivity extends ActionBarActivity {
     }
 
     private void logProfileInfoTableJoinUserTable(UserTable userTable, ProfileInfoTable profileInfoTable, Retriever retriever) {
-        Log.i("TestActivity", new StringBuilder("user_table._id = ").append(userTable.id(retriever))
+        Log.i(LOG_TAG, new StringBuilder("user_table._id = ").append(userTable.id(retriever))
                 .append("; user_table.created = ").append(userTable.created(retriever))
                 .append("; user_table.deleted = ").append(userTable.deleted(retriever))
                 .append("; user_table.modified = ").append(userTable.modified(retriever))
