@@ -22,19 +22,19 @@ import android.net.Uri;
 import com.forsuredb.api.FSJoin;
 import com.google.common.base.Strings;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * <p>
  *     A utility class to provide information about {@link Uri}s used to describe either tables
  *     or records in tables.
  * </p>
+ * @author Ryan Scott
  */
 public class UriEvaluator {
 
     /**
+     * TODO: this is probably not correct, but it doesn't seem broken for the way {@link Uri} is being used
      * <p>
      *     A {@link Uri} is considered to be a specific record {@link Uri} in the case that it:
      *     <ul>
@@ -54,6 +54,20 @@ public class UriEvaluator {
         return true;
     }
 
+    /**
+     * <p>
+     *     A {@link Uri} is a join if it contains any of the following query parameters:
+     *     <ul>
+     *         <li>INNER JOIN</li>
+     *         <li>OUTER JOIN</li>
+     *         <li>CROSS JOIN</li>
+     *         <li>LEFT JOIN</li>
+     *         <li>NATURAL JOIN</li>
+     *     </ul>
+     * </p>
+     * @param uri The {@link Uri} to evaluate
+     * @return true if the {@link Uri} is a join; false otherwise
+     */
     public static boolean isJoin(Uri uri) {
         for (FSJoin.Type type : FSJoin.Type.values()) {
             try {

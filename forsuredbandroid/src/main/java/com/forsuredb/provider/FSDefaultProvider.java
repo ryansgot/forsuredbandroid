@@ -27,11 +27,6 @@ import android.net.Uri;
 
 import com.forsuredb.FSDBHelper;
 import com.forsuredb.ForSureAndroidInfoFactory;
-import com.forsuredb.api.FSJoin;
-import com.forsuredb.api.FSProjection;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <p>

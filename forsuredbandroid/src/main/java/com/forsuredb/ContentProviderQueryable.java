@@ -18,7 +18,6 @@
 package com.forsuredb;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 
 import com.forsuredb.api.FSJoin;
@@ -28,14 +27,11 @@ import com.forsuredb.api.FSSelection;
 import com.forsuredb.api.Retriever;
 import com.forsuredb.cursor.FSCursor;
 import com.forsuredb.provider.FSContentValues;
-import com.forsuredb.provider.QueryCorrector;
 import com.forsuredb.provider.UriJoiner;
 import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /*package*/ class ContentProviderQueryable implements FSQueryable<Uri, FSContentValues> {
 
@@ -79,7 +75,8 @@ import java.util.Map;
         final String[] p = formatProjections(projections);
         final String s = selection == null ? null : selection.where();
         final String[] sArgs = selection == null ? null : selection.replacements();
-        return new FSCursor(appContext.getContentResolver().query(UriJoiner.join(resource, joins), p, s, sArgs, sortOrder));
+        final String baseTableName = ForSureAndroidInfoFactory.inst().tableName(resource);
+        return new FSCursor(appContext.getContentResolver().query(UriJoiner.join(resource, baseTableName, joins), p, s, sArgs, sortOrder));
     }
 
     private String[] formatProjections(List<FSProjection> projections) {

@@ -64,7 +64,7 @@ public class ${className} implements Resolver<${resultParameter}, ${getApiClass}
             return joins.size() == 0 ? queryable.query(PROJECTION, selection, null) : queryable.query(joins, projections, selection, null);
         } finally {
             joins.clear();  // <-- the state of the joins must be empty at the start of each query
-            projections.clear();
+            projections.clear();    // <-- the state of the projections must be empty at the start of each query
         }
     }
 
