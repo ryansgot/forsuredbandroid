@@ -18,24 +18,4 @@ public class UriEvaluatorTest {
     public void shouldDetectNonSpecificRecordUri() {
         assertFalse(UriEvaluator.isSpecificRecordUri(UriUtil.allRecordsUri()));
     }
-
-    @Test
-    public void shouldDetectAllRecordsJoinUri() {
-        assertTrue(UriEvaluator.isJoinUri(UriUtil.allRecordsJoinUri()));
-    }
-
-    @Test
-    public void shouldDetectAllRecordsJoinUriWithSpecificParent() {
-        assertTrue(UriEvaluator.isJoinUri(UriUtil.allRecordsJoinWithSpecificParentMatch()));
-    }
-
-    @Test
-    public void shouldDetectSpecificRecordJoinUriWithSpecificParent() {
-        assertTrue(UriEvaluator.isJoinUri(UriUtil.specificRecordJoinWithSpecificParentMatch()));
-    }
-
-    @Test
-    public void shouldDetectNonJoinUri() {
-        assertFalse(UriEvaluator.isJoinUri(UriUtil.allRecordsUri()));
-    }
 }

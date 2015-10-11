@@ -1,22 +1,12 @@
 package com.forsuredb.api;
 
-public interface FSJoin<U> {
-
-    enum Kind {
-        CROSS_JOIN, INNER_JOIN, OUTER_JOIN;
-
-        @Override
-        public String toString() {
-            return name().replace("_", " ");
-        }
+public interface FSJoin {
+    enum Type {
+        NATURAL, LEFT, INNER, OUTER, CROSS;
     }
-
-    Finder.Operator operator();
-    Kind kind();
+    Type type();
     String parentTable();
     String parentColumn();
     String childTable();
     String childColumn();
-    U parentResource();
-    U childResource();
 }

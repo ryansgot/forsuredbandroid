@@ -19,24 +19,61 @@ package com.forsuredb.provider;
 
 import android.net.Uri;
 
+import com.forsuredb.ForSureAndroidInfoFactory;
+import com.forsuredb.api.FSJoin;
+import com.google.common.base.Strings;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class UriJoiner {
 
-    public static final String WILDCARD = "*";
-
-    public static Uri join(Uri parentUri, Uri childUri) {
-        Uri.Builder ub = new Uri.Builder().scheme(parentUri.getScheme()).authority(parentUri.getAuthority());
-        appendPathSegmentsTo(ub, parentUri);
-        appendPathSegmentsTo(ub, childUri);
-        return ub.build();
+    /*package*/ static final Map<FSJoin.Type, String> joinMap = new HashMap<>();
+    static {
+        for (FSJoin.Type type : FSJoin.Type.values()) {
+            joinMap.put(type, type.toString() + " JOIN");
+        }
     }
 
-    private static void appendPathSegmentsTo(Uri.Builder ub, Uri uri) {
+    public static Uri join(Uri uri, List<FSJoin> joins) {
+        Uri.Builder ub = new Uri.Builder().scheme(uri.getScheme()).authority(uri.getAuthority());
         for (String pathSegment : uri.getPathSegments()) {
             ub.appendPath(pathSegment);
         }
-        if (uri.getPathSegments().size() % 2 == 1) {
-            ub.appendPath(WILDCARD);
+
+        if (joins != null) {
+            for (FSJoin join : joins) {
+                ub.appendQueryParameter(joinMap.get(join.type()), joinTextFrom(join, ForSureAndroidInfoFactory.inst().tableName(uri)));
+            }
         }
+
+        return ub.build();
     }
 
+    public static String joinStringFrom(Uri uri) {
+        StringBuffer sb = new StringBuffer(uri.getLastPathSegment());
+        for (FSJoin.Type type : FSJoin.Type.values()) {
+            appendJoinStringTo(sb, type, uri.getQueryParameter(joinMap.get(type)));
+        }
+        return sb.toString();
+    }
+
+    private static void appendJoinStringTo(StringBuffer sb, FSJoin.Type type, String joinQuery) {
+        if (Strings.isNullOrEmpty(joinQuery)) {
+            return;
+        }
+        sb.append(" ").append(joinMap.get(type)).append(" ").append(joinQuery);
+    }
+
+    private static String joinTextFrom(FSJoin join, String baseTable) {
+        if (join.type() == FSJoin.Type.NATURAL) {
+            return "";
+        }
+        return tableToJoin(join, baseTable) + " ON " + join.parentTable() + "." + join.parentColumn() + " = " + join.childTable() + "." + join.childColumn();
+    }
+
+    private static String tableToJoin(FSJoin join, String baseTable) {
+        return baseTable.equals(join.childTable()) ? join.parentTable() : join.childTable();
+    }
 }

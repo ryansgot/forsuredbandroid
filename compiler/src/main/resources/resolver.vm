@@ -8,12 +8,34 @@ import com.forsuredb.api.RecordContainer;
 import com.forsuredb.api.Resolver;
 import com.forsuredb.api.Retriever;
 import com.forsuredb.api.FSSelection;
+import com.forsuredb.api.FSProjection;
+import com.forsuredb.api.FSJoin;
+
+import java.util.List;
+import java.util.ArrayList;
 
 public class ${className} implements Resolver<${resultParameter}, ${getApiClass}, ${setApiClass}, ${finderClass}> {
 
     public static final String TABLE_NAME = "${tableName}";
+    public static final String[] columns = new String[] {
+#foreach($column in $columns)
+            "$column",
+#end
+            };
+    public static final FSProjection PROJECTION = new FSProjection() {
+        @Override
+        public String tableName() {
+            return TABLE_NAME;
+        }
+        @Override
+        public String[] columns() {
+            return columns;
+        }
+    };
 
     private final ForSureInfoFactory infoFactory;
+    private final List<FSJoin> joins = new ArrayList<>();
+    private final List<FSProjection> projections = new ArrayList<>();
     private ${resultParameter} lookupResource;
 
     private ${getApiClass} getApi;
@@ -27,16 +49,23 @@ public class ${className} implements Resolver<${resultParameter}, ${getApiClass}
     @Override
     public ${getApiClass} getApi() {
         if (getApi == null) {
-            getApi = FSGetAdapter.create(${getApiClass}.class);
+            getApi = FSGetAdapter.createUnambiguous(${getApiClass}.class);
         }
         return getApi;
     }
 
     @Override
     public Retriever get() {
-        FSSelection selection = finder == null ? new FSSelection.SelectAll() : finder.selection();
+        final FSSelection selection = finder == null ? new FSSelection.SelectAll() : finder.selection();
         finder = null;  // <-- When a finder's selection method is called, it must be nullified
-        return infoFactory.createQueryable(lookupResource).query(null, selection, null);
+        final FSQueryable queryable = infoFactory.createQueryable(lookupResource);
+        try {
+            projections.add(PROJECTION);
+            return joins.size() == 0 ? queryable.query(PROJECTION, selection, null) : queryable.query(joins, projections, selection, null);
+        } finally {
+            joins.clear();  // <-- the state of the joins must be empty at the start of each query
+            projections.clear();
+        }
     }
 
     @Override
@@ -63,4 +92,8 @@ public class ${className} implements Resolver<${resultParameter}, ${getApiClass}
     public ${resultParameter} recordLocator(long id) {
         return (${resultParameter}) infoFactory.locatorFor(TABLE_NAME, id);
     }
+#foreach($joinMethodDefinition in $joinMethodDefinitions)
+
+    $joinMethodDefinition
+#end
 }

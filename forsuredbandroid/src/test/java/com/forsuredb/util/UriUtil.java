@@ -32,16 +32,10 @@ public class UriUtil {
         return mockUri(authority, directory, Long.toString(id));
     }
 
-    public static Uri allRecordsJoinUri() {
-        return mockUri(authority, allRecordsJoinUri.toArray(new String[allRecordsJoinUri.size()]));
-    }
-
-    public static Uri allRecordsJoinWithSpecificParentMatch() {
-        return mockUri(authority, allRecordsJoinWithSpecificParentMatch.toArray(new String[allRecordsJoinWithSpecificParentMatch.size()]));
-    }
-
-    public static Uri specificRecordJoinWithSpecificParentMatch() {
-        return mockUri(authority, specificRecordJoinWithSpecificParentMatch.toArray(new String[specificRecordJoinWithSpecificParentMatch.size()]));
+    public static Uri joinUri(String joinType, String leftTable, String leftTableColumn, String rightTable, String rightTableColumn) {
+        Uri mockUri = allRecordsUri(leftTable);
+        Mockito.when(mockUri.getQueryParameters(joinType)).thenReturn(Lists.newArrayList("ON " + leftTable + "." + leftTableColumn + " = " + rightTable + "." + rightTableColumn));
+        return mockUri;
     }
 
     private static Uri mockUri(String authority, String... pathSegments) {

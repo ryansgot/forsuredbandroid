@@ -33,7 +33,7 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
     private static final String CLASS_NAME = "ForSure";
 
     private final Collection<TableInfo> allTables;
-    private final List<JoinResolver> allJoinResolvers;
+//    private final List<JoinResolver> allJoinResolvers;
     private final String applicationPackageName;
     private final String resultParameter;
 
@@ -41,7 +41,7 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
         super("forsure.vm", processingEnv);
         this.resultParameter = resultParameter;
         this.allTables = allTables;
-        this.allJoinResolvers = createJoinResolvers(allJoins);
+//        this.allJoinResolvers = createJoinResolvers(allJoins);
         this.applicationPackageName = applicationPackageName;
     }
 
@@ -56,9 +56,9 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
         vc.put("packageName", applicationPackageName);
         vc.put("resultParameter", resultParameter);
         vc.put("modelClassImports", createModelClassImports());
-        vc.put("joinClassImports", createJoinClassImports());
+//        vc.put("joinClassImports", createJoinClassImports());
         vc.put("tableResolverMethods", createTableResolverMethods());
-        vc.put("joinResolvers", allJoinResolvers);
+//        vc.put("joinResolvers", allJoinResolvers);
         return vc;
     }
 
@@ -70,13 +70,13 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
         return ret;
     }
 
-    private List<String> createJoinClassImports() {
-        List<String> ret = new ArrayList<>();
-        for (JoinResolver joinResolver : allJoinResolvers) {
-            ret.add(joinResolver.getFullyQualifiedClassName());
-        }
-        return ret;
-    }
+//    private List<String> createJoinClassImports() {
+//        List<String> ret = new ArrayList<>();
+//        for (JoinResolver joinResolver : allJoinResolvers) {
+//            ret.add(joinResolver.getFullyQualifiedClassName());
+//        }
+//        return ret;
+//    }
 
     private List<TableResolver> createTableResolverMethods() {
         List<TableResolver> ret = new ArrayList<>();
@@ -86,13 +86,13 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
         return ret;
     }
 
-    private List<JoinResolver> createJoinResolvers(List<JoinInfo> allJoins) {
-        List<JoinResolver> ret = new ArrayList<>();
-        for (JoinInfo join : allJoins) {
-            ret.add(new JoinResolver(join, resultParameter));
-        }
-        return ret;
-    }
+//    private List<JoinResolver> createJoinResolvers(List<JoinInfo> allJoins) {
+//        List<JoinResolver> ret = new ArrayList<>();
+//        for (JoinInfo join : allJoins) {
+//            ret.add(new JoinResolver(join, resultParameter));
+//        }
+//        return ret;
+//    }
 
     private String getOutputClassName(boolean fullyQualified) {
         return fullyQualified ? applicationPackageName + "." + CLASS_NAME : CLASS_NAME;
@@ -144,34 +144,34 @@ public class ForSureGenerator extends BaseGenerator<JavaFileObject> {
         }
     }
 
-    private static class JoinResolver {
-
-        private final String className;
-        private final String fullyQualifiedClassName;
-        private final String methodName;
-        private final String parentTableNameReference;
-        private final String childTableNameReference;
-        private final String resultParameter;
-
-        public JoinResolver(JoinInfo join, String resultParameter) {
-            className = join.getChildTable().getSimpleClassName() + "Join" + join.getParentTable().getSimpleClassName();
-            fullyQualifiedClassName = join.getChildTable().getPackageName() + "." + className;
-            methodName = WordUtils.uncapitalize(className);
-            parentTableNameReference = join.getParentTable().getSimpleClassName() + "Resolver.TABLE_NAME";
-            childTableNameReference = join.getChildTable().getSimpleClassName() + "Resolver.TABLE_NAME";
-            this.resultParameter = resultParameter;
-        }
-
-        @Override
-        public String toString() {
-            return new StringBuilder("public static ").append(className).append(" ").append(methodName).append("() {\n")
-                    .append("        ").append("return new ").append(className).append("((").append(resultParameter).append(") instance.resourceOf(").append(parentTableNameReference).append("), (").append(resultParameter).append(") instance.resourceOf(").append(childTableNameReference).append("), ").append("instance.infoFactory);\n")
-                    .append("    }")
-                    .toString();
-        }
-
-        public String getFullyQualifiedClassName() {
-            return fullyQualifiedClassName;
-        }
-    }
+//    private static class JoinResolver {
+//
+//        private final String className;
+//        private final String fullyQualifiedClassName;
+//        private final String methodName;
+//        private final String parentTableNameReference;
+//        private final String childTableNameReference;
+//        private final String resultParameter;
+//
+//        public JoinResolver(JoinInfo join, String resultParameter) {
+//            className = join.getChildTable().getSimpleClassName() + "Join" + join.getParentTable().getSimpleClassName();
+//            fullyQualifiedClassName = join.getChildTable().getPackageName() + "." + className;
+//            methodName = WordUtils.uncapitalize(className);
+//            parentTableNameReference = join.getParentTable().getSimpleClassName() + "Resolver.TABLE_NAME";
+//            childTableNameReference = join.getChildTable().getSimpleClassName() + "Resolver.TABLE_NAME";
+//            this.resultParameter = resultParameter;
+//        }
+//
+//        @Override
+//        public String toString() {
+//            return new StringBuilder("public static ").append(className).append(" ").append(methodName).append("() {\n")
+//                    .append("        ").append("return new ").append(className).append("((").append(resultParameter).append(") instance.resourceOf(").append(parentTableNameReference).append("), (").append(resultParameter).append(") instance.resourceOf(").append(childTableNameReference).append("), ").append("instance.infoFactory);\n")
+//                    .append("    }")
+//                    .toString();
+//        }
+//
+//        public String getFullyQualifiedClassName() {
+//            return fullyQualifiedClassName;
+//        }
+//    }
 }

@@ -18,6 +18,12 @@
 package com.forsuredb.api;
 
 public interface FSProjection {
+
+    /**
+     * @return The name of the table to which the column corresponds
+     */
+    String tableName();
+
     /**
      * @return All of the columns to be retrieved in a SELECT query
      */

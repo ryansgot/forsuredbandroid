@@ -11,12 +11,12 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.forsuredb.api.FSJoin;
 import com.forsuredb.api.Retriever;
 import com.forsuredb.api.SaveResult;
 import com.forsuredb.testapp.adapter.TestProfileInfoCursorAdapter;
 import com.forsuredb.testapp.adapter.TestUserCursorAdapter;
 import com.forsuredb.testapp.model.ProfileInfoTable;
-import com.forsuredb.testapp.model.ProfileInfoTableJoinUserTable;
 import com.forsuredb.testapp.model.UserTable;
 
 import java.math.BigDecimal;
@@ -59,12 +59,20 @@ public class TestActivity extends ActionBarActivity {
         }
         retriever.close();
 
-        Log.i(LOG_TAG, "Example of autojoin");
-        ProfileInfoTableJoinUserTable pitjut = profileInfoTableJoinUserTable();
-        Retriever joinRetriever = pitjut.join();
+        Log.i(LOG_TAG, "Example of autojoin (INNER) starting from User Table");
+        Retriever joinRetriever = userTable().joinProfileInfoTable(FSJoin.Type.INNER).get();
         if (joinRetriever.moveToFirst()) {
             do {
-                logProfileInfoTableJoinUserTable(pitjut.parentApi(), pitjut.childApi(), joinRetriever);
+                logProfileInfoTableJoinUserTable(userTable().getApi(), profileInfoTable().getApi(), joinRetriever);
+            } while(joinRetriever.moveToNext());
+        }
+        joinRetriever.close();
+
+        Log.i(LOG_TAG, "Example of autojoin (INNER) starting from Profile Info Table");
+        joinRetriever = profileInfoTable().joinUserTable(FSJoin.Type.INNER).get();
+        if (joinRetriever.moveToFirst()) {
+            do {
+                logProfileInfoTableJoinUserTable(userTable().getApi(), profileInfoTable().getApi(), joinRetriever);
             } while(joinRetriever.moveToNext());
         }
         joinRetriever.close();

@@ -29,8 +29,12 @@ import com.forsuredb.api.Retriever;
 import com.forsuredb.cursor.FSCursor;
 import com.forsuredb.provider.FSContentValues;
 import com.forsuredb.provider.QueryCorrector;
+import com.forsuredb.provider.UriJoiner;
+import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /*package*/ class ContentProviderQueryable implements FSQueryable<Uri, FSContentValues> {
@@ -64,53 +68,38 @@ import java.util.Map;
 
     @Override
     public Retriever query(FSProjection projection, FSSelection selection, String sortOrder) {
-        final String[] p = projection == null ? null : projection.columns();
+        final String[] p = formatProjections(Lists.newArrayList(projection));
         final String s = selection == null ? null : selection.where();
         final String[] sArgs = selection == null ? null : selection.replacements();
         return new FSCursor(appContext.getContentResolver().query(resource, p, s, sArgs, sortOrder));
     }
 
     @Override
-    public Retriever query(FSJoin<Uri> join, FSProjection parentProjection, FSProjection childProjection, FSSelection selection, String sortOrder) {
-        QueryCorrector qc = new QueryCorrector(join.parentResource(), selection == null ? null : selection.where(), selection == null ? null : selection.replacements());
-        SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
-        builder.setTables(queryBuilderTables(join));
-        builder.setProjectionMap(queryBuilderProjectionMap(join, parentProjection, childProjection));
-        return new FSCursor(builder.query(FSDBHelper.inst().getReadableDatabase(),
-                null,
-                qc.getSelection(),
-                qc.getSelectionArgs(),
-                null,
-                null,
-                sortOrder));
+    public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, String sortOrder) {
+        final String[] p = formatProjections(projections);
+        final String s = selection == null ? null : selection.where();
+        final String[] sArgs = selection == null ? null : selection.replacements();
+        return new FSCursor(appContext.getContentResolver().query(UriJoiner.join(resource, joins), p, s, sArgs, sortOrder));
     }
 
-    private Map<String, String> queryBuilderProjectionMap(FSJoin<Uri> join, FSProjection parentProjection, FSProjection childProjection) {
-        Map<String, String> projectionMap = new HashMap<>();
-        appendAllToProjectionMap(projectionMap, join.parentTable(), parentProjection);
-        appendAllToProjectionMap(projectionMap, join.childTable(), childProjection);
-        return projectionMap;
+    private String[] formatProjections(List<FSProjection> projections) {
+        if (projections == null || projections.size() == 0) {
+            return null;
+        }
+        List<String> formattedProjectionList = new ArrayList<>();
+        for (FSProjection projection : projections) {
+            appendProjectionToList(formattedProjectionList, projection);
+        }
+        return formattedProjectionList.toArray(new String[formattedProjectionList.size()]);
     }
 
-    private void appendAllToProjectionMap(Map<String, String> projectionMap, String tableName, FSProjection projection) {
-        if (projection == null || projection.columns() == null) {
+    private void appendProjectionToList(List<String> listToAddTo, FSProjection projection) {
+        if (projection == null || projection.columns() == null || projection.columns().length == 0) {
             return;
         }
         for (String column : projection.columns()) {
-            String unambiguousName = tableName + "." + column;
-            projectionMap.put(unambiguousName, unambiguousName + " AS " + tableName + "_" + column);
+            final String unambiguousName = projection.tableName() + "." + column;
+            listToAddTo.add(unambiguousName + " AS " + projection.tableName() + "_" + column);
         }
-    }
-
-    private String queryBuilderTables(FSJoin<Uri> join) {
-        return String.format("%s %s %s ON (%s.%s %s %s.%s)",
-                join.parentTable(),
-                join.kind().toString(),
-                join.childTable(),
-                join.parentTable(),
-                join.parentColumn(),
-                join.operator().getSymbol(),
-                join.childTable(),
-                join.childColumn());
     }
 }

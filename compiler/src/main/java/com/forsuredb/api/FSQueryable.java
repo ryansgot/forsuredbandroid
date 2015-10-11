@@ -17,6 +17,8 @@
  */
 package com.forsuredb.api;
 
+import java.util.List;
+
 /**
  * <p>
  *     if you've parameterized your FSQueryable properly, U would be a class that locates records
@@ -55,12 +57,11 @@ public interface FSQueryable<U, R extends RecordContainer> {
     Retriever query(FSProjection projection, FSSelection selection, String sortOrder);
 
     /**
-     * @param join The description of the join
-     * @param parentProjection The {@link FSProjection} that defines the subest of parent table columns to return for each record
-     * @param childProjection The {@link FSProjection} that defines the subest of child table columns to return for each record
+     * @param joins A list of {@link FSJoin} describing how to join
+     * @param projections The list of {@link FSProjection} that defines the columns to return in the SELECT query
      * @param selection The {@link FSSelection} that defines the subset of records to retrieve
      * @param sortOrder the SQL sort order for the query
      * @return A Retriever that will be able to retrieve records returned by this join query
      */
-    Retriever query(FSJoin<U> join, FSProjection parentProjection, FSProjection childProjection, FSSelection selection, String sortOrder);
+    Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, String sortOrder);
 }

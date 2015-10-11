@@ -22,10 +22,16 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 
 import com.forsuredb.FSDBHelper;
 import com.forsuredb.ForSureAndroidInfoFactory;
+import com.forsuredb.api.FSJoin;
+import com.forsuredb.api.FSProjection;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>
@@ -83,10 +89,28 @@ public class FSDefaultProvider extends ContentProvider {
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-        final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
-        final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
-        final Cursor cursor = FSDBHelper.inst().getReadableDatabase().query(tableName, projection, qc.getSelection(), qc.getSelectionArgs(), null, null, sortOrder);
+        Cursor cursor = UriEvaluator.isJoin(uri) ? performJoinQuery(uri, projection, selection, selectionArgs, sortOrder)
+                                                 : performQuery(uri, projection, selection, selectionArgs, sortOrder);
         cursor.setNotificationUri(getContext().getContentResolver(), uri);  // <-- allows CursorLoader to auto reload
         return cursor;
+    }
+
+    private Cursor performJoinQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
+        SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
+        builder.setTables(UriJoiner.joinStringFrom(uri));
+        return builder.query(FSDBHelper.inst().getReadableDatabase(),
+                projection,
+                qc.getSelection(),
+                qc.getSelectionArgs(),
+                null,
+                null,
+                sortOrder);
+    }
+
+    private Cursor performQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
+        final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
+        return FSDBHelper.inst().getReadableDatabase().query(tableName, projection, qc.getSelection(), qc.getSelectionArgs(), null, null, sortOrder);
     }
 }

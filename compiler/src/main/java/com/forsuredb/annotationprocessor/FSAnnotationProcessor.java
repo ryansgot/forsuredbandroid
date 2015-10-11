@@ -49,7 +49,6 @@ public class FSAnnotationProcessor extends AbstractProcessor {
     private static final String LOG_TAG = FSAnnotationProcessor.class.getSimpleName();
 
     private static boolean setterApisCreated = false;          // <-- maintain state so setter APIs don't have to be created more than once
-    private static boolean joinApisCreated = false;            // <-- maintain state so join APIs don't have to be created more than once
     private static boolean migrationsCreated = false;          // <-- maintain state so migrations don't have to be created more than once
     private static boolean tableCreatorClassCreated = false;   // <-- maintain state so TableCreator class does not have to be created more than once
     private static boolean finderClassesCreated = false;       // <-- maintain state so finder classes don't have to be created more than once
@@ -79,9 +78,6 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         if (!setterApisCreated) {
             createSetterApis(ve, pc);
         }
-        if (!joinApisCreated) {
-            createJoinApis(ve, pc);
-        }
         if (!migrationsCreated && Boolean.getBoolean("createMigrations")) {
             createMigrations(ve, pc);
         }
@@ -97,14 +93,6 @@ public class FSAnnotationProcessor extends AbstractProcessor {
         if (!forSureClassCreated) {
             createForSureClass(ve, pc);
         }
-    }
-
-    private void createJoinApis(VelocityEngine ve, ProcessingContext pc) {
-        String resultParameter = System.getProperty("resultParameter");
-        for (JoinInfo join : pc.allJoins()) {
-            new JoinGenerator(join, resultParameter, processingEnv).generate(ve);
-        }
-        joinApisCreated = true; // <-- maintain state so join APIs don't have to be created more than once
     }
 
     private void createSetterApis(VelocityEngine ve, ProcessingContext pc) {
@@ -140,7 +128,7 @@ public class FSAnnotationProcessor extends AbstractProcessor {
     private void createResolverClasses(VelocityEngine ve, ProcessingContext pc) {
         String resultParameter = System.getProperty("resultParameter");
         for (TableInfo tableInfo : pc.allTables()) {
-            new ResolverGenerator(tableInfo, resultParameter, processingEnv).generate(ve);
+            new ResolverGenerator(tableInfo, pc.allJoins(), resultParameter, processingEnv).generate(ve);
         }
         resolverClassesCreated = true;
     }
