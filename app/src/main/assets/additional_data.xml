@@ -1,0 +1,22 @@
+<resources>
+    <additional_data _id="1" profile_info_id="5" string_column="profile_info_id = 5" int_column="42" long_column="1000042" />
+    <additional_data _id="2" profile_info_id="4" string_column="profile_info_id = 4" int_column="43" long_column="1000043" />
+    <additional_data _id="3" profile_info_id="3" string_column="profile_info_id = 3" int_column="44" long_column="1000044" />
+    <additional_data _id="4" profile_info_id="2" string_column="profile_info_id = 2" int_column="45" long_column="1000045" />
+    <additional_data _id="5" profile_info_id="1" string_column="profile_info_id = 1" int_column="46" long_column="1000046" />
+    <additional_data _id="6" profile_info_id="6" string_column="profile_info_id = 6" int_column="47" long_column="1000047" />
+    <additional_data _id="7" profile_info_id="7" string_column="profile_info_id = 7" int_column="48" long_column="1000048" />
+    <additional_data _id="8" profile_info_id="8" string_column="profile_info_id = 8" int_column="49" long_column="1000049" />
+    <additional_data _id="9" profile_info_id="9" string_column="profile_info_id = 9" int_column="50" long_column="1000050" />
+    <additional_data _id="10" profile_info_id="10" string_column="profile_info_id = 10" int_column="51" long_column="1000051" />
+    <additional_data _id="11" profile_info_id="15" string_column="profile_info_id = 11" int_column="52" long_column="1000052" />
+    <additional_data _id="12" profile_info_id="14" string_column="profile_info_id = 12" int_column="53" long_column="1000053" />
+    <additional_data _id="13" profile_info_id="13" string_column="profile_info_id = 13" int_column="54" long_column="1000054" />
+    <additional_data _id="14" profile_info_id="12" string_column="profile_info_id = 14" int_column="55" long_column="1000055" />
+    <additional_data _id="15" profile_info_id="11" string_column="profile_info_id = 15" int_column="56" long_column="1000056" />
+    <additional_data _id="16" profile_info_id="16" string_column="profile_info_id = 16" int_column="57" long_column="1000057" />
+    <additional_data _id="17" profile_info_id="17" string_column="profile_info_id = 17" int_column="58" long_column="1000058" />
+    <additional_data _id="18" profile_info_id="18" string_column="profile_info_id = 18" int_column="59" long_column="1000059" />
+    <additional_data _id="19" profile_info_id="19" string_column="profile_info_id = 19" int_column="60" long_column="1000060" />
+    <additional_data _id="20" profile_info_id="20" string_column="profile_info_id = 20" int_column="61" long_column="1000061" />
+</resources>

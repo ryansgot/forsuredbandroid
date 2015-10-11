@@ -16,6 +16,7 @@ import com.forsuredb.api.Retriever;
 import com.forsuredb.api.SaveResult;
 import com.forsuredb.testapp.adapter.TestProfileInfoCursorAdapter;
 import com.forsuredb.testapp.adapter.TestUserCursorAdapter;
+import com.forsuredb.testapp.model.AdditionalDataTable;
 import com.forsuredb.testapp.model.ProfileInfoTable;
 import com.forsuredb.testapp.model.UserTable;
 
@@ -68,14 +69,17 @@ public class TestActivity extends ActionBarActivity {
         }
         joinRetriever.close();
 
-        Log.i(LOG_TAG, "Example of autojoin (INNER) starting from Profile Info Table");
-        joinRetriever = profileInfoTable().joinUserTable(FSJoin.Type.INNER).get();
-        if (joinRetriever.moveToFirst()) {
+        Log.i(LOG_TAG, "Example of autojoin chain (INNER) starting from Profile Info Table");
+        Retriever joinChainRetriever = profileInfoTable().joinUserTable(FSJoin.Type.INNER).joinAdditionalDataTable(FSJoin.Type.INNER).get();
+        if (joinChainRetriever.moveToFirst()) {
             do {
-                logProfileInfoTableJoinUserTable(userTable().getApi(), profileInfoTable().getApi(), joinRetriever);
-            } while(joinRetriever.moveToNext());
+                logProfileInfoTableJoinUserTableJoinAdditionalDataTable(userTable().getApi(),
+                                                                        profileInfoTable().getApi(),
+                                                                        additionalDataTable().getApi(),
+                                                                        joinChainRetriever);
+            } while(joinChainRetriever.moveToNext());
         }
-        joinRetriever.close();
+        joinChainRetriever.close();
     }
 
     @Override
@@ -240,6 +244,36 @@ public class TestActivity extends ActionBarActivity {
                 .append("; profile_info_table.user_id = ").append(profileInfoTable.userId(retriever))
                 .append("; profile_info_table.email_address = ").append(profileInfoTable.emailAddress(retriever))
                 .append("; profile_info_table.binary_data = ").append(profileInfoTable.binaryData(retriever))
+                .toString());
+    }
+
+    private void logProfileInfoTableJoinUserTableJoinAdditionalDataTable(UserTable userTable, ProfileInfoTable profileInfoTable, AdditionalDataTable additionalDataTable, Retriever retriever) {
+        Log.i(LOG_TAG, new StringBuilder("User Table:\n")
+                .append("user_table._id = ").append(userTable.id(retriever))
+                .append("; user_table.created = ").append(userTable.created(retriever))
+                .append("; user_table.deleted = ").append(userTable.deleted(retriever))
+                .append("; user_table.modified = ").append(userTable.modified(retriever))
+                .append("; user_table.global_id = ").append(userTable.globalId(retriever))
+                .append("; user_table.login_count = ").append(userTable.loginCount(retriever))
+                .append("; user_table.app_rating = ").append(userTable.appRating(retriever))
+                .append("; user_table.competitor_app_rating = ").append(userTable.competitorAppRating(retriever))
+                .append("\nProfile Info Table:\n")
+                .append("profile_info_table._id = ").append(profileInfoTable.id(retriever))
+                .append("; profile_info_table.created = ").append(profileInfoTable.created(retriever))
+                .append("; profile_info_table.deleted = ").append(profileInfoTable.deleted(retriever))
+                .append("; profile_info_table.modified = ").append(profileInfoTable.modified(retriever))
+                .append("; profile_info_table.user_id = ").append(profileInfoTable.userId(retriever))
+                .append("; profile_info_table.email_address = ").append(profileInfoTable.emailAddress(retriever))
+                .append("; profile_info_table.binary_data = ").append(profileInfoTable.binaryData(retriever))
+                .append("\nAdditional Data Table:\n")
+                .append("additional_data_table._id = ").append(additionalDataTable.id(retriever))
+                .append("; additional_data_table.deleted = ").append(additionalDataTable.deleted(retriever))
+                .append("; additional_data_table.modified = ").append(additionalDataTable.modified(retriever))
+                .append("; additional_data_table.created = ").append(additionalDataTable.created(retriever))
+                .append("; additional_data_table.int_column = ").append(additionalDataTable.intColumn(retriever))
+                .append("; additional_data_table.long_column = ").append(additionalDataTable.longColumn(retriever))
+                .append("; additional_data_table.string_column = ").append(additionalDataTable.stringColumn(retriever))
+                .append("; additional_data_table.profile_info_id = ").append(additionalDataTable.profileInfoId(retriever))
                 .toString());
     }
 }
