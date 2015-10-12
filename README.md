@@ -1,7 +1,7 @@
 # forsuredb
 forsuredb is a project designed to take a lot of the work out of database programming. Inspired mainly by the retrofit project (https://github.com/square/retrofit) and ActiveRecord (https://github.com/rails/rails/tree/master/activerecord), forsuredb is intended to be a typesafe, quick means of defining and working with data. It is not intended to replace existing frameworks, but to work within them (see the Android Development subheading below).
 
-Note that if you're upgrading from forsuredbandroid 0.0.3 and forsuredbcompiler 0.0.3 to 0.1.0 of both, then you have to clear all migrations and run ```./gradlew dbmigrate```. You'll also have to change all calls to ```ForSure.resolve```. This sucks, but it's a consequence of getting better. The API will be solid when version 1.0.0 is released.
+Note that if you're upgrading from forsuredbandroid 0.0.3 and forsuredbcompiler 0.0.3 to 0.1.0 or greater of both, then you have to clear all migrations and run ```./gradlew dbmigrate```. You'll also have to change all calls to ```ForSure.resolve```. This sucks, but it's a consequence of getting better. The API will be solid when version 1.0.0 is released.
 
 ## Possible Use Cases
 1. Android Development
@@ -50,10 +50,10 @@ android {
 dependencies {
     compile 'com.google.guava:guava:18.0' // <-- forsuredbandroid depends on this, but the version probably doesn't matter much
     
-    compile 'com.fsryan:forsuredbandroid:0.1.0@aar'
-    compile 'com.fsryan:forsuredbcompiler:0.1.0'
+    compile 'com.fsryan:forsuredbandroid:0.2.0@aar'
+    compile 'com.fsryan:forsuredbcompiler:0.2.0'
     
-    apt 'com.fsryan:forsuredbcompiler:0.1.0'
+    apt 'com.fsryan:forsuredbcompiler:0.2.0'
 }
 
 forsuredb {
@@ -156,6 +156,19 @@ As of this README, you cannot add more than one ```@ForeignKey``` column to the 
 ```
 ./gradlew dbmigrate
 ```
+### Autojoins
+"Autojoins" are generated for you between tables that have a ```@ForeignKey``` relationship. They are expressed as methods added to the ```Resolver``` implementations that are generated at compile time. What this means for you is that, for free, you get a fluent API for joins. For example, if we have the ```UserTable``` and ```ProfileInfoTable``` ```FSGetApi``` interface definitions above, then we can do the following to perform a join query:
+```java
+    Retriever retriever = ForSure.profileInfoTable().joinMainTable(FSJoin.Type.INNER).get();
+    if (retriever.moveToFirst()) {
+        do {
+            // you can get related UserTable fields and ProfileInfoTable fields from the same retriever
+            String emailAddress = ForSure.profileInfoTable().getApi().emailAddress(retriever);
+            int loginCount = ForSure.userTable().getApi().loginCount(retriever);
+        } while (retriever.moveToNext())
+    }
+    retriever.close();
+```
 ### Static Data
 You can define static data as XML in your assets directory. for example, app/src/main/assets/profile_info.xml is below:
 ```xml
@@ -186,11 +199,15 @@ For Android projects, this means that even when the user deletes all data, after
 - Add a table
 - Add a column to a table
 - Add a unique index column to a table
+- Make an existing column a unique index
 - Add a foreign key column to a table
 
 ## Coming up
 - stricter testing
 - support for more types of migrations
 - an example java (non-Android) project and corresponding forsuredbjava library
-- automatically-generated join interfaces based upon foreign key relationships
+- more robust where-clause editing when doing joins
+- Retriever Loader for Android (which will work like CursorLoader)
+- A solution for the issue adding multiple ```@ForeignKey``` annotations to the same ```FSGetApi``` extension at once
+- support for multiple autojoins between the same tables
 - plugin-style database support extensions
