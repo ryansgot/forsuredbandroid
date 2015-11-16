@@ -1,7 +1,6 @@
 package com.forsuredb.provider;
 
 import android.net.Uri;
-import android.util.Log;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
@@ -10,8 +9,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 /*package*/ class JoinUriParser {
-
-    private static final String LOG_TAG = JoinUriParser.class.getSimpleName();
 
     private final Uri uri;
     private final String baseTableName;
