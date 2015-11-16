@@ -17,7 +17,7 @@ import com.forsuredb.api.FSJoin;
 import com.forsuredb.api.Retriever;
 import com.forsuredb.api.SaveResult;
 import com.forsuredb.cursor.FSCursor;
-import com.forsuredb.provider.FSCursorLoader;
+import com.forsuredb.cursor.FSCursorLoader;
 import com.forsuredb.testapp.adapter.TestProfileInfoCursorAdapter;
 import com.forsuredb.testapp.adapter.TestUserCursorAdapter;
 import com.forsuredb.testapp.model.AdditionalDataTable;

@@ -1,4 +1,4 @@
-package com.forsuredb.provider;
+package com.forsuredb.cursor;
 
 import android.content.AsyncTaskLoader;
 import android.content.Context;
@@ -11,6 +11,7 @@ import com.forsuredb.api.FSSaveApi;
 import com.forsuredb.api.Finder;
 import com.forsuredb.api.Resolver;
 import com.forsuredb.cursor.FSCursor;
+import com.forsuredb.provider.UriEvaluator;
 
 import java.util.List;
 
@@ -76,6 +77,15 @@ public class FSCursorLoader<G extends FSGetApi, S extends FSSaveApi<Uri>, F exte
         }
     }
 
+    /**
+     * <p>
+     *     This is only the {@link G} extension of {@link FSGetApi}, so it will only give you
+     *     methods to get the columns of the base table (the one originally queried) our of the
+     *     {@link FSCursor}. In other words, you will have to get your own references to the
+     *     {@link FSGetApi} extensions that are capable of getting fields out of the {@link FSCursor}.
+     * </p>
+     * @return an instance of the {@link G} extension of {@link FSGetApi} for the base table
+     */
     public G getApi() {
         return resolver.getApi();
     }

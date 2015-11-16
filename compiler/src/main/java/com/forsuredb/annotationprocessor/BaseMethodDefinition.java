@@ -4,18 +4,18 @@ package com.forsuredb.annotationprocessor;
 
     private static final String TAB = "    ";
 
-    private final String scope;
+    private final String access;
     private final String returnType;
     private final String name;
     private final Pair<String, String>[] parameters;
     private final int baseTabs;
 
-    public BaseMethodDefinition(String scope, String returnType, String name, Pair<String, String>... parameters) {
-        this(scope, returnType, name, 1, parameters);
+    public BaseMethodDefinition(String access, String returnType, String name, Pair<String, String>... parameters) {
+        this(access, returnType, name, 1, parameters);
     }
 
-    public BaseMethodDefinition(String scope, String returnType, String name, int baseTabs, Pair<String, String>... parameters) {
-        this.scope = scope;
+    public BaseMethodDefinition(String access, String returnType, String name, int baseTabs, Pair<String, String>... parameters) {
+        this.access = access;
         this.returnType = returnType;
         this.name = name;
         this.baseTabs = baseTabs;
@@ -28,7 +28,7 @@ package com.forsuredb.annotationprocessor;
             buf.append(TAB);
         }
 
-        buf.append(scope).append(" ").append(returnType).append(" ").append(name).append("(");
+        buf.append(access).append(" ").append(returnType).append(" ").append(name).append("(");
 
         for (int i = 0; i < parameters.length; i++) {
             if (i != 0) {
