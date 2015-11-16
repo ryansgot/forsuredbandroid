@@ -1,7 +1,9 @@
 package com.forsuredb.testapp;
 
 import android.app.AlertDialog;
+import android.app.LoaderManager;
 import android.content.DialogInterface;
+import android.content.Loader;
 import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -14,6 +16,8 @@ import android.widget.ListView;
 import com.forsuredb.api.FSJoin;
 import com.forsuredb.api.Retriever;
 import com.forsuredb.api.SaveResult;
+import com.forsuredb.cursor.FSCursor;
+import com.forsuredb.provider.FSCursorLoader;
 import com.forsuredb.testapp.adapter.TestProfileInfoCursorAdapter;
 import com.forsuredb.testapp.adapter.TestUserCursorAdapter;
 import com.forsuredb.testapp.model.AdditionalDataTable;
@@ -28,10 +32,14 @@ import static com.forsuredb.testapp.ForSure.*;
 
 public class TestActivity extends ActionBarActivity {
 
+    private static final int LOADER_ID = 1934;
+
     private static final String LOG_TAG = TestActivity.class.getSimpleName();
 
     private TestUserCursorAdapter userCursorAdapter;
     private TestProfileInfoCursorAdapter profileInfoCursorAdapter;
+
+    private JoinLoader joinLoader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,51 +50,8 @@ public class TestActivity extends ActionBarActivity {
         ((ListView) findViewById(R.id.user_list_view)).setAdapter(userCursorAdapter);
         profileInfoCursorAdapter = new TestProfileInfoCursorAdapter(this);
         ((ListView) findViewById(R.id.profile_info_list_view)).setAdapter(profileInfoCursorAdapter);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        userCursorAdapter.changeCursor(userTable().get());
-        profileInfoCursorAdapter.changeCursor(profileInfoTable().get());
-
-        Log.i(LOG_TAG, "userTable().tableLocator() = " + userTable().tableLocator());
-        Log.i(LOG_TAG, "Example of fluent API");
-        Retriever retriever = userTable().find().byAppRatingBetween(4.5D).andInclusive(5.3D).andFinally().get();
-        if (retriever.moveToFirst()) {
-            do {
-                logUser(userTable().getApi(), retriever);
-            } while(retriever.moveToNext());
-        }
-        retriever.close();
-
-        Log.i(LOG_TAG, "Example of autojoin (INNER) starting from User Table");
-        Retriever joinRetriever = userTable().joinProfileInfoTable(FSJoin.Type.INNER).get();
-        if (joinRetriever.moveToFirst()) {
-            do {
-                logProfileInfoTableJoinUserTable(userTable().getApi(), profileInfoTable().getApi(), joinRetriever);
-            } while(joinRetriever.moveToNext());
-        }
-        joinRetriever.close();
-
-        Log.i(LOG_TAG, "Example of autojoin chain (INNER) starting from Profile Info Table");
-        Retriever joinChainRetriever = profileInfoTable().joinUserTable(FSJoin.Type.INNER).joinAdditionalDataTable(FSJoin.Type.INNER).get();
-        if (joinChainRetriever.moveToFirst()) {
-            do {
-                logProfileInfoTableJoinUserTableJoinAdditionalDataTable(userTable().getApi(),
-                                                                        profileInfoTable().getApi(),
-                                                                        additionalDataTable().getApi(),
-                                                                        joinChainRetriever);
-            } while(joinChainRetriever.moveToNext());
-        }
-        joinChainRetriever.close();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        userCursorAdapter.changeCursor(null);
-        profileInfoCursorAdapter.changeCursor(null);
+        joinLoader = new JoinLoader();
+        getLoaderManager().initLoader(LOADER_ID, null, joinLoader);
     }
 
     public void onEditUserTableClicked(View v) {
@@ -96,7 +61,6 @@ public class TestActivity extends ActionBarActivity {
                 try {
                     long id = getIdFromDialog(dialogInterface);
                     inputRandomDataForUser(id);
-                    profileInfoCursorAdapter.changeCursor(profileInfoTable().get());
                 } catch (NumberFormatException nfe) {
                     return;
                 } finally {
@@ -109,8 +73,6 @@ public class TestActivity extends ActionBarActivity {
                 try {
                     long id = getIdFromDialog(dialogInterface);
                     Log.i(LOG_TAG, "user rows deleted: " + userTable().find().byId(id).andFinally().set().hardDelete());
-                    profileInfoCursorAdapter.changeCursor(profileInfoTable().get());
-                    userCursorAdapter.changeCursor(userTable().get());
                 } catch (NumberFormatException nfe) {
                     return;
                 } finally {
@@ -127,7 +89,6 @@ public class TestActivity extends ActionBarActivity {
                 try {
                     long id = getIdFromDialog(dialogInterface);
                     inputRandomDataForProfileInfo(id);
-                    userCursorAdapter.changeCursor(userTable().get());
                 } catch (NumberFormatException nfe) {
                     return;
                 } finally {
@@ -140,8 +101,6 @@ public class TestActivity extends ActionBarActivity {
                 try {
                     long id = getIdFromDialog(dialogInterface);
                     logResult(profileInfoTable().find().byId(id).andFinally().set().softDelete());
-                    profileInfoCursorAdapter.changeCursor(profileInfoTable().get());
-                    userCursorAdapter.changeCursor(userTable().get());
                 } catch (NumberFormatException nfe) {
                     return;
                 } finally {
@@ -168,8 +127,6 @@ public class TestActivity extends ActionBarActivity {
          * The new record will be upserted--in other words, if a record with the specified id already exists, it will be
          * overwritten. Otherwise, it will insert.
          */
-
-        userCursorAdapter.changeCursor(userTable().get());   // <-- Update user list
     }
 
     private void inputRandomDataForProfileInfo(long id) {
@@ -188,8 +145,6 @@ public class TestActivity extends ActionBarActivity {
          * The new record will be upserted--in other words, if a record with the specified id already exists, it will be
          * overwritten. Otherwise, it will insert.
          */
-
-        profileInfoCursorAdapter.changeCursor(profileInfoTable().get());    // <-- Update profile info list
     }
 
     private long getIdFromDialog(DialogInterface dialogInterface) throws NumberFormatException {
@@ -275,5 +230,37 @@ public class TestActivity extends ActionBarActivity {
                 .append("; additional_data_table.string_column = ").append(additionalDataTable.stringColumn(retriever))
                 .append("; additional_data_table.profile_info_id = ").append(additionalDataTable.profileInfoId(retriever))
                 .toString());
+    }
+
+    private class JoinLoader implements LoaderManager.LoaderCallbacks<FSCursor> {
+
+        private final ProfileInfoTable profileInfoTable = profileInfoTable().getApi();
+        private final AdditionalDataTable additionalDataTable = additionalDataTable().getApi();
+        private final UserTable userTable = userTable().getApi();
+
+        @Override
+        public Loader<FSCursor> onCreateLoader(int id, Bundle args) {
+            Log.i(LOG_TAG, "JoinLoader.onCreateLoader");
+            return new FSCursorLoader<>(TestActivity.this, profileInfoTable().joinUserTable(FSJoin.Type.INNER).joinAdditionalDataTable(FSJoin.Type.INNER));
+        }
+
+        @Override
+        public void onLoadFinished(Loader<FSCursor> loader, FSCursor data) {
+            Log.i(LOG_TAG, "JoinLoader.onLoadFinished");
+            if (data != null && data.moveToFirst()) {
+                do {
+                    logProfileInfoTableJoinUserTableJoinAdditionalDataTable(userTable, profileInfoTable, additionalDataTable, data);
+                } while (data.moveToNext());
+                profileInfoCursorAdapter.changeCursor(data);
+                userCursorAdapter.changeCursor(data);
+            } else {
+                Log.i(LOG_TAG, "data was null or empty");
+            }
+        }
+
+        @Override
+        public void onLoaderReset(Loader<FSCursor> loader) {
+            Log.i(LOG_TAG, "JoinLoader.onLoaderReset");
+        }
     }
 }

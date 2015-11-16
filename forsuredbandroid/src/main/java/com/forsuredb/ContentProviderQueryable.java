@@ -75,8 +75,7 @@ import java.util.List;
         final String[] p = formatProjections(projections);
         final String s = selection == null ? null : selection.where();
         final String[] sArgs = selection == null ? null : selection.replacements();
-        final String baseTableName = ForSureAndroidInfoFactory.inst().tableName(resource);
-        return new FSCursor(appContext.getContentResolver().query(UriJoiner.join(resource, baseTableName, joins), p, s, sArgs, sortOrder));
+        return new FSCursor(appContext.getContentResolver().query(resource, p, s, sArgs, sortOrder));
     }
 
     private String[] formatProjections(List<FSProjection> projections) {

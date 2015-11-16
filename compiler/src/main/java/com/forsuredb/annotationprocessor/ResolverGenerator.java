@@ -46,9 +46,9 @@ public class ResolverGenerator extends BaseGenerator<JavaFileObject> {
         List<JoinMethodDefinition> ret = new ArrayList<>();
         for (JoinInfo join : allJoins) {
             if (join.getParentTable().getTableName().equals(table.getTableName())) {
-                ret.add(new JoinMethodDefinition(getOutputClassName(false), join, true));
+                ret.add(new JoinMethodDefinition(getOutputClassName(false), join, true, resultParameter));
             } else if (join.getChildTable().getTableName().equals(table.getTableName())) {
-                ret.add(new JoinMethodDefinition(getOutputClassName(false), join, false));
+                ret.add(new JoinMethodDefinition(getOutputClassName(false), join, false, resultParameter));
             }
         }
         return ret;
@@ -74,22 +74,23 @@ public class ResolverGenerator extends BaseGenerator<JavaFileObject> {
         return ret;
     }
 
-    private static class JoinMethodDefinition {
+    private static class JoinMethodDefinition extends BaseMethodDefinition {
 
-        private final String returnType;
         private final JoinInfo join;
+        private final String resultParameter;
         private final boolean isParent;
 
-        public JoinMethodDefinition(String returnType, JoinInfo join, boolean isParent) {
-            this.returnType = returnType;
-            this.join = join;
+        public JoinMethodDefinition(String returnType, JoinInfo join, boolean isParent, String resultParameter) {
+            super("public", returnType, methodName(join, isParent), new Pair<>("final FSJoin.Type", "type"));
             this.isParent = isParent;
+            this.join = join;
+            this.resultParameter = resultParameter;
         }
 
         @Override
         public String toString() {
-            return new StringBuilder(doc()).append(newLine(1))
-                    .append("public ").append(returnType).append(" ").append(methodName()).append("(final FSJoin.Type type) {").append(newLine(2))
+            return new StringBuilder(doc()).append(newLine(0))
+                    .append(signature()).append(" {").append(newLine(2))
                         .append("projections.add(").append(getOtherResolverClass()).append(".PROJECTION);").append(newLine(2))
                         .append("joins.add(new FSJoin() {").append(newLine(3))
                             .append("@Override").append(newLine(3))
@@ -113,7 +114,8 @@ public class ResolverGenerator extends BaseGenerator<JavaFileObject> {
                                 .append("return \"").append(join.getChildColumn().getColumnName()).append("\";").append(newLine(3))
                             .append("}").append(newLine(2))
                         .append("});").append(newLine(2))
-                        .append("return this;").append(newLine(1))
+                        .append("lookupResource = (").append(resultParameter).append(") infoFactory.locatorWithJoins(lookupResource, joins);").append(newLine(2))
+                    .append("return this;").append(newLine(1))
                     .append("}")
                     .toString();
         }
@@ -122,21 +124,13 @@ public class ResolverGenerator extends BaseGenerator<JavaFileObject> {
             return (isParent ? join.getChildTable().getSimpleClassName() : join.getParentTable().getSimpleClassName()) + "Resolver";
         }
 
-        private String methodName() {
+        private static String methodName(JoinInfo join, boolean isParent) {
             return "join" + (isParent ? join.getChildTable().getSimpleClassName() : join.getParentTable().getSimpleClassName());
         }
 
         private String doc() {
             // TODO
             return "";
-        }
-
-        private String newLine(int tabs) {
-            final StringBuilder buf = new StringBuilder("\n");
-            for (int i = 0; i < tabs; i++) {
-                buf.append("    ");
-            }
-            return buf.toString();
         }
     }
 }

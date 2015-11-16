@@ -19,9 +19,11 @@ package com.forsuredb.provider;
 
 import android.net.Uri;
 
+import com.forsuredb.ForSureAndroidInfoFactory;
 import com.forsuredb.api.FSJoin;
 import com.google.common.base.Strings;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -52,6 +54,18 @@ public class UriEvaluator {
         }
 
         return true;
+    }
+
+    public static List<Uri> tableReferences(Uri uri) {
+        if (uri == null) {
+            return null;
+        }
+
+        List<Uri> tableUris = new ArrayList<>();
+        for (String joinedTable : new JoinUriParser(uri).getJoinedTableNames()) {
+            tableUris.add(ForSureAndroidInfoFactory.inst().tableResource(joinedTable));
+        }
+        return tableUris;
     }
 
     /**

@@ -56,16 +56,23 @@ public class ${className} implements Resolver<${resultParameter}, ${getApiClass}
 
     @Override
     public Retriever get() {
-        final FSSelection selection = finder == null ? new FSSelection.SelectAll() : finder.selection();
-        finder = null;  // <-- When a finder's selection method is called, it must be nullified
-        final FSQueryable queryable = infoFactory.createQueryable(lookupResource);
         try {
-            projections.add(PROJECTION);
-            return joins.size() == 0 ? queryable.query(PROJECTION, selection, null) : queryable.query(joins, projections, selection, null);
+            return preserveQueryStateAndGet();
         } finally {
+            finder = null;  // <-- When a finder's selection method is called, it must be nullified
             joins.clear();  // <-- the state of the joins must be empty at the start of each query
             projections.clear();    // <-- the state of the projections must be empty at the start of each query
+            lookupResource = tableLocator();
         }
+    }
+
+    @Override
+    public Retriever preserveQueryStateAndGet() {
+        final FSSelection selection = finder == null ? new FSSelection.SelectAll() : finder.selection();
+        final FSQueryable queryable = infoFactory.createQueryable(lookupResource);
+        projections.add(PROJECTION);
+        return joins.size() == 0 ? queryable.query(PROJECTION, selection, null)
+                                 : queryable.query(joins, projections, selection, null);
     }
 
     @Override
@@ -91,6 +98,11 @@ public class ${className} implements Resolver<${resultParameter}, ${getApiClass}
     @Override
     public ${resultParameter} recordLocator(long id) {
         return (${resultParameter}) infoFactory.locatorFor(TABLE_NAME, id);
+    }
+
+    @Override
+    public ${resultParameter} currentLocator() {
+        return lookupResource;
     }
 #foreach($joinMethodDefinition in $joinMethodDefinitions)
 

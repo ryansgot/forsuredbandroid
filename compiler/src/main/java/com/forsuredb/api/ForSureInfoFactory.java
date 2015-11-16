@@ -17,10 +17,13 @@
  */
 package com.forsuredb.api;
 
+import java.util.List;
+
 public interface ForSureInfoFactory<U, R extends RecordContainer> {
     FSQueryable<U, R> createQueryable(U resource);
     R createRecordContainer();
     U tableResource(String tableName);
     U locatorFor(String tableName, long id);
+    U locatorWithJoins(U locator, List<FSJoin> joins);
     String tableName(U resource);
 }

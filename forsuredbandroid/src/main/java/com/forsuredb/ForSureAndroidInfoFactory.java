@@ -20,10 +20,14 @@ package com.forsuredb;
 import android.content.Context;
 import android.net.Uri;
 
+import com.forsuredb.api.FSJoin;
 import com.forsuredb.api.FSQueryable;
 import com.forsuredb.api.ForSureInfoFactory;
 import com.forsuredb.provider.FSContentValues;
+import com.forsuredb.provider.UriJoiner;
 import com.google.common.base.Strings;
+
+import java.util.List;
 
 /**
  * <p>
@@ -84,6 +88,11 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
     @Override
     public Uri locatorFor(String tableName, long id) {
         return Uri.withAppendedPath(tableResource(tableName), Long.toString(id));
+    }
+
+    @Override
+    public Uri locatorWithJoins(Uri uri, List<FSJoin> joins) {
+        return UriJoiner.join(uri, tableName(uri), joins);
     }
 
     @Override
