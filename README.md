@@ -207,7 +207,7 @@ For Android projects, this means that even when the user deletes all data, after
 - support for more types of migrations
 - an example java (non-Android) project and corresponding forsuredbjava library
 - more robust where-clause editing when doing joins
-- Retriever Loader for Android (which will work like CursorLoader)
+- JavaPoet integration for cleaner source file generation code
 - A solution for the issue adding multiple ```@ForeignKey``` annotations to the same ```FSGetApi``` extension at once
 - support for multiple autojoins between the same tables
 - plugin-style database support extensions
