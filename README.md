@@ -159,7 +159,7 @@ As of this README, you cannot add more than one ```@ForeignKey``` column to the 
 ### Autojoins
 "Autojoins" are generated for you between tables that have a ```@ForeignKey``` relationship. They are expressed as methods added to the ```Resolver``` implementations that are generated at compile time. What this means for you is that, for free, you get a fluent API for joins. For example, if we have the ```UserTable``` and ```ProfileInfoTable``` ```FSGetApi``` interface definitions above, then we can do the following to perform a join query:
 ```java
-    Retriever retriever = ForSure.profileInfoTable().joinMainTable(FSJoin.Type.INNER).get();
+    Retriever retriever = ForSure.profileInfoTable().joinUserTable(FSJoin.Type.INNER).get();
     if (retriever.moveToFirst()) {
         do {
             // you can get related UserTable fields and ProfileInfoTable fields from the same retriever
