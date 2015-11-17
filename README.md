@@ -50,10 +50,10 @@ android {
 dependencies {
     compile 'com.google.guava:guava:18.0' // <-- forsuredbandroid depends on this, but the version probably doesn't matter much
     
-    compile 'com.fsryan:forsuredbandroid:0.2.0@aar'
-    compile 'com.fsryan:forsuredbcompiler:0.2.0'
+    compile 'com.fsryan:forsuredbandroid:0.2.1@aar'
+    compile 'com.fsryan:forsuredbcompiler:0.2.1'
     
-    apt 'com.fsryan:forsuredbcompiler:0.2.0'
+    apt 'com.fsryan:forsuredbcompiler:0.2.1'
 }
 
 forsuredb {
