@@ -1,25 +1,13 @@
 # forsuredb
-forsuredb is a project designed to take a lot of the work out of database programming. Inspired mainly by the retrofit project (https://github.com/square/retrofit) and ActiveRecord (https://github.com/rails/rails/tree/master/activerecord), forsuredb is intended to be a typesafe, quick means of defining and working with data. It is not intended to replace existing frameworks, but to work within them (see the Android Development subheading below).
-
-Note that if you're upgrading from forsuredbandroid 0.0.3 and forsuredbcompiler 0.0.3 to 0.1.0 or greater of both, then you have to clear all migrations and run ```./gradlew dbmigrate```. You'll also have to change all calls to ```ForSure.resolve```. This sucks, but it's a consequence of getting better. The API will be solid when version 1.0.0 is released.
-
-## Possible Use Cases
-1. Android Development
-  * The integration work has already been done for you in the forsuredbandroid module
-2. Some other java project
-  * There is some integration work remaining, but you should be able to get a handle for how to do it by taking a look at the forsuredbandroid module.
-
-### Android Development
-If you always follow the examples available to you via http://developer.android.com/ or many other instructional sites, then you will find yourself writing highly verbose code that works its way into being unreadable quickly. You'll also end up writing one-off code a lot of places when you do migrations. The code in the compiler java library and the forsuredbandroid android library make this sort of programming quite a bit easier.
+For an in-depth explanation of the project, see [the project wiki](https://github.com/ryansgot/forsuredb/wiki). The following is just an Android quick-setup guide.
 
 ## Using forsuredb in Android
-### Setup
 - Create a new Android project
 - Set up the project build.gradle repositories and dependencies like this:
 ```groovy
 buildscript {
     repositories {
-        jcenter() // <-- hosts the forsuredbplugin binary
+        jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.2.3'
@@ -30,7 +18,7 @@ buildscript {
 
 allprojects {
     repositories {
-        jcenter() // <-- hosts the forsuredbcompiler and forsuredbandroid binaries
+        jcenter()
     }
 }
 ```
@@ -65,19 +53,19 @@ forsuredb {
     appProjectDirectory = 'app'                       // Your app's base directory
 }
 ```
-- Use the default content provider by declaring it in your app's AndroidManifest.xml file:
-```xml
-<provider
-    android:name="com.forsuredb.provider.FSDefaultProvider"
-    android:authorities="com.forsuredb.testapp.content"
-    android:enabled="true"
-    android:exported="false" />
-```
-- Specify your application's ```android:name``` attribute in your app's AndroidManifest.xml file and create the corresponding extension of the ```Application``` class:
+- Declare an application class and the ```FSDefaultProvider``` in your app's AndroidManifest.xml file:
 ```xml
 <application
         android:name=".App" >
+  <!-- ... -->
+  <provider
+      android:name="com.forsuredb.provider.FSDefaultProvider"
+      android:authorities="com.forsuredb.testapp.content"
+      android:enabled="true"
+      android:exported="false" />
+</application
 ```
+- Create the App class that you declared above
 ```java
 public class App extends Application {
 
@@ -105,96 +93,6 @@ public interface UserTable extends FSGetApi {   // <-- you must extend FSGetApi 
 ```
 ./gradlew dbmigrate
 ```
-After you do this, then you can retrieve records from the database by:
-```java
-        UserTable tableApi = ForSure.userTable().getApi();
-        Retriever retriever = userTable().find().byAppRatingBetween(4.5D).andInclusive(5.3D).andFinally().get();
-        if (retriever.moveToFirst()) {
-            do {
-                double appRating = tableApi.appRating(retriever);
-                long id = tableApi.id(retriever);  // <-- you got this for free by extending FSGetApi
-            } while(retriever.moveToNext());
-        }
-        retriever.close();
-/* etc */
-```
-You can insert to the database by:
-```java
-SaveResult<Uri> sr = ForSure.userTable().set()
-        .appRating(1.25D)
-        .competitorAppRating(new BigDecimal(1.5F))
-        .globalId(234846L)
-        .id(1L)
-        .loginCount(1234)
-        .save();
-```
-You can update a record or records in the database by finding the records before calling set():
-```java
-SaveResult<Uri> sr = ForSure.userTable.find().byId(1).andFinally().set()
-        .appRating(1.25D)
-        .competitorAppRating(new BigDecimal(1.5F))
-        .globalId(234846L)
-        .id(1L)
-        .loginCount(1234)
-        .save();
-```
-### Migration
-Migrations are generated (if necessary) for you as XML assets when you run ```./gradlew dbmigrate```. These XML assets will then be placed in your classpath next time you build. forsuredbandroid figures out all of the details behind migrating the database for you given the assets generated by ```./gradlew dbmigrate```--so the only code you have to write is in your extensions of the ```FSGetApi``` interface.
-
-So if you want to migrate your database after its initial creation (in this case, to add a table), then you would just:
-- Define another interface
-```java
-@FSTable("profile_info")
-public interface ProfileInfoTable extends FSGetApi {
-    @FSColumn("user_id") @ForeignKey(apiClass = UserTable.class, columnName = "_id") long userId(Retriever retriever);
-    @FSColumn("email_address") String emailAddress(Retriever retriever);
-    @FSColumn("binary_data") byte[] binaryData(Retriever retriever);
-}
-```
-As of this README, you cannot add more than one ```@ForeignKey``` column to the same table when you run ```./gradlew dbmigrate```. A workaround if you want to add multiple ```@ForeignKey``` columns is to run ```./gradlew dbmigrate``` in between addition of each ```@ForeignKey``` column.
-- Migrate the database
-```
-./gradlew dbmigrate
-```
-### Autojoins
-"Autojoins" are generated for you between tables that have a ```@ForeignKey``` relationship. They are expressed as methods added to the ```Resolver``` implementations that are generated at compile time. What this means for you is that, for free, you get a fluent API for joins. For example, if we have the ```UserTable``` and ```ProfileInfoTable``` ```FSGetApi``` interface definitions above, then we can do the following to perform a join query:
-```java
-    Retriever retriever = ForSure.profileInfoTable().joinUserTable(FSJoin.Type.INNER).get();
-    if (retriever.moveToFirst()) {
-        do {
-            // you can get related UserTable fields and ProfileInfoTable fields from the same retriever
-            String emailAddress = ForSure.profileInfoTable().getApi().emailAddress(retriever);
-            int loginCount = ForSure.userTable().getApi().loginCount(retriever);
-        } while (retriever.moveToNext())
-    }
-    retriever.close();
-```
-### Static Data
-You can define static data as XML in your assets directory. for example, app/src/main/assets/profile_info.xml is below:
-```xml
-<resources>
-    <profile_info _id="1" user_id="5" email_address="user_id_5@email.com" binary_data="42" />
-    <profile_info _id="2" user_id="4" email_address="user_id_4@email.com" binary_data="42" />
-    <profile_info _id="3" user_id="3" email_address="user_id_3@email.com" binary_data="42" />
-    <profile_info _id="4" user_id="2" email_address="user_id_2@email.com" binary_data="42" />
-    <profile_info _id="5" user_id="1" email_address="user_id_1@email.com" binary_data="42" />
-    <profile_info _id="6" user_id="6" email_address="user_id_6@email.com" binary_data="42" />
-    <profile_info _id="7" user_id="7" email_address="user_id_7@email.com" binary_data="42" />
-    <profile_info _id="8" user_id="8" email_address="user_id_8@email.com" binary_data="42" />
-    <profile_info _id="9" user_id="9" email_address="user_id_9@email.com" binary_data="42" />
-</resources>
-```
-If you do this, then you notify the compiler that you'd like to use this file by annotating your extension of the ```FSGetApi``` interface with ```@StaticData``` as below:
-```java
-@FSTable("profile_info")
-@FSStaticData(asset = "profile_info.xml", recordName = "profile_info")
-public interface ProfileInfoTable extends FSGetApi {
-    @FSColumn("user_id") @ForeignKey(apiClass = UserTable.class, columnName = "_id") long userId(Retriever retriever);
-    @FSColumn("email_address") String emailAddress(Retriever retriever);
-    @FSColumn("binary_data") byte[] binaryData(Retriever retriever);
-}
-```
-For Android projects, this means that even when the user deletes all data, after all of the migrations are rerun, the static data will get reinserted.
 ## Supported Migrations
 - Add a table
 - Add a column to a table
