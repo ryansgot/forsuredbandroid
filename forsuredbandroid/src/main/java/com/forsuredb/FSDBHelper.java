@@ -110,11 +110,13 @@ public class FSDBHelper extends SQLiteOpenHelper {
 
     private void applyMigrations(SQLiteDatabase db, int previousVersion) {
         for (Migration migration : migrations) {
-            if (previousVersion < migration.getDbVersion()) {
-                Log.i(LOG_TAG, "running migration: " + migration.toString());
-                for (String sql : QueryGeneratorFactory.getFor(migration).generate()) {
-                    db.execSQL(sql);
-                }
+            if (previousVersion >= migration.getDbVersion()) {
+                continue;
+            }
+            
+            Log.i(LOG_TAG, "running migration: " + migration.toString());
+            for (String sql : QueryGeneratorFactory.getFor(migration).generate()) {
+                db.execSQL(sql);
             }
         }
     }
