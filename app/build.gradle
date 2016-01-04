@@ -45,5 +45,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:21.0.3'
 
     compile project(':forsuredbandroid')
-    apt project(':compiler')
+
+    apt 'com.fsryan:forsuredbcompiler:0.3.0'
 }

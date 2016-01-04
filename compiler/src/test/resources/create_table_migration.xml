@@ -1,3 +1,0 @@
-<migrations>
-    <migration db_version="1" db_type="sqlite" table_name="profile_info" migration_type="CREATE_TABLE" query="CREATE TABLE profile_info(_id INTEGER PRIMARY KEY);" column="_id" column_type="long" is_last_in_set="true" />
-</migrations>

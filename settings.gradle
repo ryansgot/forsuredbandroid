@@ -1,1 +1,1 @@
-include ':app', ':forsuredbandroid', ':compiler'
+include ':app', ':forsuredbandroid'

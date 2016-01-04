@@ -44,7 +44,8 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.google.guava:guava:18.0'
 
-    compile project(':compiler')
+    compile 'com.fsryan:forsuredbcompiler:0.3.0'
+    compile 'com.fsryan.forsuredb:sqlitelib:0.0.1'
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:1.9.5'

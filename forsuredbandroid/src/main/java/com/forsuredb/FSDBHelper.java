@@ -25,6 +25,7 @@ import android.util.Log;
 import com.forsuredb.api.FSTableCreator;
 import com.forsuredb.cursor.FSCursorFactory;
 import com.forsuredb.migration.Migration;
+import com.forsuredb.sqlite.QueryGeneratorFactory;
 
 import java.util.Collections;
 import java.util.List;
@@ -111,7 +112,9 @@ public class FSDBHelper extends SQLiteOpenHelper {
         for (Migration migration : migrations) {
             if (previousVersion < migration.getDbVersion()) {
                 Log.i(LOG_TAG, "running migration: " + migration.toString());
-                db.execSQL(migration.getQuery());
+                for (String sql : QueryGeneratorFactory.getFor(migration).generate()) {
+                    db.execSQL(sql);
+                }
             }
         }
     }
