@@ -36,7 +36,6 @@ android {
 forsuredb {
     applicationPackageName = 'com.forsuredb.testapp'
     resultParameter = "android.net.Uri"
-    dbType = 'sqlite'
     migrationDirectory = 'app/src/main/assets'
     appProjectDirectory = 'app'
 }
