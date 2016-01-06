@@ -1,3 +1,0 @@
-<migrations>
-    <migration db_version="1" db_type="sqlite" table_name="user" migration_type="ALTER_TABLE_ADD_COLUMN" query="ALTER TABLE user ADD COLUMN app_rating REAL;" column="app_rating" column_type="double" is_last_in_set="true" />
-</migrations>

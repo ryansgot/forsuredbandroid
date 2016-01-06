@@ -1,4 +1,0 @@
-<migrations>
-    <migration db_version="2" table_name="profile_info" migration_type="ALTER_TABLE_ADD_UNIQUE" query="ALTER TABLE profile_info ADD COLUMN another_string TEXT;" />
-    <migration db_version="2" table_name="profile_info" migration_type="ALTER_TABLE_ADD_UNIQUE" query="CREATE UNIQUE INDEX another_string ON profile_info(another_string);" column="another_string" column_type="java.lang.String" is_last_in_set="true" />
-</migrations>

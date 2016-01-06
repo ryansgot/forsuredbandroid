@@ -29,13 +29,13 @@ android {
     packagingOptions {
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/services/javax.annotation.processing.Processor'
     }
 }
 
 forsuredb {
     applicationPackageName = 'com.forsuredb.testapp'
     resultParameter = "android.net.Uri"
-    dbType = 'sqlite'
     migrationDirectory = 'app/src/main/assets'
     appProjectDirectory = 'app'
 }
@@ -45,5 +45,6 @@ dependencies {
     compile 'com.android.support:appcompat-v7:21.0.3'
 
     compile project(':forsuredbandroid')
-    apt project(':compiler')
+
+    apt 'com.fsryan:forsuredbcompiler:0.3.1'
 }

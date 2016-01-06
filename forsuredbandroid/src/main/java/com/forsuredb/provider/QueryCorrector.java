@@ -1,5 +1,5 @@
 /*
-   forsuredb, an object relational mapping tool
+   forsuredbandroid, an android companion to the forsuredb project
 
    Copyright 2015 Ryan Scott
 

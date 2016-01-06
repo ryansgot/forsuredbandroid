@@ -1,5 +1,5 @@
 /*
-   forsuredb, an object relational mapping tool
+   forsuredbandroid, an android companion to the forsuredb project
 
    Copyright 2015 Ryan Scott
 
@@ -25,6 +25,8 @@ import android.util.Log;
 import com.forsuredb.api.FSTableCreator;
 import com.forsuredb.cursor.FSCursorFactory;
 import com.forsuredb.migration.Migration;
+import com.forsuredb.migration.MigrationSet;
+import com.forsuredb.sqlite.SqlGenerator;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,14 +37,14 @@ public class FSDBHelper extends SQLiteOpenHelper {
     private static final SQLiteDatabase.CursorFactory cursorFactory = new FSCursorFactory();
 
     private final List<FSTableCreator> tables;
-    private final List<Migration> migrations;
+    private final List<MigrationSet> migrationSets;
     private final Context context;
 
-    private FSDBHelper(Context context, String dbName, List<FSTableCreator> tables, List<Migration> migrations) {
-        super(context, dbName, cursorFactory, identifyDbVersion(migrations));
+    private FSDBHelper(Context context, String dbName, List<FSTableCreator> tables, List<MigrationSet> migrationSets) {
+        super(context, dbName, cursorFactory, identifyDbVersion(migrationSets));
         this.context = context;
         this.tables = tables;
-        this.migrations = migrations;
+        this.migrationSets = migrationSets;
     }
 
     private static final class Holder {
@@ -51,7 +53,7 @@ public class FSDBHelper extends SQLiteOpenHelper {
 
     public static void init(Context context, String dbName, List<FSTableCreator> tables) {
         if (Holder.instance == null) {
-            Holder.instance = new FSDBHelper(context, dbName, tables, new Migrator(context).getMigrations());
+            Holder.instance = new FSDBHelper(context, dbName, tables, new Migrator(context).getMigrationSets());
         }
     }
 
@@ -86,17 +88,17 @@ public class FSDBHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * @param migrations The {@link List} of {@link Migration}
-     * @return either 1 or the largest dbVersion in the migrations list
+     * @param migrationSets The {@link List} of {@link Migration}
+     * @return either 1 or the largest dbVersion in the migrationSets list
      */
-    private static int identifyDbVersion(List<Migration> migrations) {
-        if (migrations == null || migrations.size() == 0) {
+    private static int identifyDbVersion(List<MigrationSet> migrationSets) {
+        if (migrationSets == null || migrationSets.size() == 0) {
             return 1;
         }
 
         int version = 1;
-        for (Migration migration : migrations) {
-            version = migration.getDbVersion() > version ? migration.getDbVersion() : version;
+        for (MigrationSet migrationSet : migrationSets) {
+            version = migrationSet.getDbVersion() > version ? migrationSet.getDbVersion() : version;
         }
         return version;
     }
@@ -108,10 +110,14 @@ public class FSDBHelper extends SQLiteOpenHelper {
     }
 
     private void applyMigrations(SQLiteDatabase db, int previousVersion) {
-        for (Migration migration : migrations) {
-            if (previousVersion < migration.getDbVersion()) {
-                Log.i(LOG_TAG, "running migration: " + migration.toString());
-                db.execSQL(migration.getQuery());
+        for (MigrationSet migrationSet : migrationSets) {
+            if (previousVersion >= migrationSet.getDbVersion()) {
+                continue;
+            }
+
+            Log.i(LOG_TAG, "running migration: " + migrationSet.toString());
+            for (String sql : new SqlGenerator(migrationSet).generate()) {
+                db.execSQL(sql);
             }
         }
     }
