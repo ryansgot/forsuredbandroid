@@ -21,8 +21,8 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.Log;
 
-import com.forsuredb.migration.Migration;
 import com.forsuredb.migration.MigrationRetrieverFactory;
+import com.forsuredb.migration.MigrationSet;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +35,7 @@ import java.util.PriorityQueue;
     private static final String LOG_TAG = Migrator.class.getSimpleName();
 
     private final Context context;
-    private List<Migration> migrations;
+    private List<MigrationSet> migrationSets;
 
     /*package*/ Migrator(Context context) {
         this.context = context;
@@ -44,18 +44,18 @@ import java.util.PriorityQueue;
     /**
      * @return a sorted list of Migration
      */
-    public List<Migration> getMigrations() {
-        if (migrations == null) {
-            createMigrations();
+    public List<MigrationSet> getMigrationSets() {
+        if (migrationSets == null) {
+            createMigrationSets();
         }
-        return migrations;
+        return migrationSets;
     }
 
-    private void createMigrations() {
+    private void createMigrationSets() {
         final AssetManager assetManager = context.getResources().getAssets();
         final PriorityQueue<String> sortedPaths = createSortedMigrationFilenames(assetManager);
 
-        migrations = new LinkedList<>();
+        migrationSets = new LinkedList<>();
         while (sortedPaths.size() > 0) {
             addMigrationsFromFile(assetManager, sortedPaths.remove());
         }
@@ -65,7 +65,7 @@ import java.util.PriorityQueue;
         InputStream in = null;
         try {
             in = assetManager.open(filename);
-            migrations.addAll(new MigrationRetrieverFactory(new ADBFSLogger(LOG_TAG)).fromStream(in).getMigrations());
+            migrationSets.addAll(new MigrationRetrieverFactory(new ADBFSLogger(LOG_TAG)).fromStream(in).getMigrationSets());
         } catch (IOException ioe) {
             throw new IllegalStateException(ioe);
         } finally {
@@ -94,6 +94,6 @@ import java.util.PriorityQueue;
     }
 
     private boolean isMigrationXml(String filename) {
-        return filename != null && filename.endsWith("migration.xml");
+        return filename != null && filename.endsWith("migration.json");
     }
 }

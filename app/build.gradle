@@ -29,6 +29,7 @@ android {
     packagingOptions {
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/services/javax.annotation.processing.Processor'
     }
 }
 
@@ -46,5 +47,5 @@ dependencies {
 
     compile project(':forsuredbandroid')
 
-    apt 'com.fsryan:forsuredbcompiler:0.3.0'
+    apt 'com.fsryan:forsuredbcompiler:0.3.1'
 }
