@@ -7,7 +7,5 @@ test:
   override:
     - ./gradlew clean compileDebugJava :forsuredbandroid:test :forsuredbandroid:connectedAndroidTest
   post:
-    - mkdir $CIRCLE_TEST_REPORTS/compiler
-    - cp -r compiler/build/reports/* $CIRCLE_TEST_REPORTS/compiler
     - mkdir $CIRCLE_TEST_REPORTS/forsuredbandroid
     - cp -r forsuredbandroid/build/reports/* $CIRCLE_TEST_REPORTS/forsuredbandroid
