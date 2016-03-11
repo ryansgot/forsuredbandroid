@@ -140,6 +140,7 @@ public class TestActivity extends ActionBarActivity {
                 .id(id)
                 .emailAddress("user" + userId + "@email.com")
                 .binaryData(new byte[]{(byte) (generator.nextInt() & 0xFF), (byte) (generator.nextInt() & 0xFF), (byte) 0})
+                .awesome(generator.nextBoolean())
                 .save());
         /*
          * The new record will be upserted--in other words, if a record with the specified id already exists, it will be
@@ -199,6 +200,7 @@ public class TestActivity extends ActionBarActivity {
                 .append("; profile_info_table.user_id = ").append(profileInfoTable.userId(retriever))
                 .append("; profile_info_table.email_address = ").append(profileInfoTable.emailAddress(retriever))
                 .append("; profile_info_table.binary_data = ").append(profileInfoTable.binaryData(retriever))
+                .append("; profile_info_table.awesome = ").append(profileInfoTable.awesome(retriever))
                 .toString());
     }
 
@@ -220,6 +222,7 @@ public class TestActivity extends ActionBarActivity {
                 .append("; profile_info_table.user_id = ").append(profileInfoTable.userId(retriever))
                 .append("; profile_info_table.email_address = ").append(profileInfoTable.emailAddress(retriever))
                 .append("; profile_info_table.binary_data = ").append(profileInfoTable.binaryData(retriever))
+                .append("; profile_info_table.awesome = ").append(profileInfoTable.awesome(retriever))
                 .append("\nAdditional Data Table:\n")
                 .append("additional_data_table._id = ").append(additionalDataTable.id(retriever))
                 .append("; additional_data_table.deleted = ").append(additionalDataTable.deleted(retriever))

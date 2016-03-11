@@ -45,7 +45,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.google.guava:guava:18.0'
 
-    compile 'com.fsryan:forsuredbcompiler:0.4.2'
+    compile 'com.fsryan:forsuredbcompiler:0.4.3'
     compile 'com.fsryan.forsuredb:sqlitelib:0.1.0'
 
     testCompile 'junit:junit:4.12'

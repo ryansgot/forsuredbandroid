@@ -55,6 +55,7 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
                                 .created(profileInfoTable.created(retriever).toString())
                                 .modified(profileInfoTable.modified(retriever).toString())
                                 .deleted(profileInfoTable.deleted(retriever))
+                                .awesome(profileInfoTable.awesome(retriever))
                                 .targetLayout(view)
                                 .build(context);
     }
@@ -79,6 +80,7 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
         private String created;
         private String modified;
         private boolean deleted;
+        private boolean awesome;
 
         public ViewBuilder id(long id) {
             this.id = id;
@@ -115,6 +117,11 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
             return this;
         }
 
+        public ViewBuilder awesome(boolean awesome) {
+            this.awesome = awesome;
+            return this;
+        }
+
         public ViewBuilder targetLayout(View targetLayout) {
             this.targetLayout = targetLayout;
             return this;
@@ -140,6 +147,7 @@ public class TestProfileInfoCursorAdapter extends BaseAdapter {
             ((TextView) targetLayout.findViewById(R.id.profile_info_created_text)).setText(Strings.nullToEmpty(created));
             ((TextView) targetLayout.findViewById(R.id.profile_info_modified_text)).setText(Strings.nullToEmpty(modified));
             ((TextView) targetLayout.findViewById(R.id.profile_info_deleted_text)).setText(Boolean.toString(deleted));
+            ((TextView) targetLayout.findViewById(R.id.awesome_text)).setText(Boolean.toString(awesome));
         }
     }
 }
