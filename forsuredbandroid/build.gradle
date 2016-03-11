@@ -108,10 +108,10 @@ bintray {
 //        publish = true
         publicDownloadNumbers = true
         version {
-            name = '0.5.0'
+            name = '0.5.1'
             desc = 'An android library leveraging the forsuredb project'
             released  = new Date()
-            vcsTag = 'v0.5.0'
+            vcsTag = 'v0.5.1'
         }
     }
 }
