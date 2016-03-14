@@ -38,11 +38,13 @@ public class FSCursorLoader<G extends FSGetApi, S extends FSSaveApi<Uri>, F exte
     private Resolver<Uri, FSContentValues, G, S, F> resolver;
     private List<Uri> tableUris;
     private MultiTableObserver mObserver;
+    private final Handler handler;
 
     public FSCursorLoader(Context context, Resolver<Uri, FSContentValues, G, S, F> resolver) {
         super(context);
         this.resolver = resolver;
         tableUris = UriEvaluator.tableReferences(resolver.currentLocator());
+        handler = new Handler();
     }
 
     @Override
@@ -151,7 +153,7 @@ public class FSCursorLoader<G extends FSGetApi, S extends FSSaveApi<Uri>, F exte
     private final class MultiTableObserver extends ContentObserver {
 
         public MultiTableObserver() {
-            super(new Handler());
+            super(handler);
 
             // register for updates to all of the relevant tables
             if (tableUris != null) {

@@ -3,7 +3,7 @@ apply plugin: 'android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 group = 'com.fsryan'
-version = '0.5.2'
+version = '0.5.3'
 
 android {
     compileSdkVersion 21
@@ -108,10 +108,10 @@ bintray {
 //        publish = true
         publicDownloadNumbers = true
         version {
-            name = '0.5.2'
+            name = '0.5.3'
             desc = 'An android library leveraging the forsuredb project'
             released  = new Date()
-            vcsTag = 'v0.5.2'
+            vcsTag = 'v0.5.3'
         }
     }
 }
