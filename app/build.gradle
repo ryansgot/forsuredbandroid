@@ -3,8 +3,8 @@ apply plugin: 'android-apt'
 apply plugin: 'com.fsryan.forsuredb'
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion "21.1.2"
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
 
     defaultConfig {
         applicationId "com.forsuredb.testapp"
@@ -43,9 +43,10 @@ forsuredb {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:21.0.3'
+    compile 'com.android.support:appcompat-v7:23.1.1'
+    compile 'com.android.support:recyclerview-v7:23.1.1'
 
     compile project(':forsuredbandroid')
 
-    apt 'com.fsryan:forsuredbcompiler:0.5.0'
+    apt 'com.fsryan:forsuredbcompiler:0.5.2'
 }

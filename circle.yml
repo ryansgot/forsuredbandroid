@@ -1,3 +1,7 @@
+dependencies:
+  pre:
+    - echo y | android update sdk --no-ui --all --filter tools,extra-android-m2repository
+    - echo y | android update sdk --no-ui --all --filter build-tools-23.0.3
 test:
   pre:
     - emulator -avd circleci-android22 -no-audio -no-window:
