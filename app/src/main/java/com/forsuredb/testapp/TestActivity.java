@@ -201,7 +201,7 @@ public class TestActivity extends ActionBarActivity {
                     .append("; user_table.competitor_app_rating = ").append(userTable.competitorAppRating(retriever));
         }
         if (profileInfoTable != null) {
-            sb.append("\n")
+            sb.append(sb.length() == 0 ? "" : "\n")
                     .append("Profile Info Table:\n")
                     .append("profile_info_table._id = ").append(profileInfoTable.id(retriever))
                     .append("; profile_info_table.created = ").append(profileInfoTable.created(retriever))
@@ -213,7 +213,7 @@ public class TestActivity extends ActionBarActivity {
                     .append("; profile_info_table.awesome = ").append(profileInfoTable.awesome(retriever));
         }
         if (additionalDataTable != null) {
-            sb.append("\n")
+            sb.append(sb.length() == 0 ? "" : "\n")
                     .append("Additional Data Table:\n")
                     .append("additional_data_table._id = ").append(additionalDataTable.id(retriever))
                     .append("; additional_data_table.deleted = ").append(additionalDataTable.deleted(retriever))
