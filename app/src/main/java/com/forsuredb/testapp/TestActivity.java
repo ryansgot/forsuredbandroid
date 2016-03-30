@@ -7,19 +7,24 @@ import android.content.Loader;
 import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.forsuredb.api.FSGetApi;
 import com.forsuredb.api.FSJoin;
 import com.forsuredb.api.Retriever;
 import com.forsuredb.api.SaveResult;
 import com.forsuredb.cursor.FSCursor;
 import com.forsuredb.cursor.FSCursorLoader;
-import com.forsuredb.testapp.adapter.TestProfileInfoCursorAdapter;
-import com.forsuredb.testapp.adapter.TestUserCursorAdapter;
+import com.forsuredb.cursor.FSCursorRecyclerViewAdapter;
+import com.forsuredb.cursor.FSCursorViewHolder;
+import com.forsuredb.testapp.adapter.ProfileInfoTableRecyclerAdapter;
+import com.forsuredb.testapp.adapter.UserTableRecyclerAdapter;
 import com.forsuredb.testapp.model.AdditionalDataTable;
 import com.forsuredb.testapp.model.ProfileInfoTable;
 import com.forsuredb.testapp.model.UserTable;
@@ -36,8 +41,8 @@ public class TestActivity extends ActionBarActivity {
 
     private static final String LOG_TAG = TestActivity.class.getSimpleName();
 
-    private TestUserCursorAdapter userCursorAdapter;
-    private TestProfileInfoCursorAdapter profileInfoCursorAdapter;
+    private UserTableRecyclerAdapter userRecyclerAdapter;
+    private ProfileInfoTableRecyclerAdapter profileInfoRecyclerAdapter;
 
     private JoinLoader joinLoader;
 
@@ -46,10 +51,11 @@ public class TestActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test);
 
-        userCursorAdapter = new TestUserCursorAdapter(this);
-        ((ListView) findViewById(R.id.user_list_view)).setAdapter(userCursorAdapter);
-        profileInfoCursorAdapter = new TestProfileInfoCursorAdapter(this);
-        ((ListView) findViewById(R.id.profile_info_list_view)).setAdapter(profileInfoCursorAdapter);
+        userRecyclerAdapter = new UserTableRecyclerAdapter();
+        initRecycler(R.id.user_recycler_view, userRecyclerAdapter);
+        profileInfoRecyclerAdapter = new ProfileInfoTableRecyclerAdapter();
+        initRecycler(R.id.profile_info_recycler_view, profileInfoRecyclerAdapter);
+
         joinLoader = new JoinLoader();
         getLoaderManager().initLoader(LOADER_ID, null, joinLoader);
     }
@@ -108,6 +114,15 @@ public class TestActivity extends ActionBarActivity {
                 }
             }
         });
+    }
+
+    private <G extends FSGetApi, VH extends FSCursorViewHolder> void initRecycler(int viewId, FSCursorRecyclerViewAdapter<G, VH> adapter) {
+        RecyclerView recycler = (RecyclerView) findViewById(viewId);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        layoutManager.scrollToPosition(0);
+        recycler.setLayoutManager(layoutManager);
+        recycler.setHasFixedSize(true);
+        recycler.setAdapter(adapter);
     }
 
     private void inputRandomDataForUser(long id) {
@@ -172,67 +187,44 @@ public class TestActivity extends ActionBarActivity {
         Log.d(LOG_TAG, "SaveResult<Uri>{inserted=" + result.inserted() + ", exception=" + result.exception() + ", rowsAffected=" + result.rowsAffected() + "}");
     }
 
-    private void logUser(UserTable userTable, Retriever retriever) {
-        Log.i(LOG_TAG, new StringBuilder("_id = ").append(userTable.id(retriever))
-                .append("; created = ").append(userTable.created(retriever))
-                .append("; deleted = ").append(userTable.deleted(retriever))
-                .append("; modified = ").append(userTable.modified(retriever))
-                .append("; global_id = ").append(userTable.globalId(retriever))
-                .append("; login_count = ").append(userTable.loginCount(retriever))
-                .append("; app_rating = ").append(userTable.appRating(retriever))
-                .append("; competitor_app_rating = ").append(userTable.competitorAppRating(retriever))
-                .toString());
-    }
-
-    private void logProfileInfoTableJoinUserTable(UserTable userTable, ProfileInfoTable profileInfoTable, Retriever retriever) {
-        Log.i(LOG_TAG, new StringBuilder("user_table._id = ").append(userTable.id(retriever))
-                .append("; user_table.created = ").append(userTable.created(retriever))
-                .append("; user_table.deleted = ").append(userTable.deleted(retriever))
-                .append("; user_table.modified = ").append(userTable.modified(retriever))
-                .append("; user_table.global_id = ").append(userTable.globalId(retriever))
-                .append("; user_table.login_count = ").append(userTable.loginCount(retriever))
-                .append("; user_table.app_rating = ").append(userTable.appRating(retriever))
-                .append("; user_table.competitor_app_rating = ").append(userTable.competitorAppRating(retriever))
-                .append("; profile_info_table._id = ").append(profileInfoTable.id(retriever))
-                .append("; profile_info_table.created = ").append(profileInfoTable.created(retriever))
-                .append("; profile_info_table.deleted = ").append(profileInfoTable.deleted(retriever))
-                .append("; profile_info_table.modified = ").append(profileInfoTable.modified(retriever))
-                .append("; profile_info_table.user_id = ").append(profileInfoTable.userId(retriever))
-                .append("; profile_info_table.email_address = ").append(profileInfoTable.emailAddress(retriever))
-                .append("; profile_info_table.binary_data = ").append(profileInfoTable.binaryData(retriever))
-                .append("; profile_info_table.awesome = ").append(profileInfoTable.awesome(retriever))
-                .toString());
-    }
-
     private void logProfileInfoTableJoinUserTableJoinAdditionalDataTable(UserTable userTable, ProfileInfoTable profileInfoTable, AdditionalDataTable additionalDataTable, Retriever retriever) {
-        Log.i(LOG_TAG, new StringBuilder("User Table:\n")
-                .append("user_table._id = ").append(userTable.id(retriever))
-                .append("; user_table.created = ").append(userTable.created(retriever))
-                .append("; user_table.deleted = ").append(userTable.deleted(retriever))
-                .append("; user_table.modified = ").append(userTable.modified(retriever))
-                .append("; user_table.global_id = ").append(userTable.globalId(retriever))
-                .append("; user_table.login_count = ").append(userTable.loginCount(retriever))
-                .append("; user_table.app_rating = ").append(userTable.appRating(retriever))
-                .append("; user_table.competitor_app_rating = ").append(userTable.competitorAppRating(retriever))
-                .append("\nProfile Info Table:\n")
-                .append("profile_info_table._id = ").append(profileInfoTable.id(retriever))
-                .append("; profile_info_table.created = ").append(profileInfoTable.created(retriever))
-                .append("; profile_info_table.deleted = ").append(profileInfoTable.deleted(retriever))
-                .append("; profile_info_table.modified = ").append(profileInfoTable.modified(retriever))
-                .append("; profile_info_table.user_id = ").append(profileInfoTable.userId(retriever))
-                .append("; profile_info_table.email_address = ").append(profileInfoTable.emailAddress(retriever))
-                .append("; profile_info_table.binary_data = ").append(profileInfoTable.binaryData(retriever))
-                .append("; profile_info_table.awesome = ").append(profileInfoTable.awesome(retriever))
-                .append("\nAdditional Data Table:\n")
-                .append("additional_data_table._id = ").append(additionalDataTable.id(retriever))
-                .append("; additional_data_table.deleted = ").append(additionalDataTable.deleted(retriever))
-                .append("; additional_data_table.modified = ").append(additionalDataTable.modified(retriever))
-                .append("; additional_data_table.created = ").append(additionalDataTable.created(retriever))
-                .append("; additional_data_table.int_column = ").append(additionalDataTable.intColumn(retriever))
-                .append("; additional_data_table.long_column = ").append(additionalDataTable.longColumn(retriever))
-                .append("; additional_data_table.string_column = ").append(additionalDataTable.stringColumn(retriever))
-                .append("; additional_data_table.profile_info_id = ").append(additionalDataTable.profileInfoId(retriever))
-                .toString());
+        StringBuilder sb = new StringBuilder();
+        if (userTable != null) {
+            sb.append("User Table:\n")
+                    .append("user_table._id = ").append(userTable.id(retriever))
+                    .append("; user_table.created = ").append(userTable.created(retriever))
+                    .append("; user_table.deleted = ").append(userTable.deleted(retriever))
+                    .append("; user_table.modified = ").append(userTable.modified(retriever))
+                    .append("; user_table.global_id = ").append(userTable.globalId(retriever))
+                    .append("; user_table.login_count = ").append(userTable.loginCount(retriever))
+                    .append("; user_table.app_rating = ").append(userTable.appRating(retriever))
+                    .append("; user_table.competitor_app_rating = ").append(userTable.competitorAppRating(retriever));
+        }
+        if (profileInfoTable != null) {
+            sb.append("\n")
+                    .append("Profile Info Table:\n")
+                    .append("profile_info_table._id = ").append(profileInfoTable.id(retriever))
+                    .append("; profile_info_table.created = ").append(profileInfoTable.created(retriever))
+                    .append("; profile_info_table.deleted = ").append(profileInfoTable.deleted(retriever))
+                    .append("; profile_info_table.modified = ").append(profileInfoTable.modified(retriever))
+                    .append("; profile_info_table.user_id = ").append(profileInfoTable.userId(retriever))
+                    .append("; profile_info_table.email_address = ").append(profileInfoTable.emailAddress(retriever))
+                    .append("; profile_info_table.binary_data = ").append(profileInfoTable.binaryData(retriever))
+                    .append("; profile_info_table.awesome = ").append(profileInfoTable.awesome(retriever));
+        }
+        if (additionalDataTable != null) {
+            sb.append("\n")
+                    .append("Additional Data Table:\n")
+                    .append("additional_data_table._id = ").append(additionalDataTable.id(retriever))
+                    .append("; additional_data_table.deleted = ").append(additionalDataTable.deleted(retriever))
+                    .append("; additional_data_table.modified = ").append(additionalDataTable.modified(retriever))
+                    .append("; additional_data_table.created = ").append(additionalDataTable.created(retriever))
+                    .append("; additional_data_table.int_column = ").append(additionalDataTable.intColumn(retriever))
+                    .append("; additional_data_table.long_column = ").append(additionalDataTable.longColumn(retriever))
+                    .append("; additional_data_table.string_column = ").append(additionalDataTable.stringColumn(retriever))
+                    .append("; additional_data_table.profile_info_id = ").append(additionalDataTable.profileInfoId(retriever));
+        }
+        Log.i(LOG_TAG, sb.toString());
     }
 
     private class JoinLoader implements LoaderManager.LoaderCallbacks<FSCursor> {
@@ -254,8 +246,8 @@ public class TestActivity extends ActionBarActivity {
                 do {
                     logProfileInfoTableJoinUserTableJoinAdditionalDataTable(userTable, profileInfoTable, additionalDataTable, data);
                 } while (data.moveToNext());
-                profileInfoCursorAdapter.changeCursor(data);
-                userCursorAdapter.changeCursor(data);
+                profileInfoRecyclerAdapter.changeCursor(data);
+                userRecyclerAdapter.changeCursor(data);
             } else {
                 Log.i(LOG_TAG, "data was null or empty");
             }

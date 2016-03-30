@@ -27,7 +27,7 @@ public class ProfileInfoTableRecyclerAdapter extends FSCursorRecyclerViewAdapter
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.profile_info_layout, parent);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.profile_info_layout, parent, false);
         return new ViewHolder(v, viewType);
     }
 
