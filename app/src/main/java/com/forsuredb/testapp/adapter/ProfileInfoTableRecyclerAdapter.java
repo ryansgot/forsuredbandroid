@@ -21,7 +21,7 @@ public class ProfileInfoTableRecyclerAdapter extends FSCursorRecyclerViewAdapter
     private final ProfileInfoTable api;
 
     public ProfileInfoTableRecyclerAdapter() {
-        super(null);
+        super();
         api = profileInfoTable().getApi();
     }
 

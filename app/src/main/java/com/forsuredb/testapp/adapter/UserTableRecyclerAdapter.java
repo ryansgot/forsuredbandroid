@@ -18,7 +18,7 @@ public class UserTableRecyclerAdapter extends FSCursorRecyclerViewAdapter<UserTa
     private final UserTable api;
 
     public UserTableRecyclerAdapter() {
-        super(null);
+        super();
         api = userTable().getApi();
     }
 

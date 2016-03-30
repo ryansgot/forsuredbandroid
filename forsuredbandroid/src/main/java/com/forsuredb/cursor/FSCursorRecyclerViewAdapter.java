@@ -8,6 +8,10 @@ public abstract class FSCursorRecyclerViewAdapter<G extends FSGetApi, VH extends
 
     private FSCursor c;
 
+    public FSCursorRecyclerViewAdapter() {
+        this(null);
+    }
+
     public FSCursorRecyclerViewAdapter(FSCursor c) {
         swapCursor(c);
         setHasStableIds(true);
