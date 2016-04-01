@@ -39,21 +39,52 @@ public class FSDBHelper extends SQLiteOpenHelper {
     private final List<FSTableCreator> tables;
     private final List<MigrationSet> migrationSets;
     private final Context context;
+    private final boolean debugMode;
 
-    private FSDBHelper(Context context, String dbName, List<FSTableCreator> tables, List<MigrationSet> migrationSets) {
+    private FSDBHelper(Context context, String dbName, List<FSTableCreator> tables, List<MigrationSet> migrationSets, boolean debugMode) {
         super(context, dbName, cursorFactory, identifyDbVersion(migrationSets));
         this.context = context;
         this.tables = tables;
         this.migrationSets = migrationSets;
+        this.debugMode = debugMode;
     }
 
     private static final class Holder {
         public static FSDBHelper instance;
     }
 
+    /**
+     * <p>
+     *     Call this initializer in onCreate of your {@link android.app.Application} class with
+     *     the production version of your app. It has debug mode set to false. If you want
+     *     debugMode on, then call {@link #initDebug(Context, String, List)}.
+     * </p>
+     * @param context The application context
+     * @param dbName The name of your database
+     * @param tables The information for creating tables
+     * @see #initDebug(Context, String, List)
+     */
     public static void init(Context context, String dbName, List<FSTableCreator> tables) {
         if (Holder.instance == null) {
-            Holder.instance = new FSDBHelper(context, dbName, tables, new Migrator(context).getMigrationSets());
+            Holder.instance = new FSDBHelper(context, dbName, tables, new Migrator(context).getMigrationSets(), false);
+        }
+    }
+
+    /**
+     * <p>
+     *     Call this initializer in onCreate of your {@link android.app.Application} class with
+     *     if you want to output all of your queries to logcat with the tag FSCursorFactory.
+     *     Otherwise, you can just call {@link #init(Context, String, List)}, which defaults to
+     *     debugMode off.
+     * </p>
+     * @param context The application context
+     * @param dbName The name of your database
+     * @param tables The information for creating tables
+     * @see #init(Context, String, List)
+     */
+    public static void initDebug(Context context, String dbName, List<FSTableCreator> tables) {
+        if (Holder.instance == null) {
+            Holder.instance = new FSDBHelper(context, dbName, tables, new Migrator(context).getMigrationSets(), true);
         }
     }
 
@@ -85,6 +116,10 @@ public class FSDBHelper extends SQLiteOpenHelper {
         if (!db.isReadOnly()) {
             db.execSQL("PRAGMA foreign_keys=ON;");
         }
+    }
+
+    public boolean inDebugMode() {
+        return debugMode;
     }
 
     /**
