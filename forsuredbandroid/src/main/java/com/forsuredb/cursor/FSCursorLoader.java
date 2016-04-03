@@ -27,20 +27,21 @@ import com.forsuredb.api.FSGetApi;
 import com.forsuredb.api.FSSaveApi;
 import com.forsuredb.api.Finder;
 import com.forsuredb.api.Resolver;
+import com.forsuredb.api.OrderBy;
 import com.forsuredb.provider.FSContentValues;
 import com.forsuredb.provider.UriEvaluator;
 
 import java.util.List;
 
-public class FSCursorLoader<G extends FSGetApi, S extends FSSaveApi<Uri>, F extends Finder<Uri, FSContentValues, G, S, F>> extends AsyncTaskLoader<FSCursor> {
+public class FSCursorLoader<G extends FSGetApi, S extends FSSaveApi<Uri>, F extends Finder<Uri, FSContentValues, G, S, F, O>, O extends OrderBy<Uri, FSContentValues, G, S, F, O>> extends AsyncTaskLoader<FSCursor> {
 
     private FSCursor mCursor;
-    private Resolver<Uri, FSContentValues, G, S, F> resolver;
+    private Resolver<Uri, FSContentValues, G, S, F, O> resolver;
     private List<Uri> tableUris;
     private MultiTableObserver mObserver;
     private final Handler handler;
 
-    public FSCursorLoader(Context context, Resolver<Uri, FSContentValues, G, S, F> resolver) {
+    public FSCursorLoader(Context context, Resolver<Uri, FSContentValues, G, S, F, O> resolver) {
         super(context);
         this.resolver = resolver;
         tableUris = UriEvaluator.tableReferences(resolver.currentLocator());
