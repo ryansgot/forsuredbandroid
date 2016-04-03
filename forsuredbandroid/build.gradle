@@ -47,7 +47,7 @@ dependencies {
 
     compile 'com.google.guava:guava:19.0'
 
-    compile 'com.fsryan:forsuredbcompiler:0.6.1'
+    compile 'com.fsryan:forsuredbcompiler:0.6.2'
     compile 'com.fsryan.forsuredb:sqlitelib:0.1.0'
 
     testCompile 'junit:junit:4.12'

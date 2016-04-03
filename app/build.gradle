@@ -48,5 +48,5 @@ dependencies {
 
     compile project(':forsuredbandroid')
 
-    apt 'com.fsryan:forsuredbcompiler:0.6.1'
+    apt 'com.fsryan:forsuredbcompiler:0.6.2'
 }
