@@ -3,7 +3,6 @@
 buildscript {
     repositories {
         jcenter()
-        mavenLocal()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.2.3'
@@ -18,10 +17,12 @@ buildscript {
 
 allprojects {
     repositories {
+        maven {
+            url "https://dl.bintray.com/ryansgot/maven"
+        }
         jcenter()
         maven {
             url "http://projectlombok.org/mavenrepo"
         }
-        mavenLocal()
     }
 }
