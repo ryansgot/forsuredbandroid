@@ -16,6 +16,7 @@ import android.widget.EditText;
 
 import com.forsuredb.api.FSGetApi;
 import com.forsuredb.api.FSJoin;
+import com.forsuredb.api.OrderBy.Order;
 import com.forsuredb.api.Retriever;
 import com.forsuredb.api.SaveResult;
 import com.forsuredb.cursor.FSCursor;
@@ -235,7 +236,12 @@ public class TestActivity extends ActionBarActivity {
         @Override
         public Loader<FSCursor> onCreateLoader(int id, Bundle args) {
             Log.i(LOG_TAG, "JoinLoader.onCreateLoader");
-            return new FSCursorLoader<>(TestActivity.this, profileInfoTable().joinUserTable(FSJoin.Type.INNER).joinAdditionalDataTable(FSJoin.Type.INNER));
+            return new FSCursorLoader<>(TestActivity.this, profileInfoTable()
+                    .joinUserTable(FSJoin.Type.INNER)
+                    .joinAdditionalDataTable(FSJoin.Type.INNER)
+                    .order().byDeleted(Order.ASC)       // <-- deleted items appear last regardless of profileInfo.email_address
+                    .and().byEmailAddress(Order.DESC)   // <-- sort rows in descending order by email address
+                    .andFinally());
         }
 
         @Override
