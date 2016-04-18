@@ -20,7 +20,6 @@ package com.forsuredb;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import com.forsuredb.api.FSTableCreator;
 import com.forsuredb.cursor.FSCursorFactory;
@@ -150,7 +149,6 @@ public class FSDBHelper extends SQLiteOpenHelper {
                 continue;
             }
 
-            Log.i(LOG_TAG, "running migration: " + migrationSet.toString());
             for (String sql : new SqlGenerator(migrationSet).generate()) {
                 db.execSQL(sql);
             }
