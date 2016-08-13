@@ -19,13 +19,13 @@ package com.forsuredb.provider;
 
 import android.content.ContentValues;
 
-import com.forsuredb.api.RecordContainer;
+import com.fsryan.forsuredb.api.RecordContainer;
 
 /**
  * <p>
  *     This is a wrapper for a {@link ContentValues} object. Because it implements
  *     {@link RecordContainer}, it can be used to create an
- *     {@link com.forsuredb.api.FSSaveApi FSSaveApi}.
+ *     {@link com.fsryan.forsuredb.api.FSSaveApi FSSaveApi}.
  * </p>
  * @author Ryan Scott
  */

@@ -20,13 +20,13 @@ package com.forsuredb.cursor;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 
-import com.forsuredb.api.Retriever;
+import com.fsryan.forsuredb.api.Retriever;
 
 /**
  * <p>
  *     Wraps a {@link Cursor}, getting its implementation from {@link CursorWrapper}
- *     and implements {@link com.forsuredb.api.Retriever} so that it may be used as the parameter to
- *     {@link com.forsuredb.api.FSGetApi FSGetApi} methods.
+ *     and implements {@link com.fsryan.forsuredb.api.Retriever} so that it may be used as the parameter to
+ *     {@link com.fsryan.forsuredb.api.FSGetApi FSGetApi} methods.
  * </p>
  */
 public class FSCursor extends CursorWrapper implements Retriever {

@@ -19,7 +19,7 @@ package com.forsuredb;
 
 import android.util.Log;
 
-import com.forsuredb.api.FSLogger;
+import com.fsryan.forsuredb.api.FSLogger;
 import com.google.common.base.Strings;
 
 /*package*/ class ADBFSLogger implements FSLogger {

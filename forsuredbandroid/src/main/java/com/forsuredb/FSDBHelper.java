@@ -21,11 +21,11 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.forsuredb.api.FSTableCreator;
+import com.fsryan.forsuredb.api.FSTableCreator;
 import com.forsuredb.cursor.FSCursorFactory;
-import com.forsuredb.migration.Migration;
-import com.forsuredb.migration.MigrationSet;
-import com.forsuredb.sqlite.SqlGenerator;
+import com.fsryan.forsuredb.api.migration.Migration;
+import com.fsryan.forsuredb.api.migration.MigrationSet;
+import com.fsryan.forsuredb.sqlitelib.SqlGenerator;
 
 import java.util.Collections;
 import java.util.List;
@@ -149,7 +149,7 @@ public class FSDBHelper extends SQLiteOpenHelper {
                 continue;
             }
 
-            for (String sql : new SqlGenerator(migrationSet).generate()) {
+            for (String sql : new SqlGenerator().generateMigrationSql(migrationSet)) {
                 db.execSQL(sql);
             }
         }

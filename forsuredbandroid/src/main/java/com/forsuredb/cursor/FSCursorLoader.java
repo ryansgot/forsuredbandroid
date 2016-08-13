@@ -23,11 +23,11 @@ import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.Handler;
 
-import com.forsuredb.api.FSGetApi;
-import com.forsuredb.api.FSSaveApi;
-import com.forsuredb.api.Finder;
-import com.forsuredb.api.Resolver;
-import com.forsuredb.api.OrderBy;
+import com.fsryan.forsuredb.api.FSGetApi;
+import com.fsryan.forsuredb.api.FSSaveApi;
+import com.fsryan.forsuredb.api.Finder;
+import com.fsryan.forsuredb.api.Resolver;
+import com.fsryan.forsuredb.api.OrderBy;
 import com.forsuredb.provider.FSContentValues;
 import com.forsuredb.provider.UriEvaluator;
 

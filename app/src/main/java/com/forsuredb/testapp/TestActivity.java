@@ -14,11 +14,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 
-import com.forsuredb.api.FSGetApi;
-import com.forsuredb.api.FSJoin;
-import com.forsuredb.api.OrderBy.Order;
-import com.forsuredb.api.Retriever;
-import com.forsuredb.api.SaveResult;
+import com.fsryan.forsuredb.api.FSGetApi;
+import com.fsryan.forsuredb.api.FSJoin;
+import com.fsryan.forsuredb.api.OrderBy.Order;
+import com.fsryan.forsuredb.api.Retriever;
+import com.fsryan.forsuredb.api.SaveResult;
 import com.forsuredb.cursor.FSCursor;
 import com.forsuredb.cursor.FSCursorLoader;
 import com.forsuredb.cursor.FSCursorRecyclerViewAdapter;

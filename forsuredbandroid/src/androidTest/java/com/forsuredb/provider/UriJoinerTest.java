@@ -20,7 +20,7 @@ package com.forsuredb.provider;
 import android.net.Uri;
 import android.test.InstrumentationTestCase;
 
-import com.forsuredb.api.FSJoin;
+import com.fsryan.forsuredb.api.FSJoin;
 import com.google.common.collect.Lists;
 
 import java.util.List;

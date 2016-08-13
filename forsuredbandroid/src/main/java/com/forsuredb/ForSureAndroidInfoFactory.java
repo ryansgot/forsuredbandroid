@@ -20,9 +20,9 @@ package com.forsuredb;
 import android.content.Context;
 import android.net.Uri;
 
-import com.forsuredb.api.FSJoin;
-import com.forsuredb.api.FSQueryable;
-import com.forsuredb.api.ForSureInfoFactory;
+import com.fsryan.forsuredb.api.FSJoin;
+import com.fsryan.forsuredb.api.FSQueryable;
+import com.fsryan.forsuredb.api.ForSureInfoFactory;
 import com.forsuredb.provider.FSContentValues;
 import com.forsuredb.provider.UriJoiner;
 import com.google.common.base.Strings;

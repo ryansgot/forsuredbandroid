@@ -1,10 +1,10 @@
 package com.forsuredb.testapp.model;
 
-import com.forsuredb.annotation.FSStaticData;
-import com.forsuredb.api.Retriever;
-import com.forsuredb.api.FSGetApi;
-import com.forsuredb.annotation.FSColumn;
-import com.forsuredb.annotation.FSTable;
+import com.fsryan.forsuredb.annotations.FSStaticData;
+import com.fsryan.forsuredb.api.Retriever;
+import com.fsryan.forsuredb.api.FSGetApi;
+import com.fsryan.forsuredb.annotations.FSColumn;
+import com.fsryan.forsuredb.annotations.FSTable;
 
 import java.math.BigDecimal;
 

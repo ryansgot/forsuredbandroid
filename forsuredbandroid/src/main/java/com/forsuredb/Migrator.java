@@ -21,8 +21,8 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.Log;
 
-import com.forsuredb.migration.MigrationRetrieverFactory;
-import com.forsuredb.migration.MigrationSet;
+import com.fsryan.forsuredb.api.migration.MigrationRetrieverFactory;
+import com.fsryan.forsuredb.api.migration.MigrationSet;
 
 import java.io.IOException;
 import java.io.InputStream;

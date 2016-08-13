@@ -20,7 +20,7 @@ package com.forsuredb.provider;
 import android.net.Uri;
 
 import com.forsuredb.ForSureAndroidInfoFactory;
-import com.forsuredb.api.FSJoin;
+import com.fsryan.forsuredb.api.FSJoin;
 import com.google.common.base.Strings;
 
 import java.util.ArrayList;
