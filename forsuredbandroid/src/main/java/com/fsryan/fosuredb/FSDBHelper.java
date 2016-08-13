@@ -15,14 +15,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.forsuredb;
+package com.fsryan.fosuredb;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.fsryan.forsuredb.api.FSTableCreator;
-import com.forsuredb.cursor.FSCursorFactory;
+import com.fsryan.fosuredb.cursor.FSCursorFactory;
 import com.fsryan.forsuredb.api.migration.Migration;
 import com.fsryan.forsuredb.api.migration.MigrationSet;
 import com.fsryan.forsuredb.sqlitelib.SqlGenerator;

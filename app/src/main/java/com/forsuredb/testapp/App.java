@@ -2,8 +2,8 @@ package com.forsuredb.testapp;
 
 import android.app.Application;
 
-import com.forsuredb.FSDBHelper;
-import com.forsuredb.ForSureAndroidInfoFactory;
+import com.fsryan.fosuredb.FSDBHelper;
+import com.fsryan.fosuredb.ForSureAndroidInfoFactory;
 
 public class App extends Application {
 

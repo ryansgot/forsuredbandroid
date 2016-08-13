@@ -36,7 +36,7 @@ android {
 forsuredb {
     applicationPackageName = 'com.forsuredb.testapp'
     resultParameter = "android.net.Uri"
-    recordContainer = "com.forsuredb.provider.FSContentValues"
+    recordContainer = "com.fsryan.fosuredb.provider.FSContentValues"
     migrationDirectory = 'app/src/main/assets'
     appProjectDirectory = 'app'
 }
