@@ -15,11 +15,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.forsuredb;
+package com.fsryan.fosuredb;
 
 import android.util.Log;
 
-import com.forsuredb.api.FSLogger;
+import com.fsryan.forsuredb.api.FSLogger;
 import com.google.common.base.Strings;
 
 /*package*/ class ADBFSLogger implements FSLogger {

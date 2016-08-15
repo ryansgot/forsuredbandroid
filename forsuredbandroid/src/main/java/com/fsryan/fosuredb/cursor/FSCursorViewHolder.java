@@ -1,4 +1,4 @@
-package com.forsuredb.cursor;
+package com.fsryan.fosuredb.cursor;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -24,9 +24,9 @@ public abstract class FSCursorViewHolder extends RecyclerView.ViewHolder {
 
     /**
      * <p>
-     *     It is up to you to determine what {@link com.forsuredb.api.FSGetApi}
+     *     It is up to you to determine what {@link com.fsryan.forsuredb.api.FSGetApi}
      *     class to use to get data out of the {@link FSCursor}. A {@link FSCursor} is a
-     *     {@link com.forsuredb.api.Retriever}.
+     *     {@link com.fsryan.forsuredb.api.Retriever}.
      * </p>
      * @param cursor A cursor at the correct position for this view.
      */

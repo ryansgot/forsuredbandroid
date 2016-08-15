@@ -1,4 +1,4 @@
-package com.forsuredb.util;
+package com.fsryan.fosuredb.util;
 
 import android.net.Uri;
 
@@ -10,7 +10,7 @@ import java.util.List;
 
 public class UriUtil {
 
-    private static final String authority = "com.forsuredb.util.content";
+    private static final String authority = "com.fsryan.fosuredb.util.content";
 
     private static final List<String> allRecordsJoinUri = Lists.newArrayList("parent", "*", "child");
     private static final List<String> allRecordsJoinWithSpecificParentMatch = Lists.newArrayList("parent", "1", "child");

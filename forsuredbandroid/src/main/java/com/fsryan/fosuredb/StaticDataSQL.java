@@ -15,25 +15,25 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.forsuredb;
+package com.fsryan.fosuredb;
 
 import android.content.Context;
 import android.content.res.AssetManager;
 
-import com.forsuredb.annotation.FSColumn;
-import com.forsuredb.api.FSGetApi;
-import com.forsuredb.api.FSLogger;
-import com.forsuredb.api.FSTableCreator;
-import com.forsuredb.api.RecordContainer;
-import com.forsuredb.api.staticdata.StaticDataRetrieverFactory;
-import com.google.common.base.Strings;
+import com.fsryan.forsuredb.api.FSGetApi;
+import com.fsryan.forsuredb.api.FSLogger;
+import com.fsryan.forsuredb.api.FSTableCreator;
+import com.fsryan.forsuredb.api.staticdata.StaticDataRetrieverFactory;
+import com.fsryan.forsuredb.sqlitelib.SqlGenerator;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 /*package*/ class StaticDataSQL {
 
@@ -64,25 +64,26 @@ import java.util.List;
     public List<String> getInsertionSQL(Context context) {
         if (!canCreateStaticDataInsertionQueries()) {
             log.e("Cannot create static data insertion queries for apiClass: " + apiClass.getSimpleName());
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
+        SqlGenerator sqlGenerator = new SqlGenerator();
         List<String> insertionQueries = new ArrayList<>();
-        for (RecordContainer recordContainer : getRecordContainers(context.getResources().getAssets())) {
-            insertionQueries.add(getInsertionQuery(recordContainer));
+        for (Map<String, String> rawRecord : getRawRecords(context.getResources().getAssets())) {
+            insertionQueries.add(sqlGenerator.newSingleRowInsertionSql(tableName, rawRecord));
         }
 
         return insertionQueries;
     }
 
-    private List<RecordContainer> getRecordContainers(AssetManager assetManager) {
+    private List<Map<String, String>> getRawRecords(AssetManager assetManager) {
         InputStream xmlStream = null;
         try {
             xmlStream = assetManager.open(staticDataAsset);
-            return new StaticDataRetrieverFactory(log).fromStream(xmlStream).getRecords(staticDataRecordName);
+            return new StaticDataRetrieverFactory(log).fromStream(xmlStream).getRawRecords(staticDataRecordName);
         } catch (IOException ioe) {
             log.e("Could not retrieve static data from " + staticDataAsset + ":" + ioe.getMessage());
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         } finally {
             if (xmlStream != null) {
                 try {
@@ -92,38 +93,7 @@ import java.util.List;
         }
     }
 
-    private String getInsertionQuery(RecordContainer recordContainer) {
-        final StringBuilder queryBuf = new StringBuilder("INSERT INTO " + tableName + " (");
-        final StringBuilder valueBuf = new StringBuilder();
-
-        for (Method method : apiClass.getDeclaredMethods()) {
-            if (!method.isAnnotationPresent(FSColumn.class)) {
-                continue;
-            }
-            final String columnName = getColumnName(method);
-            if ("_id".equals(columnName)) {
-                continue;   // <-- never insert an _id column
-            }
-            final Object val = recordContainer.get(getColumnName(method));
-            if (val != null) {
-                queryBuf.append(columnName).append(", ");
-                valueBuf.append("'").append(val).append("', ");
-            }
-        }
-
-        queryBuf.delete(queryBuf.length() - 2, queryBuf.length());  // <-- remove final ", "
-        valueBuf.delete(valueBuf.length() - 2, valueBuf.length());  // <-- remove final ", "
-        return queryBuf.append(") VALUES (").append(valueBuf.toString()).append(");").toString();
-    }
-
-    private String getColumnName(Method method) {
-        return method.getAnnotation(FSColumn.class).value().isEmpty() ? method.getName() : method.getAnnotation(FSColumn.class).value();
-    }
-
     private boolean canCreateStaticDataInsertionQueries() {
-        return apiClass != null
-                && !Strings.isNullOrEmpty(tableName)
-                && !Strings.isNullOrEmpty(staticDataAsset)
-                && !Strings.isNullOrEmpty(staticDataRecordName);
+        return !isNullOrEmpty(tableName) && !isNullOrEmpty(staticDataAsset) && !isNullOrEmpty(staticDataRecordName);
     }
 }

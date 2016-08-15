@@ -24,5 +24,6 @@ allprojects {
         maven {
             url "http://projectlombok.org/mavenrepo"
         }
+        mavenLocal()
     }
 }

@@ -5,9 +5,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.forsuredb.cursor.FSCursor;
-import com.forsuredb.cursor.FSCursorRecyclerViewAdapter;
-import com.forsuredb.cursor.FSCursorViewHolder;
+import com.fsryan.fosuredb.cursor.FSCursor;
+import com.fsryan.fosuredb.cursor.FSCursorRecyclerViewAdapter;
+import com.fsryan.fosuredb.cursor.FSCursorViewHolder;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.ProfileInfoTable;
 

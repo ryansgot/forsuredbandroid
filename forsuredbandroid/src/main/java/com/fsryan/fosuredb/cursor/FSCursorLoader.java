@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.forsuredb.cursor;
+package com.fsryan.fosuredb.cursor;
 
 import android.content.AsyncTaskLoader;
 import android.content.Context;
@@ -23,13 +23,13 @@ import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.Handler;
 
-import com.forsuredb.api.FSGetApi;
-import com.forsuredb.api.FSSaveApi;
-import com.forsuredb.api.Finder;
-import com.forsuredb.api.Resolver;
-import com.forsuredb.api.OrderBy;
-import com.forsuredb.provider.FSContentValues;
-import com.forsuredb.provider.UriEvaluator;
+import com.fsryan.forsuredb.api.FSGetApi;
+import com.fsryan.forsuredb.api.FSSaveApi;
+import com.fsryan.forsuredb.api.Finder;
+import com.fsryan.forsuredb.api.Resolver;
+import com.fsryan.forsuredb.api.OrderBy;
+import com.fsryan.fosuredb.provider.FSContentValues;
+import com.fsryan.fosuredb.provider.UriEvaluator;
 
 import java.util.List;
 

@@ -15,12 +15,12 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.forsuredb.provider;
+package com.fsryan.fosuredb.provider;
 
 import android.net.Uri;
 import android.test.InstrumentationTestCase;
 
-import com.forsuredb.api.FSJoin;
+import com.fsryan.forsuredb.api.FSJoin;
 import com.google.common.collect.Lists;
 
 import java.util.List;
@@ -28,7 +28,7 @@ import java.util.List;
 public class UriJoinerTest extends InstrumentationTestCase {
 
     private static final String scheme = "content";
-    private static final String authority = "com.forsuredb.provider.UriJoinerTest.content";
+    private static final String authority = "com.fsryan.fosuredb.provider.UriJoinerTest.content";
 
     private Uri.Builder inputUriBuilder;
     private Uri.Builder expectedUriBuilder;

@@ -1,8 +1,8 @@
-package com.forsuredb.cursor;
+package com.fsryan.fosuredb.cursor;
 
 import android.support.v7.widget.RecyclerView;
 
-import com.forsuredb.api.FSGetApi;
+import com.fsryan.forsuredb.api.FSGetApi;
 
 /**
  * <p>

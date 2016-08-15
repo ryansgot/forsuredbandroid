@@ -1,6 +1,6 @@
-package com.forsuredb.provider;
+package com.fsryan.fosuredb.provider;
 
-import com.forsuredb.util.UriUtil;
+import com.fsryan.fosuredb.util.UriUtil;
 
 import org.junit.Test;
 
