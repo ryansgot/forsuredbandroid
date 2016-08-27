@@ -20,6 +20,7 @@ package com.fsryan.fosuredb;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.fsryan.forsuredb.api.FSTableCreator;
 import com.fsryan.fosuredb.cursor.FSCursorFactory;
@@ -100,7 +101,7 @@ public class FSDBHelper extends SQLiteOpenHelper {
 
         Collections.sort(tables);
         for (FSTableCreator table : tables) {
-            performStaticDataInsertion(db, table);
+            executeSqlList(db, new StaticDataSQL(table).getInsertionSQL(context), "inserting static data: ");
         }
     }
 
@@ -137,20 +138,24 @@ public class FSDBHelper extends SQLiteOpenHelper {
         return version;
     }
 
-    private void performStaticDataInsertion(SQLiteDatabase db, FSTableCreator table) {
-        for (String insertionSqlString : new StaticDataSQL(table).getInsertionSQL(context)) {
-            db.execSQL(insertionSqlString);
-        }
-    }
-
     private void applyMigrations(SQLiteDatabase db, int previousVersion) {
         for (MigrationSet migrationSet : migrationSets) {
             if (previousVersion >= migrationSet.getDbVersion()) {
                 continue;
             }
+            executeSqlList(db, new SqlGenerator().generateMigrationSql(migrationSet), "performing migration sql: ");
+        }
+    }
 
-            for (String sql : new SqlGenerator().generateMigrationSql(migrationSet)) {
-                db.execSQL(sql);
+    private void executeSqlList(SQLiteDatabase db, List<String> sqlList, String logPrefix) {
+        if (debugMode) {
+            for (String insertionSqlString : sqlList) {
+                Log.d("forsuredb", logPrefix + insertionSqlString);
+                db.execSQL(insertionSqlString);
+            }
+        } else {
+            for (String insertionSqlString : sqlList) {
+                db.execSQL(insertionSqlString);
             }
         }
     }
