@@ -3,15 +3,20 @@ package com.forsuredb.testapp;
 import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.Loader;
 import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.EditText;
 
 import com.fsryan.forsuredb.api.FSGetApi;
@@ -35,7 +40,7 @@ import java.util.Random;
 
 import static com.forsuredb.testapp.ForSure.*;
 
-public class TestActivity extends ActionBarActivity {
+public class TestActivity extends AppCompatActivity {
 
     private static final int LOADER_ID = 1934;
 
@@ -58,6 +63,24 @@ public class TestActivity extends ActionBarActivity {
 
         joinLoader = new JoinLoader();
         getLoaderManager().initLoader(LOADER_ID, null, joinLoader);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_test, menu);
+        menu.removeItem(R.id.action_test_relational);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_test_doc_store:
+                startActivity(new Intent(this, DocStoreTestActivity.class));
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public void onEditUserTableClicked(View v) {
