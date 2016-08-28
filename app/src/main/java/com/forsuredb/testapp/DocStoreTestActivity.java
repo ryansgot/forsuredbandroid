@@ -222,10 +222,10 @@ public class DocStoreTestActivity extends AppCompatActivity implements TimePicke
             return new FSCursorLoader<>(DocStoreTestActivity.this, docStoreTestTable()
                     .find()
                             .byClassName(DocStoreIntPropertyExtension.class.getName())
+                            .andFinally()
+                    .order()
+                            .byModified(OrderBy.Order.DESC)
                             .andFinally());
-//                    .order()
-//                            .byModified(OrderBy.Order.DESC)
-//                            .andFinally());
         }
 
         @Override
@@ -252,10 +252,10 @@ public class DocStoreTestActivity extends AppCompatActivity implements TimePicke
             return new FSCursorLoader<>(DocStoreTestActivity.this, docStoreTestTable()
                     .find()
                             .byClassName(DocStoreDoublePropertyExtension.class.getName())
+                            .andFinally()
+                    .order()
+                            .byModified(OrderBy.Order.DESC)
                             .andFinally());
-//                    .order()
-//                            .byModified(OrderBy.Order.DESC)
-//                            .andFinally());
         }
 
         @Override
