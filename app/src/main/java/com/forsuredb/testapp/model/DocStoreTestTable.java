@@ -8,5 +8,6 @@ import com.fsryan.forsuredb.api.Retriever;
 
 @FSTable("doc_store_test")
 public interface DocStoreTestTable extends FSDocStoreGetApi<DocStoreTestBase> {
+    Class BASE_CLASS = DocStoreTestBase.class;
     @FSColumn("uuid") @Unique String uuid(Retriever retriever);
 }
