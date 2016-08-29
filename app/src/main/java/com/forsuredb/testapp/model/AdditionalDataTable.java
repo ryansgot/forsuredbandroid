@@ -10,8 +10,17 @@ import com.fsryan.forsuredb.api.Retriever;
 @FSTable("additional_data")
 @FSStaticData(asset = "additional_data.xml", recordName = "additional_data")
 public interface AdditionalDataTable extends FSGetApi {
-    @FSColumn("profile_info_id") @ForeignKey(apiClass = ProfileInfoTable.class, columnName = "_id") long profileInfoId(Retriever retriever);
-    @FSColumn("string_column") String stringColumn(Retriever retriever);
-    @FSColumn("int_column") int intColumn(Retriever retriever);
-    @FSColumn("long_column") long longColumn(Retriever retriever);
+
+    @FSColumn(value = "profile_info_id", orderable = false, searchable = false)
+    @ForeignKey(apiClass = ProfileInfoTable.class, columnName = "_id")
+    long profileInfoId(Retriever retriever);
+
+    @FSColumn(value = "string_column", orderable = false, searchable = false)
+    String stringColumn(Retriever retriever);
+
+    @FSColumn(value = "int_column", orderable = false, searchable = false)
+    int intColumn(Retriever retriever);
+
+    @FSColumn(value = "long_column", orderable = false, searchable = false)
+    long longColumn(Retriever retriever);
 }

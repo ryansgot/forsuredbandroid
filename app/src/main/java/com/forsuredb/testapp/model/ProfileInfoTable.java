@@ -10,8 +10,17 @@ import com.fsryan.forsuredb.annotations.FSTable;
 @FSTable("profile_info")
 @FSStaticData(asset = "profile_info.xml", recordName = "profile_info")
 public interface ProfileInfoTable extends FSGetApi {
-    @FSColumn("user_id") @ForeignKey(apiClass = UserTable.class, columnName = "_id") long userId(Retriever retriever);
-    @FSColumn("email_address") String emailAddress(Retriever retriever);
-    @FSColumn("binary_data") byte[] binaryData(Retriever retriever);
-    @FSColumn("awesome") boolean awesome(Retriever retriever);
+
+    @FSColumn(value = "user_id", orderable = false, searchable = false)
+    @ForeignKey(apiClass = UserTable.class, columnName = "_id")
+    long userId(Retriever retriever);
+
+    @FSColumn("email_address")
+    String emailAddress(Retriever retriever);
+
+    @FSColumn(value = "binary_data", orderable = false, searchable = false)
+    byte[] binaryData(Retriever retriever);
+
+    @FSColumn(value = "awesome", orderable = false, searchable = false)
+    boolean awesome(Retriever retriever);
 }
