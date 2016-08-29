@@ -11,8 +11,15 @@ import java.math.BigDecimal;
 @FSTable("user")
 @FSStaticData(asset = "user.xml", recordName = "user")
 public interface UserTable extends FSGetApi {
-    @FSColumn("global_id") long globalId(Retriever retriever);
-    @FSColumn("login_count") int loginCount(Retriever retriever);
-    @FSColumn("app_rating") double appRating(Retriever retriever);
-    @FSColumn("competitor_app_rating") BigDecimal competitorAppRating(Retriever retriever);
+    @FSColumn(value = "global_id", orderable = false, searchable = false)
+    long globalId(Retriever retriever);
+
+    @FSColumn(value = "login_count", orderable = false, searchable = false)
+    int loginCount(Retriever retriever);
+
+    @FSColumn(value = "app_rating", orderable = false, searchable = false)
+    double appRating(Retriever retriever);
+
+    @FSColumn(value = "competitor_app_rating", orderable = false, searchable = false)
+    BigDecimal competitorAppRating(Retriever retriever);
 }

@@ -4,5 +4,11 @@
     <string name="app_name">ForSureDB</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="test_doc_store">Test Doc Store</string>
+    <string name="test_relational_tables">Test Relational Tables</string>
 
+    <string-array name="doc_store_test_types">
+        <item>DocStoreIntPropertyExtension</item>
+        <item>DocStoreDoublePropertyExtension</item>
+    </string-array>
 </resources>

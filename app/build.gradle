@@ -29,7 +29,6 @@ android {
     packagingOptions {
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE.txt'
-        exclude 'META-INF/services/javax.annotation.processing.Processor'
     }
 }
 
@@ -39,6 +38,8 @@ forsuredb {
     recordContainer = "com.fsryan.fosuredb.provider.FSContentValues"
     migrationDirectory = 'app/src/main/assets'
     appProjectDirectory = 'app'
+    resourcesDirectory = 'app/src/main/resources'
+    fsJsonAdapterFactoryClass = 'com.forsuredb.testapp.model.TestJsonAdapterFactory'
 }
 
 dependencies {
@@ -46,9 +47,9 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:recyclerview-v7:23.4.0'
 
-    provided 'com.fsryan.forsuredb:forsuredbcompiler:0.7.0'
+    provided 'com.fsryan.forsuredb:forsuredbcompiler:0.8.0'
 
     compile project(':forsuredbandroid')
 
-    apt 'com.fsryan.forsuredb:forsuredbcompiler:0.7.0'
+    apt 'com.fsryan.forsuredb:forsuredbcompiler:0.8.0'
 }

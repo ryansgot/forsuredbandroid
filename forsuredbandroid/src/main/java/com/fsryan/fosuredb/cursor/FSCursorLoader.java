@@ -33,7 +33,7 @@ import com.fsryan.fosuredb.provider.UriEvaluator;
 
 import java.util.List;
 
-public class FSCursorLoader<G extends FSGetApi, S extends FSSaveApi<Uri>, F extends Finder<Uri, FSContentValues, G, S, F, O>, O extends OrderBy<Uri, FSContentValues, G, S, F, O>> extends AsyncTaskLoader<FSCursor> {
+public class FSCursorLoader<G extends FSGetApi, S extends FSSaveApi<Uri>, F extends Finder, O extends OrderBy> extends AsyncTaskLoader<FSCursor> {
 
     private FSCursor mCursor;
     private Resolver<Uri, FSContentValues, G, S, F, O> resolver;

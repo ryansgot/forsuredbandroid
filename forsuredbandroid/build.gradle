@@ -3,7 +3,7 @@ apply plugin: 'android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 group = 'com.fsryan.forsuredb'
-version = '0.7.0'
+version = '0.8.0'
 
 android {
     compileSdkVersion 23
@@ -47,8 +47,8 @@ dependencies {
 
     compile 'com.google.guava:guava:19.0'
 
-    compile 'com.fsryan.forsuredb:forsuredbapi:0.7.0'
-    compile 'com.fsryan.forsuredb:sqlitelib:0.2.0'
+    compile 'com.fsryan.forsuredb:forsuredbapi:0.8.1'
+    compile 'com.fsryan.forsuredb:sqlitelib:0.3.0'
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:1.9.5'
@@ -110,10 +110,10 @@ bintray {
 //        publish = true
         publicDownloadNumbers = true
         version {
-            name = '0.7.0'
+            name = '0.8.0'
             desc = 'An android library leveraging the forsuredb project'
             released  = new Date()
-            vcsTag = 'v0.7.0'
+            vcsTag = 'v0.8.0'
         }
     }
 }

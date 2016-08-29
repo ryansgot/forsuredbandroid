@@ -16,6 +16,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".DocStoreTestActivity"
+            android:label="@string/app_name" />
         <provider
             android:name="com.fsryan.fosuredb.provider.FSDefaultProvider"
             android:authorities="com.forsuredb.testapp.content"

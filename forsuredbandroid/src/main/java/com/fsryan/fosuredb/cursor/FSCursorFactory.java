@@ -28,12 +28,10 @@ import com.fsryan.fosuredb.FSDBHelper;
 
 public class FSCursorFactory implements SQLiteDatabase.CursorFactory {
 
-    private static final String LOG_TAG = FSCursorFactory.class.getSimpleName();
-
     @Override
     public Cursor newCursor(SQLiteDatabase db, SQLiteCursorDriver masterQuery, String editTable, SQLiteQuery query) {
         if (FSDBHelper.inst().inDebugMode()) {
-            Log.d(LOG_TAG, "Running query (Edit table = " + editTable + "): " + query.toString());
+            Log.d("forsuredb", "Running query (Edit table = " + editTable + "): " + query.toString());
         }
         return new FSCursor(new SQLiteCursor(masterQuery, editTable, query));
     }
