@@ -6,6 +6,8 @@ public class DocStoreDoublePropertyExtension extends DocStoreTestBase {
 
     private double value;
 
+    public DocStoreDoublePropertyExtension() {}
+
     public DocStoreDoublePropertyExtension(String uuid, String name, Date date, double value) {
         super(uuid, name, date);
         this.value = value;

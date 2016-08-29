@@ -27,8 +27,6 @@ public abstract class TypeAdapter<T extends DocStoreTestBase> implements JsonSer
         return updateJsonFromInstance(new JsonObject(), src, typeOfSrc, context);
     }
 
-    protected abstract JsonElement updateJsonFromInstance(JsonObject jsonObject, T src, Type typeOfSrc, JsonSerializationContext context);
-
     @Override
     public final T deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         try {
@@ -39,11 +37,11 @@ public abstract class TypeAdapter<T extends DocStoreTestBase> implements JsonSer
         return null;
     }
 
+    protected abstract JsonElement updateJsonFromInstance(JsonObject jsonObject, T src, Type typeOfSrc, JsonSerializationContext context);
     protected abstract T updateInstanceFromJson(JsonObject asJsonObject, T t, Type typeOfT, JsonDeserializationContext context);
 
-
     protected final long serializeDate(Date date) {
-        return  date == null ? -1L : date.getTime();
+        return date == null ? -1L : date.getTime();
     }
 
     protected final Date deserializeDate(JsonObject jsonObject, String key) {

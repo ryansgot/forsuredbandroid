@@ -35,6 +35,7 @@ import com.fsryan.fosuredb.cursor.FSCursorRecyclerViewAdapter;
 import com.fsryan.fosuredb.cursor.FSCursorViewHolder;
 
 import java.util.Calendar;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.forsuredb.testapp.ForSure.docStoreTestTable;

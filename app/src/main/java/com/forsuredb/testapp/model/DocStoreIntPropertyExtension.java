@@ -6,6 +6,8 @@ public class DocStoreIntPropertyExtension extends DocStoreTestBase {
 
     private int value;
 
+    public DocStoreIntPropertyExtension() {}
+
     public DocStoreIntPropertyExtension(String uuid, String name, Date date, int value) {
         super(uuid, name, date);
         this.value = value;

@@ -39,6 +39,8 @@ forsuredb {
     recordContainer = "com.fsryan.fosuredb.provider.FSContentValues"
     migrationDirectory = 'app/src/main/assets'
     appProjectDirectory = 'app'
+    resourcesDirectory = 'app/src/main/resources'
+    fsJsonAdapterFactoryClass = 'com.forsuredb.testapp.model.TestJsonAdapterFactory'
 }
 
 dependencies {

@@ -15,6 +15,8 @@ public abstract class DocStoreTestBase {
     private String name;
     private Date date;
 
+    public DocStoreTestBase() {}
+
     public DocStoreTestBase(String uuid, String name, Date date) {
         this.uuid = uuid;
         this.name = name;
