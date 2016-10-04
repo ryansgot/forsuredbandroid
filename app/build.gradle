@@ -39,7 +39,7 @@ forsuredb {
     migrationDirectory = 'app/src/main/assets'
     appProjectDirectory = 'app'
     resourcesDirectory = 'app/src/main/resources'
-    fsJsonAdapterFactoryClass = 'com.forsuredb.testapp.model.TestJsonAdapterFactory'
+    fsSerializerFactoryClass = 'com.forsuredb.testapp.model.TestJsonAdapterFactory'
 }
 
 dependencies {
