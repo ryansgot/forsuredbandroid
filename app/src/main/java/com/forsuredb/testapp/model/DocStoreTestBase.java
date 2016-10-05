@@ -7,10 +7,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.Date;
 
-public abstract class DocStoreTestBase {
+public abstract class DocStoreTestBase implements Serializable {
+
+    private static final long serialVersionUID = 248985L;
+
     private String uuid;
     private String name;
     private Date date;

@@ -2,7 +2,9 @@ package com.forsuredb.testapp.model;
 
 import android.support.annotation.CallSuper;
 
+import com.forsuredb.testapp.BuildConfig;
 import com.fsryan.forsuredb.api.adapter.FSGsonSerializer;
+import com.fsryan.forsuredb.api.adapter.FSSerializableSerializer;
 import com.fsryan.forsuredb.api.adapter.FSSerializer;
 import com.fsryan.forsuredb.api.adapter.FSSerializerFactory;
 import com.google.gson.Gson;
@@ -54,10 +56,17 @@ public class TestJsonAdapterFactory implements FSSerializerFactory {
 
     @Override
     public FSSerializer create() {
-        return new FSGsonSerializer(new GsonBuilder()
-                .registerTypeAdapter(DocStoreTestBase.class, dstBAdapter)
-                .registerTypeAdapter(DocStoreIntPropertyExtension.class, dstIAdapter)
-                .registerTypeAdapter(DocStoreDoublePropertyExtension.class, dstDAdapter)
-                .create());
+        switch (BuildConfig.SERIALIZER) {
+            case "gson":
+                return new FSGsonSerializer(new GsonBuilder()
+                        .registerTypeAdapter(DocStoreTestBase.class, dstBAdapter)
+                        .registerTypeAdapter(DocStoreIntPropertyExtension.class, dstIAdapter)
+                        .registerTypeAdapter(DocStoreDoublePropertyExtension.class, dstDAdapter)
+                        .create());
+            case "java_serializable":
+                return new FSSerializableSerializer();
+        }
+
+        return null;
     }
 }
