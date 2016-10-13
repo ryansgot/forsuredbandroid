@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.fsryan.fosuredb;
+package com.fsryan.forsuredb;
 
 import android.util.Log;
 

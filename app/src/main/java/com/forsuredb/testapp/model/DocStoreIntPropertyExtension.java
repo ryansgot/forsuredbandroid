@@ -4,6 +4,8 @@ import java.util.Date;
 
 public class DocStoreIntPropertyExtension extends DocStoreTestBase {
 
+    private static final long serialVersionUID = 834743L;
+
     private int value;
 
     public DocStoreIntPropertyExtension() {}

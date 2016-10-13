@@ -29,13 +29,12 @@ import com.forsuredb.testapp.model.DocStoreTestTable;
 import com.fsryan.forsuredb.api.FSGetApi;
 import com.fsryan.forsuredb.api.OrderBy;
 import com.fsryan.forsuredb.api.SaveResult;
-import com.fsryan.fosuredb.cursor.FSCursor;
-import com.fsryan.fosuredb.cursor.FSCursorLoader;
-import com.fsryan.fosuredb.cursor.FSCursorRecyclerViewAdapter;
-import com.fsryan.fosuredb.cursor.FSCursorViewHolder;
+import com.fsryan.forsuredb.cursor.FSCursor;
+import com.fsryan.forsuredb.cursor.FSCursorLoader;
+import com.fsryan.forsuredb.cursor.FSCursorRecyclerViewAdapter;
+import com.fsryan.forsuredb.cursor.FSCursorViewHolder;
 
 import java.util.Calendar;
-import java.util.Map;
 import java.util.UUID;
 
 import static com.forsuredb.testapp.ForSure.docStoreTestTable;

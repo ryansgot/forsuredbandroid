@@ -8,9 +8,9 @@ import android.widget.TextView;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.DocStoreTestBase;
 import com.forsuredb.testapp.model.DocStoreTestTable;
-import com.fsryan.fosuredb.cursor.FSCursor;
-import com.fsryan.fosuredb.cursor.FSCursorRecyclerViewAdapter;
-import com.fsryan.fosuredb.cursor.FSCursorViewHolder;
+import com.fsryan.forsuredb.cursor.FSCursor;
+import com.fsryan.forsuredb.cursor.FSCursorRecyclerViewAdapter;
+import com.fsryan.forsuredb.cursor.FSCursorViewHolder;
 
 import static com.forsuredb.testapp.ForSure.docStoreTestTable;
 

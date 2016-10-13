@@ -2,7 +2,11 @@ package com.forsuredb.testapp.model;
 
 import android.support.annotation.CallSuper;
 
-import com.fsryan.forsuredb.api.adapter.FSJsonAdapterFactory;
+import com.forsuredb.testapp.BuildConfig;
+import com.fsryan.forsuredb.api.adapter.FSGsonSerializer;
+import com.fsryan.forsuredb.api.adapter.FSSerializableSerializer;
+import com.fsryan.forsuredb.api.adapter.FSSerializer;
+import com.fsryan.forsuredb.api.adapter.FSSerializerFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -12,7 +16,7 @@ import com.google.gson.JsonSerializationContext;
 
 import java.lang.reflect.Type;
 
-public class TestJsonAdapterFactory implements FSJsonAdapterFactory {
+public class TestJsonAdapterFactory implements FSSerializerFactory {
 
     public static final DocStoreTestBase.Adapter<DocStoreTestBase> dstBAdapter = new DocStoreTestBase.Adapter<DocStoreTestBase>(DocStoreTestBase.class) {};
     public static final DocStoreTestBase.Adapter<DocStoreIntPropertyExtension> dstIAdapter = new DocStoreTestBase.Adapter<DocStoreIntPropertyExtension>(DocStoreIntPropertyExtension.class) {
@@ -51,11 +55,18 @@ public class TestJsonAdapterFactory implements FSJsonAdapterFactory {
     };
 
     @Override
-    public Gson create() {
-        return new GsonBuilder().setPrettyPrinting()
-                .registerTypeAdapter(DocStoreTestBase.class, dstBAdapter)
-                .registerTypeAdapter(DocStoreIntPropertyExtension.class, dstIAdapter)
-                .registerTypeAdapter(DocStoreDoublePropertyExtension.class, dstDAdapter)
-                .create();
+    public FSSerializer create() {
+        switch (BuildConfig.SERIALIZER) {
+            case "gson":
+                return new FSGsonSerializer(new GsonBuilder()
+                        .registerTypeAdapter(DocStoreTestBase.class, dstBAdapter)
+                        .registerTypeAdapter(DocStoreIntPropertyExtension.class, dstIAdapter)
+                        .registerTypeAdapter(DocStoreDoublePropertyExtension.class, dstDAdapter)
+                        .create());
+            case "java_serializable":
+                return new FSSerializableSerializer();
+        }
+
+        return null;
     }
 }

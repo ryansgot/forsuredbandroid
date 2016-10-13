@@ -1,4 +1,4 @@
-package com.fsryan.fosuredb.provider;
+package com.fsryan.forsuredb.provider;
 
 import android.net.Uri;
 

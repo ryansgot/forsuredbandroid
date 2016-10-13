@@ -4,6 +4,8 @@ import java.util.Date;
 
 public class DocStoreDoublePropertyExtension extends DocStoreTestBase {
 
+    private static final long serialVersionUID = 6583865L;
+
     private double value;
 
     public DocStoreDoublePropertyExtension() {}

@@ -26,6 +26,16 @@ android {
         }
     }
 
+    productFlavors {
+        javaserializableserializer {
+            buildConfigField "String", "SERIALIZER", "\"java_serializable\""
+        }
+
+        gsonserializer {
+            buildConfigField "String", "SERIALIZER", "\"gson\""
+        }
+    }
+
     packagingOptions {
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE.txt'
@@ -39,7 +49,7 @@ forsuredb {
     migrationDirectory = 'app/src/main/assets'
     appProjectDirectory = 'app'
     resourcesDirectory = 'app/src/main/resources'
-    fsJsonAdapterFactoryClass = 'com.forsuredb.testapp.model.TestJsonAdapterFactory'
+    fsSerializerFactoryClass = 'com.forsuredb.testapp.model.TestJsonAdapterFactory'
 }
 
 dependencies {
@@ -47,9 +57,9 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:recyclerview-v7:23.4.0'
 
-    provided 'com.fsryan.forsuredb:forsuredbcompiler:0.8.0'
+    provided 'com.fsryan.forsuredb:forsuredbcompiler:0.8.1'
 
     compile project(':forsuredbandroid')
 
-    apt 'com.fsryan.forsuredb:forsuredbcompiler:0.8.0'
+    apt 'com.fsryan.forsuredb:forsuredbcompiler:0.8.1'
 }
