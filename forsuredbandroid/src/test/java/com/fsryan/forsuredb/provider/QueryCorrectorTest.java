@@ -15,11 +15,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.fsryan.fosuredb.provider;
+package com.fsryan.forsuredb.provider;
 
 import android.net.Uri;
 
-import com.fsryan.fosuredb.util.UriUtil;
+import com.fsryan.forsuredb.util.UriUtil;
 
 import org.junit.Before;
 import org.junit.Test;

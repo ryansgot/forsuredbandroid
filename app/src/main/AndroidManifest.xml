@@ -19,7 +19,7 @@
         <activity android:name=".DocStoreTestActivity"
             android:label="@string/app_name" />
         <provider
-            android:name="com.fsryan.fosuredb.provider.FSDefaultProvider"
+            android:name="com.fsryan.forsuredb.provider.FSDefaultProvider"
             android:authorities="com.forsuredb.testapp.content"
             android:enabled="true"
             android:exported="false" />

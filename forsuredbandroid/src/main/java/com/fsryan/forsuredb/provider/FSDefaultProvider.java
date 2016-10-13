@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.fsryan.fosuredb.provider;
+package com.fsryan.forsuredb.provider;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -25,8 +25,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 
-import com.fsryan.fosuredb.FSDBHelper;
-import com.fsryan.fosuredb.ForSureAndroidInfoFactory;
+import com.fsryan.forsuredb.FSDBHelper;
+import com.fsryan.forsuredb.ForSureAndroidInfoFactory;
 
 /**
  * <p>
