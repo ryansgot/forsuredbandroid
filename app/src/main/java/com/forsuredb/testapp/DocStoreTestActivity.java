@@ -27,7 +27,6 @@ import com.forsuredb.testapp.model.DocStoreIntPropertyExtension;
 import com.forsuredb.testapp.model.DocStoreTestBase;
 import com.forsuredb.testapp.model.DocStoreTestTable;
 import com.fsryan.forsuredb.api.FSGetApi;
-import com.fsryan.forsuredb.api.OrderBy;
 import com.fsryan.forsuredb.api.SaveResult;
 import com.fsryan.forsuredb.cursor.FSCursor;
 import com.fsryan.forsuredb.cursor.FSCursorLoader;
@@ -39,6 +38,7 @@ import java.util.UUID;
 
 import static com.forsuredb.testapp.ForSure.docStoreTestTable;
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.fsryan.forsuredb.api.OrderBy.ORDER_DESC;
 
 public class DocStoreTestActivity extends AppCompatActivity implements TimePickerDialog.OnTimeSetListener, DatePickerDialog.OnDateSetListener {
 
@@ -222,10 +222,10 @@ public class DocStoreTestActivity extends AppCompatActivity implements TimePicke
             return new FSCursorLoader<>(DocStoreTestActivity.this, docStoreTestTable()
                     .find()
                             .byClassName(DocStoreIntPropertyExtension.class.getName())
-                            .andFinally()
+                            .then()
                     .order()
-                            .byModified(OrderBy.Order.DESC)
-                            .andFinally());
+                            .byModified(ORDER_DESC)
+                            .then());
         }
 
         @Override
@@ -252,10 +252,10 @@ public class DocStoreTestActivity extends AppCompatActivity implements TimePicke
             return new FSCursorLoader<>(DocStoreTestActivity.this, docStoreTestTable()
                     .find()
                             .byClassName(DocStoreDoublePropertyExtension.class.getName())
-                            .andFinally()
+                            .then()
                     .order()
-                            .byModified(OrderBy.Order.DESC)
-                            .andFinally());
+                            .byModified(ORDER_DESC)
+                            .then());
         }
 
         @Override

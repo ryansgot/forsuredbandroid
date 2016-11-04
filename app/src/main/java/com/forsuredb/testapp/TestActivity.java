@@ -19,7 +19,6 @@ import android.widget.EditText;
 
 import com.fsryan.forsuredb.api.FSGetApi;
 import com.fsryan.forsuredb.api.FSJoin;
-import com.fsryan.forsuredb.api.OrderBy.Order;
 import com.fsryan.forsuredb.api.Retriever;
 import com.fsryan.forsuredb.api.SaveResult;
 import com.fsryan.forsuredb.cursor.FSCursor;
@@ -37,6 +36,8 @@ import java.util.Date;
 import java.util.Random;
 
 import static com.forsuredb.testapp.ForSure.*;
+import static com.fsryan.forsuredb.api.OrderBy.ORDER_DESC;
+import static com.fsryan.forsuredb.api.OrderBy.ORDER_ASC;
 
 public class TestActivity extends AppCompatActivity {
 
@@ -99,7 +100,7 @@ public class TestActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialogInterface, int which) {
                 try {
                     long id = getIdFromDialog(dialogInterface);
-                    Log.i(LOG_TAG, "user rows deleted: " + userTable().find().byId(id).andFinally().set().hardDelete());
+                    Log.i(LOG_TAG, "user rows deleted: " + userTable().find().byId(id).then().set().hardDelete());
                 } catch (NumberFormatException nfe) {
                     return;
                 } finally {
@@ -127,7 +128,7 @@ public class TestActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialogInterface, int which) {
                 try {
                     long id = getIdFromDialog(dialogInterface);
-                    logResult(profileInfoTable().find().byId(id).andFinally().set().softDelete());
+                    logResult(profileInfoTable().find().byId(id).then().set().softDelete());
                 } catch (NumberFormatException nfe) {
                     return;
                 } finally {
@@ -152,7 +153,7 @@ public class TestActivity extends AppCompatActivity {
         /*
          * This block demonstrates saving a newly created record routed via the table name
          */
-        logResult(userTable().find().byId(id).andFinally().set()
+        logResult(userTable().find().byId(id).then().set()
                 .appRating(generator.nextDouble())
                 .competitorAppRating(new BigDecimal(generator.nextFloat()))
                 .globalId(generator.nextLong())
@@ -172,7 +173,7 @@ public class TestActivity extends AppCompatActivity {
         /*
          * This block demonstrates saving a newly created record as a method call chain
          */
-        logResult(profileInfoTable().find().byId(id).andFinally().set()
+        logResult(profileInfoTable().find().byId(id).then().set()
                 .id(id)
                 .emailAddress("user" + userId + "@email.com")
                 .binaryData(new byte[]{(byte) (generator.nextInt() & 0xFF), (byte) (generator.nextInt() & 0xFF), (byte) 0})
@@ -259,10 +260,12 @@ public class TestActivity extends AppCompatActivity {
             Log.i(LOG_TAG, "JoinLoader.onCreateLoader");
             return new FSCursorLoader<>(TestActivity.this, profileInfoTable()
                     .joinUserTable(FSJoin.Type.INNER)
-                    .joinAdditionalDataTable(FSJoin.Type.INNER)
-                    .order().byDeleted(Order.ASC)       // <-- deleted items appear last regardless of profileInfo.email_address
-                    .and().byEmailAddress(Order.DESC)   // <-- sort rows in descending order by email address
-                    .andFinally());
+                    .joinAdditionalDataTable(FSJoin.Type.INNER) // <-- At the moment, joins must occur before Find/OrderBy operations
+                    .find().byIdBetweenInclusive(0L).and(100L)  // <-- demonstrates WHERE querying
+                    .then()                                     // <-- then() exits from the Finder context and sends you back to the resolver context
+                    .order().byDeleted(ORDER_ASC)               // <-- deleted items appear last regardless of profileInfo.email_address
+                    .and().byEmailAddress(ORDER_DESC)           // <-- sort rows in descending order by email address
+                    .then());                                   // <-- then() exits from the OrderBy context and sends you back to the Resolver context
         }
 
         @Override
