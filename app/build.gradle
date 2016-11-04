@@ -45,11 +45,12 @@ android {
 forsuredb {
     applicationPackageName = 'com.forsuredb.testapp'
     resultParameter = "android.net.Uri"
-    recordContainer = "com.fsryan.fosuredb.provider.FSContentValues"
+    recordContainer = "com.fsryan.forsuredb.provider.FSContentValues"
     migrationDirectory = 'app/src/main/assets'
     appProjectDirectory = 'app'
     resourcesDirectory = 'app/src/main/resources'
     fsSerializerFactoryClass = 'com.forsuredb.testapp.model.TestJsonAdapterFactory'
+    dbmsIntegratorClass = 'com.fsryan.forsuredb.FSAndroidSQLiteGenerator'
 }
 
 dependencies {
@@ -57,9 +58,9 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:recyclerview-v7:23.4.0'
 
-    provided 'com.fsryan.forsuredb:forsuredbcompiler:0.8.1'
+    provided 'com.fsryan.forsuredb:forsuredbcompiler:0.9.0'
 
     compile project(':forsuredbandroid')
 
-    apt 'com.fsryan.forsuredb:forsuredbcompiler:0.8.1'
+    apt 'com.fsryan.forsuredb:forsuredbcompiler:0.9.0'
 }

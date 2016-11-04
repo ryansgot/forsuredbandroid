@@ -23,6 +23,7 @@ import android.content.res.AssetManager;
 import com.fsryan.forsuredb.api.FSGetApi;
 import com.fsryan.forsuredb.api.FSLogger;
 import com.fsryan.forsuredb.api.FSTableCreator;
+import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.api.staticdata.StaticDataRetrieverFactory;
 import com.fsryan.forsuredb.sqlitelib.SqlGenerator;
 
@@ -67,10 +68,9 @@ import static com.google.common.base.Strings.isNullOrEmpty;
             return Collections.emptyList();
         }
 
-        SqlGenerator sqlGenerator = new SqlGenerator();
         List<String> insertionQueries = new ArrayList<>();
         for (Map<String, String> rawRecord : getRawRecords(context.getResources().getAssets())) {
-            insertionQueries.add(sqlGenerator.newSingleRowInsertionSql(tableName, rawRecord));
+            insertionQueries.add(Sql.generator().newSingleRowInsertionSql(tableName, rawRecord));
         }
 
         return insertionQueries;

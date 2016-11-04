@@ -25,6 +25,7 @@ import com.fsryan.forsuredb.api.FSProjection;
 import com.fsryan.forsuredb.api.FSQueryable;
 import com.fsryan.forsuredb.api.FSSelection;
 import com.fsryan.forsuredb.api.Retriever;
+import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.cursor.FSCursor;
 import com.fsryan.forsuredb.provider.FSContentValues;
 import com.google.common.collect.Lists;
@@ -92,9 +93,21 @@ import java.util.List;
         if (projection == null || projection.columns() == null || projection.columns().length == 0) {
             return;
         }
+
+//        The following code in SQLiteCursor.getColumnIndex forces us to disambiguate columns without using the table.column
+//        notation
+//        // Hack according to bug 903852
+//        final int periodIndex = columnName.lastIndexOf('.');
+//        if (periodIndex != -1) {
+//            Exception e = new Exception();
+//            Log.e(TAG, "requesting column name with table name -- " + columnName, e);
+//            columnName = columnName.substring(periodIndex + 1);
+//        }
+
         for (String column : projection.columns()) {
-            final String unambiguousName = projection.tableName() + "." + column;
-            listToAddTo.add(unambiguousName + " AS " + projection.tableName() + "_" + column);
+            final String unambiguousName = Sql.generator().unambiguousColumn(projection.tableName(), column);
+            final String retrievalName = Sql.generator().unambiguousRetrievalColumn(projection.tableName(), column);
+            listToAddTo.add(unambiguousName + " AS " + retrievalName);
         }
     }
 }

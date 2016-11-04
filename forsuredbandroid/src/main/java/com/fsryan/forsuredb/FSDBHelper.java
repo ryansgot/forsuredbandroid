@@ -23,10 +23,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import com.fsryan.forsuredb.api.FSTableCreator;
+import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.cursor.FSCursorFactory;
 import com.fsryan.forsuredb.api.migration.Migration;
 import com.fsryan.forsuredb.api.migration.MigrationSet;
-import com.fsryan.forsuredb.sqlitelib.SqlGenerator;
 
 import java.util.Collections;
 import java.util.List;
@@ -143,7 +143,7 @@ public class FSDBHelper extends SQLiteOpenHelper {
             if (previousVersion >= migrationSet.getDbVersion()) {
                 continue;
             }
-            executeSqlList(db, new SqlGenerator().generateMigrationSql(migrationSet), "performing migration sql: ");
+            executeSqlList(db, Sql.generator().generateMigrationSql(migrationSet), "performing migration sql: ");
         }
     }
 
