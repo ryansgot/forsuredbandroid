@@ -149,13 +149,13 @@
         android:layout_width="match_parent"
         android:layout_height="0dp">
         <Button
-            android:text="Edit user Table"
+            android:text="user"
             android:onClick="onEditUserTableClicked"
             android:layout_weight="1"
             android:layout_width="0dp"
             android:layout_height="match_parent"/>
         <Button
-            android:text="Edit profile_info Table"
+            android:text="profile_info"
             android:onClick="onEditProfileInfoTableClicked"
             android:layout_weight="1"
             android:layout_width="0dp"
