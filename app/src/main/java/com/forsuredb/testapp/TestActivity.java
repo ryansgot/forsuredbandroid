@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.fsryan.forsuredb.api.FSGetApi;
 import com.fsryan.forsuredb.api.FSJoin;
@@ -107,6 +108,15 @@ public class TestActivity extends AppCompatActivity {
                     dialogInterface.dismiss();
                 }
             }
+        }, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                SaveResult<Uri> result = userTable().set().save();
+                logResult(result);
+                // Won't show in UI because the default record will be excluded from the join
+                Toast.makeText(TestActivity.this, "saved: " + result.inserted(), Toast.LENGTH_LONG).show();
+                dialog.dismiss();
+            }
         });
     }
 
@@ -135,7 +145,7 @@ public class TestActivity extends AppCompatActivity {
                     dialogInterface.dismiss();
                 }
             }
-        });
+        }, null);
     }
 
     private <G extends FSGetApi, VH extends FSCursorViewHolder> void initRecycler(int viewId, FSCursorRecyclerViewAdapter<G, VH> adapter) {
@@ -190,19 +200,22 @@ public class TestActivity extends AppCompatActivity {
         return Long.parseLong(idText.getText().toString());
     }
 
-    private void showDialog(String title, DialogInterface.OnClickListener saveListener, DialogInterface.OnClickListener deleteListener) {
-        new AlertDialog.Builder(this).setTitle(title)
+    private void showDialog(String title, DialogInterface.OnClickListener saveListener, DialogInterface.OnClickListener deleteListener, DialogInterface.OnClickListener defaultRecordListener) {
+        AlertDialog.Builder adb = new AlertDialog.Builder(this).setTitle(title)
                 .setView(LayoutInflater.from(this).inflate(R.layout.enter_id_layout, null))
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialogInterface.dismiss();
-                    }
-                })
-                .setPositiveButton("Save", saveListener)
-                .setNeutralButton("Delete", deleteListener)
-                .create()
-                .show();
+                .setNegativeButton("Delete", deleteListener)
+                .setPositiveButton("Save", saveListener);
+        if (defaultRecordListener != null) {
+            adb.setNeutralButton("New Default Record", defaultRecordListener);
+        } else {
+            adb.setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+        }
+        adb.create().show();
     }
 
     private void logResult(SaveResult<Uri> result) {

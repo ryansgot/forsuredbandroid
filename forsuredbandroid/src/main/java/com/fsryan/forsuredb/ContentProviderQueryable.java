@@ -45,6 +45,16 @@ import java.util.List;
 
     @Override
     public Uri insert(FSContentValues cv) {
+        // SQLite either requires that there be a value for a column in an insert query or that the query be in the following
+        // form: INSERT INTO table DEFAULT VALUES;
+        // Since executing raw SQL on the SQLiteDatabase reference would achieve the desired result, but return void, we would
+        // not get the Uri of the inserted resource back from the call.
+        // This hack makes use of the fact that each forsuredb table has a 'deleted' column with a default value of 0. Since it
+        // would have been 0 anyway, we can get away with this hack here and can avoid using the nullColumnHack encouraged by
+        // the Android framework.
+        if (cv.getContentValues().keySet().size() == 0) {
+            cv.put("deleted", 0);
+        }
         return appContext.getContentResolver().insert(resource, cv.getContentValues());
     }
 
