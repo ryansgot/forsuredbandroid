@@ -221,7 +221,7 @@ public class DocStoreTestActivity extends AppCompatActivity implements TimePicke
             Log.i(LOG_TAG, "DocStoreIntPropertyExtensionLoader.onCreateLoader");
             return new FSCursorLoader<>(DocStoreTestActivity.this, docStoreTestTable()
                     .find()
-                            .byClassName(DocStoreIntPropertyExtension.class.getName())
+                            .byClass(DocStoreIntPropertyExtension.class)
                             .then()
                     .order()
                             .byModified(ORDER_DESC)
@@ -251,7 +251,7 @@ public class DocStoreTestActivity extends AppCompatActivity implements TimePicke
             Log.i(LOG_TAG, "DocStoreDoublePropertyExtensionLoader.onCreateLoader");
             return new FSCursorLoader<>(DocStoreTestActivity.this, docStoreTestTable()
                     .find()
-                            .byClassName(DocStoreDoublePropertyExtension.class.getName())
+                            .byClass(DocStoreDoublePropertyExtension.class)
                             .then()
                     .order()
                             .byModified(ORDER_DESC)
