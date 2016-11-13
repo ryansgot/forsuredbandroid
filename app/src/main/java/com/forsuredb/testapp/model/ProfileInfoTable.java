@@ -21,6 +21,6 @@ public interface ProfileInfoTable extends FSGetApi {
     @FSColumn(value = "binary_data", orderable = false, searchable = false)
     byte[] binaryData(Retriever retriever);
 
-    @FSColumn(value = "awesome", orderable = false, searchable = false)
+    @FSColumn("awesome")
     boolean awesome(Retriever retriever);
 }

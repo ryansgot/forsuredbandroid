@@ -272,23 +272,33 @@ public class TestActivity extends AppCompatActivity {
         public Loader<FSCursor> onCreateLoader(int id, Bundle args) {
             Log.i(LOG_TAG, "JoinLoader.onCreateLoader");
             /*
-             * Modifying queries can be done in any order. Notice how the find() call appears after the
-             * profileInfoTable() call, then the user table is joined, then an orderBy() call is made,
-             * and then another join. The then() call serves to exit the WHERE and ORDER BY contexts that
-             * were entered by calling the find() method and orderBy() method respectively.
+             * To a limited capacity, you can query in just about any order. Currently, the exception to this
+             * is that if you join and then either find or order, then you will be unable to go back to the
+             * preceding resolver contexts. You can see this below by checking the return type of the last
+             * two then() method calls. They both return references to a ProfileInfoTableResolver--even
+             * though the last then() method call is performed while in the additional_data table's Resolver
+             * context. The indentation of method calls is intentional to demonstrate the differences in
+             * contexts.
              *
-             * Currently, the joins are pretty stupid. They only know how to join--and no WHERE or ORDER BY
-             * clauses may be edited via the querying API. I plan to add such querying capabilities in
-             * forsuredbapi and forsuredbcompiler versions 0.9.2.
+             * I expect that a future version will allow for more flexibility.
              */
-            return new FSCursorLoader<>(TestActivity.this, profileInfoTable()
-                    .find().byIdBetweenInclusive(0L).and(100L)      // <-- demonstrates WHERE querying (in this case WHERE _id >= 0 AND _id < 100
-                    .then()                                         // <-- then() exits from the Finder context and sends you back to the resolver context
-                    .joinUserTable(FSJoin.Type.INNER)               // <-- performs a join on the columns profile_info.user_id = user._id due to the @ForeignKey annotation
-                    .order().byDeleted(ORDER_ASC)                   // <-- deleted items appear last regardless of profileInfo.email_address
-                    .and().byEmailAddress(ORDER_DESC)               // <-- sort rows in descending order by email address
-                    .then()                                         // <-- then() exits from the OrderBy context and sends you back to the Resolver context
-                    .joinAdditionalDataTable(FSJoin.Type.INNER));   // <-- performs a join on the columns additional_data.profile_id = profile_info._id due to the @ForeignKey annotation
+            return new FSCursorLoader<>(TestActivity.this, userTable()  // <-- selection is made from the table called "user" because of the FSTable annotation on UserTable--puts you into user table's Resolver context
+                    .find()                                             // <-- puts you into user table's Finder context
+                            .byLoginCountGreaterThan(0)                 // <-- appends a WHERE clause user.login_count > 0
+                            .then()                                     // <-- exits Finder context for "user" table and puts you into user table's Resolver context
+                    .order()                                            // <-- enters user table's OrderBy context
+                            .byLoginCount(ORDER_DESC)                   // <-- appends login_count DESC in ORDER BY section of the query
+                            .then()                                     // <-- exits user table's OrderBy context and puts you into user table's Resolver context
+                    .joinProfileInfoTable(FSJoin.Type.INNER)            // <-- joins to "profile_info" table on profile_info.user_id = user._id and puts you into profile_info table's Resolver context
+                            .find()                                     // <-- puts you into profile_info table's Finder context
+                                    .byIdBetweenInclusive(0L).and(100L) // <-- appends a WHERE clause profile_info._id >= 0 AND profile_info._id < 100
+                                    .then()                             // <-- exits profile_info table's Finder context and puts you into profile_info table's Resolver context
+                            .order()                                    // <-- enters profile_info table's OrderBy context
+                                    .byDeleted(ORDER_ASC)               // <-- appends deleted ASC to ORDER BY section of the query
+                                    .and().byEmailAddress(ORDER_DESC)   // <-- appends email_address DESC to ORDER BY section of the query
+                                    .then()                             // <-- exits the profile_info table's OrderBy context and puts you into profile_info table's Resolver context
+                            .joinAdditionalDataTable(FSJoin.Type.INNER) // <-- joins to "additional_data" table and puts you into additional_data table's Resolver context
+                                    .then());                           // <-- exits additional_data table's Resolver context and puts you into profile_info table's Resolver context
         }
 
         @Override
