@@ -14,7 +14,7 @@ public interface UserTable extends FSGetApi {
     @FSColumn(value = "global_id", orderable = false, searchable = false)
     long globalId(Retriever retriever);
 
-    @FSColumn(value = "login_count", orderable = false, searchable = false)
+    @FSColumn("login_count")
     int loginCount(Retriever retriever);
 
     @FSColumn(value = "app_rating", orderable = false, searchable = false)
