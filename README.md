@@ -1,5 +1,14 @@
 # forsuredbandroid
 
+Forsuredbandroid is the android framework component of the forsuredb project. If you're thinking about using forsuredb on Android, you should definitely use this library. It provides some handy tools like:
+- ```FSCursorLoader``` for writing custom ```LoaderManager.Callbacks``` that integrates nicely with the forsuredb ```Resolver``` concept
+- ```FSAndroidSQLiteGenerator```, an implementation of the SQLite DBMS integration that handles problems with ```SQLiteCursor``` and allows you to succcessfully join tables that have columns with the same name.
+- ```FSCursorRecyclerViewAdapter``` class that handles boilerplate for adapting data from an ```FSCursor```
+- ```FSDBHelper``` class to integrate with ```SQLiteOpenHelper```
+
+## Quick Start Guide
+See https://github.com/ryansgot/forsuredbcompiler/blob/master/README.md#using-forsuredb-in-android
+
 ## Proguard Considerations
 forsuredb leverages ```javax.annotation.processing.AbstractProcessor```, reflection and ```java.lang.reflect.Proxy```, so if you use proguard to minify your project, you'll have to include the following lines in your proguard-rules.pro file:
 ```
