@@ -33,15 +33,15 @@ import com.fsryan.forsuredb.provider.UriEvaluator;
 
 import java.util.List;
 
-public class FSCursorLoader<G extends FSGetApi, S extends FSSaveApi<Uri>, F extends Finder, O extends OrderBy> extends AsyncTaskLoader<FSCursor> {
+public class FSCursorLoader<T extends Resolver, G extends FSGetApi, S extends FSSaveApi<Uri>, F extends Finder<T, F>, O extends OrderBy<T, O>> extends AsyncTaskLoader<FSCursor> {
 
     private FSCursor mCursor;
-    private Resolver<Uri, FSContentValues, G, S, F, O> resolver;
+    private Resolver<T, Uri, FSContentValues, G, S, F, O> resolver;
     private List<Uri> tableUris;
     private MultiTableObserver mObserver;
     private final Handler handler;
 
-    public FSCursorLoader(Context context, Resolver<Uri, FSContentValues, G, S, F, O> resolver) {
+    public FSCursorLoader(Context context, Resolver<T, Uri, FSContentValues, G, S, F, O> resolver) {
         super(context);
         this.resolver = resolver;
         tableUris = UriEvaluator.tableReferences(resolver.currentLocator());

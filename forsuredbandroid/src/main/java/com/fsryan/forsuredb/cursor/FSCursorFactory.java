@@ -31,7 +31,7 @@ public class FSCursorFactory implements SQLiteDatabase.CursorFactory {
     @Override
     public Cursor newCursor(SQLiteDatabase db, SQLiteCursorDriver masterQuery, String editTable, SQLiteQuery query) {
         if (FSDBHelper.inst().inDebugMode()) {
-            Log.d("forsuredb", "Running query (Edit table = " + editTable + "): " + query.toString());
+            Log.d("forsuredb", "Running query: " + masterQuery.toString());
         }
         return new FSCursor(new SQLiteCursor(masterQuery, editTable, query));
     }
