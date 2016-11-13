@@ -272,33 +272,73 @@ public class TestActivity extends AppCompatActivity {
         public Loader<FSCursor> onCreateLoader(int id, Bundle args) {
             Log.i(LOG_TAG, "JoinLoader.onCreateLoader");
             /*
-             * To a limited capacity, you can query in just about any order. Currently, the exception to this
-             * is that if you join and then either find or order, then you will be unable to go back to the
-             * preceding resolver contexts. You can see this below by checking the return type of the last
-             * two then() method calls. They both return references to a ProfileInfoTableResolver--even
-             * though the last then() method call is performed while in the additional_data table's Resolver
-             * context. The indentation of method calls is intentional to demonstrate the differences in
-             * contexts.
+             * Demonstrates an incredibly flexible querying API
+             * The comments to the right tell what is happening to the type system in terms of the querying context.
              *
-             * I expect that a future version will allow for more flexibility.
+             * Entry to and exit from the various querying contexts is marked by indentation for demonstration purposes. Because
+             * this is a long chain of methods, and the generated API is specific to the queries you may want to make, the return
+             * type of each method call may not be the same (and it often is not).
+             *
+             * There is one big gotcha with FSCursorLoader and the new querying API. The new querying API allows you to stop the
+             * method call chain with a Resolver that is not the outermost resolver (in this case, the Resolver that was returned
+             * from the profileInfoTable() call). In order to refresh the data on change to any table in your query, you'll have
+             * to pass a reference to this outermost resolver to the constructor of the FSCursorLoader by chaining calls to then()
+             * until it is no longer available to be called.
              */
-            return new FSCursorLoader<>(TestActivity.this, userTable()  // <-- selection is made from the table called "user" because of the FSTable annotation on UserTable--puts you into user table's Resolver context
-                    .find()                                             // <-- puts you into user table's Finder context
-                            .byLoginCountGreaterThan(0)                 // <-- appends a WHERE clause user.login_count > 0
-                            .then()                                     // <-- exits Finder context for "user" table and puts you into user table's Resolver context
-                    .order()                                            // <-- enters user table's OrderBy context
-                            .byLoginCount(ORDER_DESC)                   // <-- appends login_count DESC in ORDER BY section of the query
-                            .then()                                     // <-- exits user table's OrderBy context and puts you into user table's Resolver context
-                    .joinProfileInfoTable(FSJoin.Type.INNER)            // <-- joins to "profile_info" table on profile_info.user_id = user._id and puts you into profile_info table's Resolver context
-                            .find()                                     // <-- puts you into profile_info table's Finder context
-                                    .byIdBetweenInclusive(0L).and(100L) // <-- appends a WHERE clause profile_info._id >= 0 AND profile_info._id < 100
-                                    .then()                             // <-- exits profile_info table's Finder context and puts you into profile_info table's Resolver context
-                            .order()                                    // <-- enters profile_info table's OrderBy context
-                                    .byDeleted(ORDER_ASC)               // <-- appends deleted ASC to ORDER BY section of the query
-                                    .and().byEmailAddress(ORDER_DESC)   // <-- appends email_address DESC to ORDER BY section of the query
-                                    .then()                             // <-- exits the profile_info table's OrderBy context and puts you into profile_info table's Resolver context
-                            .joinAdditionalDataTable(FSJoin.Type.INNER) // <-- joins to "additional_data" table and puts you into additional_data table's Resolver context
-                                    .then());                           // <-- exits additional_data table's Resolver context and puts you into profile_info table's Resolver context
+            return new FSCursorLoader<>(TestActivity.this, profileInfoTable()   // <-- signifies the base table on which you will
+                                                                                // SELECT and enters the profile_info table's
+                                                                                // Resolver context
+                    .joinAdditionalDataTable(FSJoin.Type.INNER)                 // <-- performs a JOIN to the additional_data
+                                                                                // table based upon the @ForeignKey annotaiton on
+                                                                                // a method in either the ProfileInfoTable
+                                                                                // interface or the AdditionalDataTable interface
+                                                                                // and enters the additional_data table's Resolver
+                                                                                // context
+                            .order()                                            // <-- enters the additional_data table's OrderBy
+                                                                                // context
+                                    .byId(ORDER_ASC)                            // <-- adds additional_data._id ASC to the
+                                                                                // ORDER BY clause of the generated query
+                                    .then()                                     // <-- exits the additional_data table's OrderBy
+                                                                                // context
+                            .find()                                             // <-- enters the additional_data table's Finder
+                                                                                // context
+                                    .byIdGreaterThan(10L)                       // <-- adds additional_data._id > 10 to the WHERE
+                                                                                // clause of the generated query
+                                    .then()                                     // <-- exits the additional_data table's Finder
+                                                                                // context
+                            .then()                                             // <-- exits the additional_data table's Resolver
+                                                                                // context, entering the profile_info table's
+                                                                                // Resolver context
+                    .joinUserTable(FSJoin.Type.INNER)                           // <-- performs a JOIN to the user table based
+                                                                                // upon the @ForeignKey annotation on a method in
+                                                                                // either the ProfileInfoTable interface or the
+                                                                                // UserTable interface and enters the user table's
+                                                                                // Resolver context
+                            .order()                                            // <-- enters the user table's OrderBy context
+                                    .byLoginCount(ORDER_DESC)                   // <-- adds user.login_count DESC to the generated
+                                                                                // query's ORDER BY clause
+                                    .then()                                     // <-- exits the user table's OrderBy context
+                            .find()                                             // <-- enters the user table's Finder context
+                                    .byLoginCountGreaterThan(2)                 // <-- adds AND login_count > 2 to the generated
+                                                                                // query's WHERE clause
+                                    .then()                                     // <-- exits the user table's Finder context
+                            .then()                                             // <-- exits the user table's Resolver context,
+                                                                                // returning to the profile_info table's Resolver
+                                                                                // context
+                    .find()                                                     // <-- enters the profile_info table's Finder
+                                                                                // context
+                            .byAwesome()                                        // <-- adds AND profile_info.awesome = 1 to the
+                                                                                // generated query's WHERE clause
+                            .then()                                             // <-- exits the profile_info table's Finder
+                                                                                // context
+                    .order()                                                    // <-- enters the profile_info table's OrderBy
+                                                                                // context
+                            .byEmailAddress(ORDER_ASC)                          // <-- adds profile_info.email_address ASC to the
+                                                                                // generated query's ORDER BY clause
+                            .then());                                           // <-- exits the profile_info table's OrderBy
+                                                                                // context, returning to the original Resolver
+                                                                                // context of the profile_info table, as desired
+                                                                                // by the constructor of FSCursorLoader
         }
 
         @Override
