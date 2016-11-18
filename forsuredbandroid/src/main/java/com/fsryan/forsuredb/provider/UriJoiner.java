@@ -18,15 +18,19 @@
 package com.fsryan.forsuredb.provider;
 
 import android.net.Uri;
+import android.util.Log;
+import android.util.Pair;
 
 import com.fsryan.forsuredb.api.FSJoin;
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -61,8 +65,15 @@ public class UriJoiner {
         for (String pathSegment : uri.getPathSegments()) {
             ub.appendPath(pathSegment);
         }
+        Set<String> joinedTables = Sets.newHashSet(baseTableName);
         for (FSJoin join : joins) {
-            ub.appendQueryParameter(joinMap.get(join.type()), joinTextFrom(join, baseTableName));
+            Pair<String, String> tableJoinTextPair = joinTextFrom(join, joinedTables);
+            if (tableJoinTextPair == null) {
+                Log.w(UriJoiner.class.getSimpleName(), "Cannot join " + join.parentTable() + " and " + join.childTable() + " because both tables are already joined in this query");
+                continue;
+            }
+            joinedTables.add(tableJoinTextPair.first);
+            ub.appendQueryParameter(joinMap.get(join.type()), tableJoinTextPair.second);
         }
 
         return ub.build();
@@ -94,15 +105,22 @@ public class UriJoiner {
         sb.append(" ").append(joinType).append(" ").append(joinQuery);
     }
 
-    private static String joinTextFrom(FSJoin join, String baseTable) {
+    private static Pair<String, String> joinTextFrom(FSJoin join, Set<String> joinedTables) {
         if (join.type() == FSJoin.Type.NATURAL) {
-            return "";
+            return Pair.create("", "");
         }
-        return tableToJoin(join, baseTable) + " ON " + join.parentTable() + "." + join.parentColumn() + " = " + join.childTable() + "." + join.childColumn();
+        String tableToJoin = tableToJoin(join, joinedTables);
+        if (tableToJoin == null) {
+            return null;
+        }
+        String joinString = tableToJoin + " ON " + join.parentTable() + "." + join.parentColumn() + " = " + join.childTable() + "." + join.childColumn();
+        return Pair.create(tableToJoin, joinString);
     }
 
-    private static String tableToJoin(FSJoin join, String baseTable) {
-        return baseTable.equals(join.childTable()) ? join.parentTable() : join.childTable();
+    private static String tableToJoin(FSJoin join, Set<String> joinedTables) {
+        return joinedTables.contains(join.parentTable())
+                ? joinedTables.contains(join.childTable()) ? null : join.childTable()
+                : join.parentTable();
     }
 
     /**
