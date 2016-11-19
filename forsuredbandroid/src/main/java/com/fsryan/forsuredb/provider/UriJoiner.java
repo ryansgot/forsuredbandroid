@@ -69,11 +69,11 @@ public class UriJoiner {
         for (FSJoin join : joins) {
             Pair<String, String> tableJoinTextPair = joinTextFrom(join, joinedTables);
             if (tableJoinTextPair == null) {
-                Log.w(UriJoiner.class.getSimpleName(), "Cannot join " + join.parentTable() + " and " + join.childTable() + " because both tables are already joined in this query");
+                Log.w(UriJoiner.class.getSimpleName(), "Cannot join " + join.getParentTable() + " and " + join.getChildTable() + " because both tables are already joined in this query");
                 continue;
             }
             joinedTables.add(tableJoinTextPair.first);
-            ub.appendQueryParameter(joinMap.get(join.type()), tableJoinTextPair.second);
+            ub.appendQueryParameter(joinMap.get(join.getType()), tableJoinTextPair.second);
         }
 
         return ub.build();
@@ -106,21 +106,23 @@ public class UriJoiner {
     }
 
     private static Pair<String, String> joinTextFrom(FSJoin join, Set<String> joinedTables) {
-        if (join.type() == FSJoin.Type.NATURAL) {
+        if (join.getType() == FSJoin.Type.NATURAL) {
             return Pair.create("", "");
         }
         String tableToJoin = tableToJoin(join, joinedTables);
         if (tableToJoin == null) {
             return null;
         }
-        String joinString = tableToJoin + " ON " + join.parentTable() + "." + join.parentColumn() + " = " + join.childTable() + "." + join.childColumn();
+        String joinString = tableToJoin
+                + " ON " + join.getParentTable() + "." + join.getParentColumn()
+                + " = " + join.getChildTable() + "." + join.getChildColumn();
         return Pair.create(tableToJoin, joinString);
     }
 
     private static String tableToJoin(FSJoin join, Set<String> joinedTables) {
-        return joinedTables.contains(join.parentTable())
-                ? joinedTables.contains(join.childTable()) ? null : join.childTable()
-                : join.parentTable();
+        return joinedTables.contains(join.getParentTable())
+                ? joinedTables.contains(join.getChildTable()) ? null : join.getChildTable()
+                : join.getParentTable();
     }
 
     /**

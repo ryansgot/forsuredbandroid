@@ -199,31 +199,6 @@ public class UriJoinerTest extends InstrumentationTestCase {
     }
 
     private FSJoin createJoin(final TableToJoin parent, final TableToJoin child, final FSJoin.Type type) {
-        return new FSJoin() {
-            @Override
-            public Type type() {
-                return type;
-            }
-
-            @Override
-            public String parentTable() {
-                return parent.getTableName();
-            }
-
-            @Override
-            public String parentColumn() {
-                return parent.getColumnName();
-            }
-
-            @Override
-            public String childTable() {
-                return child.getTableName();
-            }
-
-            @Override
-            public String childColumn() {
-                return child.getColumnName();
-            }
-        };
+        return new FSJoin(type, parent.getTableName(), parent.getColumnName(), child.getTableName(), child.getColumnName());
     }
 }
