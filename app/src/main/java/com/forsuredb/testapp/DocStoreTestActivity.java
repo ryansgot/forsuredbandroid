@@ -15,6 +15,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -25,15 +27,15 @@ import com.forsuredb.testapp.adapter.DocStoreTestAdapter;
 import com.forsuredb.testapp.model.DocStoreDoublePropertyExtension;
 import com.forsuredb.testapp.model.DocStoreIntPropertyExtension;
 import com.forsuredb.testapp.model.DocStoreTestBase;
-import com.forsuredb.testapp.model.DocStoreTestTable;
-import com.fsryan.forsuredb.api.FSGetApi;
 import com.fsryan.forsuredb.api.SaveResult;
 import com.fsryan.forsuredb.cursor.FSCursor;
 import com.fsryan.forsuredb.cursor.FSCursorLoader;
-import com.fsryan.forsuredb.cursor.FSCursorRecyclerViewAdapter;
-import com.fsryan.forsuredb.cursor.FSCursorViewHolder;
+import com.google.common.collect.Sets;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.forsuredb.testapp.ForSure.docStoreTestTable;
@@ -43,8 +45,7 @@ import static com.fsryan.forsuredb.api.OrderBy.ORDER_DESC;
 public class DocStoreTestActivity extends AppCompatActivity implements TimePickerDialog.OnTimeSetListener, DatePickerDialog.OnDateSetListener {
 
     private static final String LOG_TAG = DocStoreTestActivity.class.getSimpleName();
-    private static final int DOC_STORE_INT_PROPERTY_EXTENSION_LOADER_ID = DocStoreTestActivity.class.hashCode();
-    private static final int DOC_STORE_DOUBLE_PROPERTY_EXTENSION_LOADER_ID = DOC_STORE_INT_PROPERTY_EXTENSION_LOADER_ID + 1;
+    private static final int LOADER_ID = DocStoreTestActivity.class.hashCode();
 
     private final Calendar currentCalendar = Calendar.getInstance();
     private Spinner typeSelectionSpinner;
@@ -54,10 +55,10 @@ public class DocStoreTestActivity extends AppCompatActivity implements TimePicke
     private Button timeButton;
     private Button saveButton;
 
-    /*package*/ DocStoreTestAdapter<DocStoreIntPropertyExtension> docStoreIntPropertyExtensionAdapter;
-    /*package*/ DocStoreTestAdapter<DocStoreDoublePropertyExtension> docStoreDoublePropertyExtensionAdapter;
-    private DocStoreIntPropertyExtensionLoader dsIntPropertyLoader;
-    private DocStoreDoublePropertyExtensionLoader dsDoublePropertyLoader;
+    private final Set<Class<? extends DocStoreTestBase>> classFilter = Sets.newHashSet(DocStoreIntPropertyExtension.class, DocStoreDoublePropertyExtension.class);
+
+    /*package*/ DocStoreTestAdapter adapter;
+    private DocStoreTestLoader docStoreTestloader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,11 +69,11 @@ public class DocStoreTestActivity extends AppCompatActivity implements TimePicke
         valueEntryText = (EditText) findViewById(R.id.value_text_entry);
         nameEntryText = (EditText) findViewById(R.id.name_text_entry);
         initButtons();
-        initRecyclers();
-        dsIntPropertyLoader = new DocStoreIntPropertyExtensionLoader();
-        dsDoublePropertyLoader = new DocStoreDoublePropertyExtensionLoader();
-        getLoaderManager().initLoader(DOC_STORE_INT_PROPERTY_EXTENSION_LOADER_ID, null, dsIntPropertyLoader);
-        getLoaderManager().initLoader(DOC_STORE_DOUBLE_PROPERTY_EXTENSION_LOADER_ID, null, dsDoublePropertyLoader);
+        initCheckBoxes();
+        initRecycler();
+        docStoreTestloader = new DocStoreTestLoader();
+
+        getLoaderManager().initLoader(LOADER_ID, null, docStoreTestloader);
     }
 
     @Override
@@ -173,55 +174,59 @@ public class DocStoreTestActivity extends AppCompatActivity implements TimePicke
         });
     }
 
+    private void initCheckBoxes() {
+        CheckBox intPropertyCheckBox = (CheckBox) findViewById(R.id.doc_store_test_int_property_checkbox);
+        intPropertyCheckBox.setChecked(true);
+        intPropertyCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    classFilter.add(DocStoreIntPropertyExtension.class);
+                } else {
+                    classFilter.remove(DocStoreIntPropertyExtension.class);
+                }
+                getLoaderManager().restartLoader(LOADER_ID, null, docStoreTestloader);
+            }
+        });
+        CheckBox doublePropertyCheckBox = (CheckBox) findViewById(R.id.doc_store_test_double_property_checkbox);
+        doublePropertyCheckBox.setChecked(true);
+        doublePropertyCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    classFilter.add(DocStoreDoublePropertyExtension.class);
+                } else {
+                    classFilter.remove(DocStoreDoublePropertyExtension.class);
+                }
+                getLoaderManager().restartLoader(LOADER_ID, null, docStoreTestloader);
+            }
+        });
+    }
+
     private void logResult(SaveResult<Uri> result) {
         Log.d(LOG_TAG, "SaveResult<Uri>{inserted=" + result.inserted() + ", exception=" + result.exception() + ", rowsAffected=" + result.rowsAffected() + "}");
     }
 
-    private void initRecyclers() {
-        docStoreIntPropertyExtensionAdapter = new DocStoreTestAdapter<>(DocStoreIntPropertyExtension.class, new DocStoreTestAdapter.ViewHolderFactory<DocStoreIntPropertyExtension>() {
-            @Override
-            public DocStoreTestAdapter.ViewHolder<DocStoreIntPropertyExtension> create(View v, int viewType, DocStoreTestTable api, Class<DocStoreIntPropertyExtension> docStoreTestBaseExtensionClass) {
-                return new DocStoreTestAdapter.ViewHolder<DocStoreIntPropertyExtension>(v, viewType, api, docStoreTestBaseExtensionClass) {
-                    @Override
-                    protected void populateRemainingViews(DocStoreIntPropertyExtension obj) {
-                        valueText.setText(Integer.toString(obj.getValue()));
-                    }
-                };
-            }
-        });
-        docStoreDoublePropertyExtensionAdapter = new DocStoreTestAdapter<>(DocStoreDoublePropertyExtension.class, new DocStoreTestAdapter.ViewHolderFactory<DocStoreDoublePropertyExtension>() {
-            @Override
-            public DocStoreTestAdapter.ViewHolder<DocStoreDoublePropertyExtension> create(View v, int viewType, DocStoreTestTable api, Class<DocStoreDoublePropertyExtension> docStoreTestBaseExtensionClass) {
-                return new DocStoreTestAdapter.ViewHolder<DocStoreDoublePropertyExtension>(v, viewType, api, docStoreTestBaseExtensionClass) {
-                    @Override
-                    protected void populateRemainingViews(DocStoreDoublePropertyExtension obj) {
-                        valueText.setText(Double.toString(obj.getValue()));
-                    }
-                };
-            }
-        });
-
-        initRecycler(R.id.doc_store_test_base_int_property_recycler, docStoreIntPropertyExtensionAdapter);
-        initRecycler(R.id.doc_store_test_base_double_property_recycler, docStoreDoublePropertyExtensionAdapter);
-    }
-
-    private <G extends FSGetApi, VH extends FSCursorViewHolder> void initRecycler(int viewId, FSCursorRecyclerViewAdapter<G, VH> adapter) {
-        RecyclerView recycler = (RecyclerView) findViewById(viewId);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+    private void initRecycler() {
+        adapter = new DocStoreTestAdapter();
+        RecyclerView recycler = (RecyclerView) findViewById(R.id.doc_store_test_elements_recycler);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         layoutManager.scrollToPosition(0);
         recycler.setLayoutManager(layoutManager);
         recycler.setHasFixedSize(true);
         recycler.setAdapter(adapter);
     }
 
-    private class DocStoreIntPropertyExtensionLoader implements LoaderManager.LoaderCallbacks<FSCursor> {
+    private class DocStoreTestLoader implements LoaderManager.LoaderCallbacks<FSCursor> {
 
         @Override
         public Loader<FSCursor> onCreateLoader(int id, Bundle args) {
-            Log.i(LOG_TAG, "DocStoreIntPropertyExtensionLoader.onCreateLoader");
+            Log.i(LOG_TAG, "DocStoreTestLoader.onCreateLoader");
+            ArrayList<Class<? extends DocStoreTestBase>> filterList = new ArrayList<>(classFilter);
+            Class mainSearchClass = filterList.isEmpty() ? Object.class : filterList.remove(0);
             return new FSCursorLoader<>(DocStoreTestActivity.this, docStoreTestTable()
                     .find()
-                            .byClass(DocStoreIntPropertyExtension.class)
+                            .byClass(mainSearchClass, filterList.toArray(new Class[filterList.size()]))
                             .then()
                     .order()
                             .byModified(ORDER_DESC)
@@ -230,9 +235,9 @@ public class DocStoreTestActivity extends AppCompatActivity implements TimePicke
 
         @Override
         public void onLoadFinished(Loader<FSCursor> loader, FSCursor data) {
-            Log.i(LOG_TAG, "DocStoreIntPropertyExtensionLoader.onLoadFinished");
-            if (data != null && data.moveToFirst()) {
-                docStoreIntPropertyExtensionAdapter.changeCursor(data);
+            Log.i(LOG_TAG, "DocStoreTestLoader.onLoadFinished");
+            if (data != null) {
+                adapter.changeCursor(data);
             } else {
                 Log.i(LOG_TAG, "data was null or empty");
             }
@@ -240,37 +245,7 @@ public class DocStoreTestActivity extends AppCompatActivity implements TimePicke
 
         @Override
         public void onLoaderReset(Loader<FSCursor> loader) {
-            Log.i(LOG_TAG, "DocStoreIntPropertyExtensionLoader.onLoaderReset");
-        }
-    }
-
-    private class DocStoreDoublePropertyExtensionLoader implements LoaderManager.LoaderCallbacks<FSCursor> {
-
-        @Override
-        public Loader<FSCursor> onCreateLoader(int id, Bundle args) {
-            Log.i(LOG_TAG, "DocStoreDoublePropertyExtensionLoader.onCreateLoader");
-            return new FSCursorLoader<>(DocStoreTestActivity.this, docStoreTestTable()
-                    .find()
-                            .byClass(DocStoreDoublePropertyExtension.class)
-                            .then()
-                    .order()
-                            .byModified(ORDER_DESC)
-                            .then());
-        }
-
-        @Override
-        public void onLoadFinished(Loader<FSCursor> loader, FSCursor data) {
-            Log.i(LOG_TAG, "DocStoreDoublePropertyExtensionLoader.onLoadFinished");
-            if (data != null && data.moveToFirst()) {
-                docStoreDoublePropertyExtensionAdapter.changeCursor(data);
-            } else {
-                Log.i(LOG_TAG, "data was null or empty");
-            }
-        }
-
-        @Override
-        public void onLoaderReset(Loader<FSCursor> loader) {
-            Log.i(LOG_TAG, "DocStoreDoublePropertyExtensionLoader.onLoaderReset");
+            Log.i(LOG_TAG, "DocStoreTestLoader.onLoaderReset");
         }
     }
 }

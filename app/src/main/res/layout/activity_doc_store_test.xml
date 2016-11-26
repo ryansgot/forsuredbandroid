@@ -4,46 +4,88 @@
     android:layout_height="match_parent">
     <LinearLayout
         android:orientation="vertical"
-        android:layout_above="@+id/entry_form_layout"
+        android:layout_above="@+id/doc_store_test_filer_layout"
         android:layout_alignParentTop="true"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_weight="1"
+        <TextView
+            android:text="Elements"
             android:layout_width="match_parent"
-            android:layout_height="0dp">
-            <TextView
-                android:text="Doc Store Base Int Extension"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-            <View
-                android:background="@android:color/black"
-                android:layout_width="match_parent"
-                android:layout_height="1dp" />
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/doc_store_test_base_int_property_recycler"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-        </LinearLayout>
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_weight="1"
+            android:layout_height="wrap_content" />
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="0dp">
+            android:layout_height="wrap_content">
             <TextView
-                android:text="Doc Store Base Double Extension"
-                android:layout_width="match_parent"
+                android:text="Class Name"
+                android:layout_weight="2"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content" />
-            <View
-                android:background="@android:color/black"
-                android:layout_width="match_parent"
-                android:layout_height="1dp" />
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/doc_store_test_base_double_property_recycler"
-                android:layout_width="match_parent"
+            <TextView
+                android:text="UUID"
+                android:layout_weight="2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="Assigned Name"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="Date"
+                android:layout_weight="2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="Value"
+                android:layout_weight="1"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content" />
         </LinearLayout>
+        <View
+            android:background="@android:color/black"
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/doc_store_test_elements_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout
+        android:id="@id/doc_store_test_filer_layout"
+        android:layout_above="@+id/entry_form_layout"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <View
+            android:background="@android:color/black"
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
+        <TextView
+            android:text="Class Inclusion Filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <CheckBox
+                android:id="@+id/doc_store_test_int_property_checkbox"
+                android:text="Integer Properties"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content" />
+            <CheckBox
+                android:id="@+id/doc_store_test_double_property_checkbox"
+                android:text="Double Properties"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+        <View
+            android:background="@android:color/black"
+            android:layout_width="match_parent"
+            android:layout_height="1dp" />
     </LinearLayout>
     <LinearLayout
         android:id="@id/entry_form_layout"

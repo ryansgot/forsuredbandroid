@@ -7,7 +7,6 @@ import com.fsryan.forsuredb.api.adapter.FSGsonSerializer;
 import com.fsryan.forsuredb.api.adapter.FSSerializableSerializer;
 import com.fsryan.forsuredb.api.adapter.FSSerializer;
 import com.fsryan.forsuredb.api.adapter.FSSerializerFactory;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonElement;

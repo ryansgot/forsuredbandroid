@@ -6,6 +6,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.forsuredb.testapp.R;
+import com.forsuredb.testapp.model.DocStoreDoublePropertyExtension;
+import com.forsuredb.testapp.model.DocStoreIntPropertyExtension;
 import com.forsuredb.testapp.model.DocStoreTestBase;
 import com.forsuredb.testapp.model.DocStoreTestTable;
 import com.fsryan.forsuredb.cursor.FSCursor;
@@ -14,22 +16,12 @@ import com.fsryan.forsuredb.cursor.FSCursorViewHolder;
 
 import static com.forsuredb.testapp.ForSure.docStoreTestTable;
 
-public class DocStoreTestAdapter<T extends DocStoreTestBase> extends FSCursorRecyclerViewAdapter<DocStoreTestTable, DocStoreTestAdapter.ViewHolder<T>> {
+public class DocStoreTestAdapter extends FSCursorRecyclerViewAdapter<DocStoreTestTable, DocStoreTestAdapter.ViewHolder> {
 
-    public interface ViewHolderFactory<T extends DocStoreTestBase> {
-        DocStoreTestAdapter.ViewHolder<T> create(View v, int viewType, DocStoreTestTable api, Class<T> docStoreTestBaseExtensionClass);
-    }
+    private final DocStoreTestTable api = docStoreTestTable().getApi();
 
-
-    private final Class<T> docStoreTestBaseExtensionClass;
-    private final ViewHolderFactory<T> holderFactory;
-    private final DocStoreTestTable api;
-
-    public DocStoreTestAdapter(Class<T> docStoreTestBaseExtensionClass, ViewHolderFactory<T> holderFactory) {
+    public DocStoreTestAdapter() {
         super();
-        this.docStoreTestBaseExtensionClass = docStoreTestBaseExtensionClass;
-        this.holderFactory = holderFactory;
-        api = docStoreTestTable().getApi();
     }
 
     @Override
@@ -40,26 +32,26 @@ public class DocStoreTestAdapter<T extends DocStoreTestBase> extends FSCursorRec
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.doc_store_test_item, parent, false);
-        return holderFactory.create(v, viewType, api, docStoreTestBaseExtensionClass);
+        return new ViewHolder(v, viewType, api);
     }
 
-    public static abstract class ViewHolder<T extends DocStoreTestBase> extends FSCursorViewHolder {
+    public static class ViewHolder extends FSCursorViewHolder {
 
         private final DocStoreTestTable api;
-        private final Class<T> docStoreTestBaseExtensionClass;
-        protected TextView uuidText;
-        protected TextView nameText;
-        protected TextView dateText;
-        protected TextView valueText;
+        private TextView classNameText;
+        private TextView uuidText;
+        private TextView nameText;
+        private TextView dateText;
+        private TextView valueText;
 
-        public ViewHolder(View itemView, int viewType, DocStoreTestTable api, Class<T> docStoreTestBaseExtensionClass) {
+        public ViewHolder(View itemView, int viewType, DocStoreTestTable api) {
             super(itemView, viewType);
             this.api = api;
-            this.docStoreTestBaseExtensionClass = docStoreTestBaseExtensionClass;
         }
 
         @Override
         protected void initViewReferences(View targetLayout) {
+            classNameText = (TextView) targetLayout.findViewById(R.id.class_name_text);
             uuidText = (TextView) targetLayout.findViewById(R.id.uuid_text);
             nameText = (TextView) targetLayout.findViewById(R.id.name_text);
             dateText = (TextView) targetLayout.findViewById(R.id.date_text);
@@ -68,13 +60,18 @@ public class DocStoreTestAdapter<T extends DocStoreTestBase> extends FSCursorRec
 
         @Override
         protected void populateView(FSCursor cursor) {
-            T obj = api.getAs(docStoreTestBaseExtensionClass, cursor);
+            DocStoreTestBase obj = api.get(cursor);
+
+            classNameText.setText(obj.getClass().getSimpleName());
             uuidText.setText(obj.getUuid());
             nameText.setText(obj.getName());
             dateText.setText(obj.getDate().toString());
-            populateRemainingViews(obj);
-        }
 
-        protected abstract void populateRemainingViews(T obj);
+            if (obj instanceof DocStoreIntPropertyExtension) {
+                valueText.setText(Integer.toString(((DocStoreIntPropertyExtension) obj).getValue()));
+            } else {
+                valueText.setText(Double.toString(((DocStoreDoublePropertyExtension) obj).getValue()));
+            }
+        }
     }
 }
