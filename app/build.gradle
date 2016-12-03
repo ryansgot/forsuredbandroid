@@ -58,9 +58,9 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:recyclerview-v7:23.4.0'
 
-    provided 'com.fsryan.forsuredb:forsuredbcompiler:0.9.5'
+    provided 'com.fsryan.forsuredb:forsuredbcompiler:0.10.0'
 
     compile project(':forsuredbandroid')
 
-    apt 'com.fsryan.forsuredb:forsuredbcompiler:0.9.5'
+    apt 'com.fsryan.forsuredb:forsuredbcompiler:0.10.0'
 }

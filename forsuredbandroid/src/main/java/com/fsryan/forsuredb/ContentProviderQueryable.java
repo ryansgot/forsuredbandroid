@@ -18,6 +18,7 @@
 package com.fsryan.forsuredb;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
 import com.fsryan.forsuredb.api.FSJoin;
@@ -74,21 +75,45 @@ import java.util.List;
 
     @Override
     public Retriever query(FSProjection projection, FSSelection selection, String sortOrder) {
-        final String[] p = formatProjections(Lists.newArrayList(projection));
+        final String[] p = formatProjection(Lists.newArrayList(projection));
         final String s = selection == null ? null : selection.where();
         final String[] sArgs = selection == null ? null : selection.replacements();
-        return new FSCursor(appContext.getContentResolver().query(resource, p, s, sArgs, sortOrder));
+        return new FSCursor(appContext.getContentResolver().query(resourceFrom(resource, projection), p, s, sArgs, sortOrder));
     }
 
     @Override
     public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, String sortOrder) {
-        final String[] p = formatProjections(projections);
+        final String[] p = formatProjection(projections);
         final String s = selection == null ? null : selection.where();
         final String[] sArgs = selection == null ? null : selection.replacements();
-        return new FSCursor(appContext.getContentResolver().query(resource, p, s, sArgs, sortOrder));
+        return new FSCursor(appContext.getContentResolver().query(resourceFrom(resource, projections), p, s, sArgs, sortOrder));
     }
 
-    private String[] formatProjections(List<FSProjection> projections) {
+    private Uri resourceFrom(Uri uri, FSProjection projection) {
+        if (projection == null) {
+            return uri.buildUpon()
+                    .appendQueryParameter("DISTINCT", "false")
+                    .build();
+        }
+        return resourceFrom(uri, Lists.newArrayList(projection));
+    }
+
+    private Uri resourceFrom(Uri uri, List<FSProjection> projections) {
+        return uri.buildUpon()
+                .appendQueryParameter("DISTINCT", isDistinctQuery(projections) ? "true" : "false")
+                .build();
+    }
+
+    private boolean isDistinctQuery(Iterable<FSProjection> projections) {
+        for (FSProjection projection : projections) {
+            if (projection.isDistinct()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String[] formatProjection(List<FSProjection> projections) {
         if (projections == null || projections.size() == 0) {
             return null;
         }
@@ -104,20 +129,29 @@ import java.util.List;
             return;
         }
 
-//        The following code in SQLiteCursor.getColumnIndex forces us to disambiguate columns without using the table.column
-//        notation
-//        // Hack according to bug 903852
-//        final int periodIndex = columnName.lastIndexOf('.');
-//        if (periodIndex != -1) {
-//            Exception e = new Exception();
-//            Log.e(TAG, "requesting column name with table name -- " + columnName, e);
-//            columnName = columnName.substring(periodIndex + 1);
-//        }
-
         for (String column : projection.columns()) {
-            final String unambiguousName = Sql.generator().unambiguousColumn(projection.tableName(), column);
-            final String retrievalName = Sql.generator().unambiguousRetrievalColumn(projection.tableName(), column);
-            listToAddTo.add(unambiguousName + " AS " + retrievalName);
+            listToAddTo.add(unambiguouslyAliasColumn(projection.tableName(), column));
         }
+    }
+
+    // TODO: move this method to forsuredb sqlitelib
+    /**
+     * The following code in SQLiteCursor.getColumnIndex forces us to disambiguate columns without using the table.column
+     * notation
+     * Hack according to bug 903852
+     * final int periodIndex = columnName.lastIndexOf('.');
+     * if (periodIndex != -1) {
+     * Exception e = new Exception();
+     * Log.e(TAG, "requesting column name with table name -- " + columnName, e);
+     * columnName = columnName.substring(periodIndex + 1);
+     * }
+     * @param tableName
+     * @param columnName
+     * @return
+     */
+    private String unambiguouslyAliasColumn(String tableName, String columnName) {
+        final String unambiguousName = Sql.generator().unambiguousColumn(tableName, columnName);
+        final String retrievalName = Sql.generator().unambiguousRetrievalColumn(tableName, columnName);
+        return unambiguousName + " AS " + retrievalName;
     }
 }

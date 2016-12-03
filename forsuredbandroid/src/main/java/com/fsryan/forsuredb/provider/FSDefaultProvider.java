@@ -94,6 +94,8 @@ public class FSDefaultProvider extends ContentProvider {
         QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
         SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
         builder.setTables(UriJoiner.joinStringFrom(uri));
+        boolean isDistinct = Boolean.parseBoolean(uri.getQueryParameter("DISTINCT"));
+        builder.setDistinct(isDistinct);
         return builder.query(FSDBHelper.inst().getReadableDatabase(),
                 projection,
                 qc.getSelection(),
@@ -106,6 +108,8 @@ public class FSDefaultProvider extends ContentProvider {
     private Cursor performQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
         final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
-        return FSDBHelper.inst().getReadableDatabase().query(tableName, projection, qc.getSelection(), qc.getSelectionArgs(), null, null, sortOrder);
+
+        boolean isDistinct = Boolean.parseBoolean(uri.getQueryParameter("DISTINCT"));
+        return FSDBHelper.inst().getReadableDatabase().query(isDistinct, tableName, projection, qc.getSelection(), qc.getSelectionArgs(), null, null, sortOrder, null);
     }
 }
