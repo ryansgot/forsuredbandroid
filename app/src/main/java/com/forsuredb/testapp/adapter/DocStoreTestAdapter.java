@@ -10,22 +10,23 @@ import com.forsuredb.testapp.model.DocStoreDoublePropertyExtension;
 import com.forsuredb.testapp.model.DocStoreIntPropertyExtension;
 import com.forsuredb.testapp.model.DocStoreTestBase;
 import com.forsuredb.testapp.model.DocStoreTestTable;
+import com.fsryan.forsuredb.api.FSGetApi;
+import com.fsryan.forsuredb.cursor.BaseFSCursorRecyclerAdapter;
 import com.fsryan.forsuredb.cursor.FSCursor;
-import com.fsryan.forsuredb.cursor.FSCursorRecyclerViewAdapter;
 import com.fsryan.forsuredb.cursor.FSCursorViewHolder;
 
 import static com.forsuredb.testapp.ForSure.docStoreTestTable;
 
-public class DocStoreTestAdapter extends FSCursorRecyclerViewAdapter<DocStoreTestTable, DocStoreTestAdapter.ViewHolder> {
+public class DocStoreTestAdapter extends BaseFSCursorRecyclerAdapter<DocStoreTestAdapter.ViewHolder> {
 
     private final DocStoreTestTable api = docStoreTestTable().getApi();
 
     public DocStoreTestAdapter() {
-        super();
+        super(true);
     }
 
     @Override
-    protected DocStoreTestTable api() {
+    protected FSGetApi api() {
         return api;
     }
 

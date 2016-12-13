@@ -18,13 +18,12 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.fsryan.forsuredb.api.FSGetApi;
 import com.fsryan.forsuredb.api.FSJoin;
 import com.fsryan.forsuredb.api.Retriever;
 import com.fsryan.forsuredb.api.SaveResult;
+import com.fsryan.forsuredb.cursor.BaseFSCursorRecyclerAdapter;
 import com.fsryan.forsuredb.cursor.FSCursor;
 import com.fsryan.forsuredb.cursor.FSCursorLoader;
-import com.fsryan.forsuredb.cursor.FSCursorRecyclerViewAdapter;
 import com.fsryan.forsuredb.cursor.FSCursorViewHolder;
 import com.forsuredb.testapp.adapter.ProfileInfoTableRecyclerAdapter;
 import com.forsuredb.testapp.adapter.UserTableRecyclerAdapter;
@@ -148,7 +147,7 @@ public class TestActivity extends AppCompatActivity {
         }, null);
     }
 
-    private <G extends FSGetApi, VH extends FSCursorViewHolder> void initRecycler(int viewId, FSCursorRecyclerViewAdapter<G, VH> adapter) {
+    private <VH extends FSCursorViewHolder> void initRecycler(int viewId, BaseFSCursorRecyclerAdapter<VH> adapter) {
         RecyclerView recycler = (RecyclerView) findViewById(viewId);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         layoutManager.scrollToPosition(0);

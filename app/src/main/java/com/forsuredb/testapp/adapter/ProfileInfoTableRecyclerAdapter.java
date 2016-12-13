@@ -18,11 +18,10 @@ import static com.google.common.base.Strings.nullToEmpty;
 
 public class ProfileInfoTableRecyclerAdapter extends FSCursorRecyclerViewAdapter<ProfileInfoTable, ProfileInfoTableRecyclerAdapter.ViewHolder> {
 
-    private final ProfileInfoTable api;
+    private final ProfileInfoTable api = profileInfoTable().getApi();
 
     public ProfileInfoTableRecyclerAdapter() {
         super();
-        api = profileInfoTable().getApi();
     }
 
     @Override
