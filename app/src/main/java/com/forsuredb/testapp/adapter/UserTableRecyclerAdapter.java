@@ -5,21 +5,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.fsryan.forsuredb.cursor.BaseFSCursorRecyclerAdapter;
 import com.fsryan.forsuredb.cursor.FSCursor;
-import com.fsryan.forsuredb.cursor.FSCursorRecyclerViewAdapter;
 import com.fsryan.forsuredb.cursor.FSCursorViewHolder;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.UserTable;
 
 import static com.forsuredb.testapp.ForSure.userTable;
 
-public class UserTableRecyclerAdapter extends FSCursorRecyclerViewAdapter<UserTable, UserTableRecyclerAdapter.ViewHolder> {
+public class UserTableRecyclerAdapter extends BaseFSCursorRecyclerAdapter<UserTableRecyclerAdapter.ViewHolder> {
 
-    private final UserTable api;
+    private final UserTable api = userTable().getApi();
 
     public UserTableRecyclerAdapter() {
-        super();
-        api = userTable().getApi();
+        super(true);
     }
 
     @Override
