@@ -25,7 +25,6 @@ import com.fsryan.forsuredb.api.FSQueryable;
 import com.fsryan.forsuredb.api.ForSureInfoFactory;
 import com.fsryan.forsuredb.provider.FSContentValues;
 import com.fsryan.forsuredb.provider.UriJoiner;
-import com.google.common.base.Strings;
 
 import java.util.List;
 
@@ -55,7 +54,7 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
      * @param authority the authority of your {@link android.content.ContentProvider}. This cannot be null.
      */
     public static void init(Context appContext, String authority) {
-        if (Strings.isNullOrEmpty(authority)) {
+        if (authority == null || authority.isEmpty()) {
             throw new IllegalArgumentException("authority cannot be null.");
         }
         if (instance == null) {

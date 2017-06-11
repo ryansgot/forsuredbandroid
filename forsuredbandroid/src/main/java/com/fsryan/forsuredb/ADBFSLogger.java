@@ -20,7 +20,6 @@ package com.fsryan.forsuredb;
 import android.util.Log;
 
 import com.fsryan.forsuredb.api.FSLogger;
-import com.google.common.base.Strings;
 
 /*package*/ class ADBFSLogger implements FSLogger {
 
@@ -32,21 +31,21 @@ import com.google.common.base.Strings;
 
     @Override
     public void e(String message) {
-        Log.e(logTag, Strings.nullToEmpty(message));
+        Log.e(logTag, message == null ? "" : message);
     }
 
     @Override
     public void i(String message) {
-        Log.i(logTag, Strings.nullToEmpty(message));
+        Log.i(logTag, message == null ? "" : message);
     }
 
     @Override
     public void w(String message) {
-        Log.w(logTag, Strings.nullToEmpty(message));
+        Log.w(logTag, message == null ? "" : message);
     }
 
     @Override
     public void o(String message) {
-        Log.d(logTag, Strings.nullToEmpty(message));
+        Log.d(logTag, message == null ? "" : message);
     }
 }

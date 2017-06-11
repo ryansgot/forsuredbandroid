@@ -2,9 +2,6 @@ package com.fsryan.forsuredb.provider;
 
 import android.net.Uri;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,8 +16,10 @@ import java.util.Set;
     }
 
     public Set<String> getJoinedTableNames() {
-        if (uri == null || Strings.isNullOrEmpty(uri.getQuery()) || Strings.isNullOrEmpty(baseTableName)) {
-            return Sets.newHashSet(baseTableName);
+        if (uri == null || uri.getQuery() == null || uri.getQuery().isEmpty() || baseTableName == null || baseTableName.isEmpty()) {
+            Set<String> ret = new HashSet<>();
+            ret.add(baseTableName);
+            return ret;
         }
 
         final String[] parsedQuery = uri.getQuery().split("&");
@@ -28,7 +27,7 @@ import java.util.Set;
         retSet.add(baseTableName);
         for (String query : parsedQuery) {
             final String tableName = joinedTableNameFromIndividualQuery(query);
-            if (!Strings.isNullOrEmpty(tableName) && !retSet.contains(tableName)) {
+            if (tableName != null && !tableName.isEmpty() && !retSet.contains(tableName)) {
                 retSet.add(tableName);
             }
         }
@@ -37,7 +36,7 @@ import java.util.Set;
     }
 
     private String joinedTableNameFromIndividualQuery(String query) {
-        if (Strings.isNullOrEmpty(query)) {
+        if (query != null && !query.isEmpty()) {
             return null;
         }
 
