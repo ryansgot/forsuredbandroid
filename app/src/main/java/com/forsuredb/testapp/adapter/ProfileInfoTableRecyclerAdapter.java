@@ -5,8 +5,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.fsryan.forsuredb.cursor.BaseFSCursorRecyclerAdapter;
 import com.fsryan.forsuredb.cursor.FSCursor;
-import com.fsryan.forsuredb.cursor.FSCursorRecyclerViewAdapter;
 import com.fsryan.forsuredb.cursor.FSCursorViewHolder;
 import com.forsuredb.testapp.R;
 import com.forsuredb.testapp.model.ProfileInfoTable;
@@ -16,12 +16,12 @@ import java.util.Arrays;
 import static com.forsuredb.testapp.ForSure.profileInfoTable;
 import static com.forsuredb.testapp.StringUtil.nullToEmpty;
 
-public class ProfileInfoTableRecyclerAdapter extends FSCursorRecyclerViewAdapter<ProfileInfoTable, ProfileInfoTableRecyclerAdapter.ViewHolder> {
+public class ProfileInfoTableRecyclerAdapter extends BaseFSCursorRecyclerAdapter<ProfileInfoTableRecyclerAdapter.ViewHolder> {
 
     private final ProfileInfoTable api = profileInfoTable().getApi();
 
     public ProfileInfoTableRecyclerAdapter() {
-        super();
+        super(true);
     }
 
     @Override
