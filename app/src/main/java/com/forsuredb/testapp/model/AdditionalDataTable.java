@@ -1,6 +1,7 @@
 package com.forsuredb.testapp.model;
 
 import com.fsryan.forsuredb.annotations.FSColumn;
+import com.fsryan.forsuredb.annotations.FSDefault;
 import com.fsryan.forsuredb.annotations.FSForeignKey;
 import com.fsryan.forsuredb.annotations.FSStaticData;
 import com.fsryan.forsuredb.annotations.FSTable;
@@ -32,9 +33,11 @@ public interface AdditionalDataTable extends FSGetApi {
     String uuid(Retriever retriever);
 
     @FSColumn(value = "string_column", orderable = false, searchable = false)
+    @FSDefault("some string")
     String stringColumn(Retriever retriever);
 
     @FSColumn(value = "int_column", orderable = false, searchable = false)
+    @FSDefault("7")
     int intColumn(Retriever retriever);
 
     @FSColumn(value = "long_column", orderable = false, searchable = false)
