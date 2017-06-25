@@ -21,7 +21,9 @@ import android.content.AsyncTaskLoader;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.net.Uri;
+import android.os.CancellationSignal;
 import android.os.Handler;
+import android.os.OperationCanceledException;
 
 import com.fsryan.forsuredb.api.FSGetApi;
 import com.fsryan.forsuredb.api.FSSaveApi;
@@ -38,7 +40,8 @@ public class FSCursorLoader<T extends Resolver, G extends FSGetApi, S extends FS
     private FSCursor mCursor;
     private Resolver<T, Uri, FSContentValues, G, S, F, O> resolver;
     private List<Uri> tableUris;
-    private MultiTableObserver mObserver;
+    private BaseResolverContentObserver<T> mObserver;
+    private CancellationSignal mCancellationSignal;
     private final Handler handler;
 
     public FSCursorLoader(Context context, Resolver<T, Uri, FSContentValues, G, S, F, O> resolver) {
@@ -46,12 +49,21 @@ public class FSCursorLoader<T extends Resolver, G extends FSGetApi, S extends FS
         this.resolver = resolver;
         tableUris = UriEvaluator.tableReferences(resolver.currentLocator());
         handler = new Handler();
+        mObserver = new BaseResolverContentObserver<T>(context, resolver, new Handler(), true) {
+            @Override
+            public void onChange(boolean selfChange, Uri tableUri, Resolver<T, Uri, FSContentValues, ?, ?, ?, ?> resolver) {
+                onContentChanged();
+            }
+        };
     }
 
     @Override
     public FSCursor loadInBackground() {
-        if (mObserver == null) {
-            mObserver = new MultiTableObserver();
+        synchronized (this) {
+            if (isLoadInBackgroundCanceled()) {
+                throw new OperationCanceledException();
+            }
+            mCancellationSignal = new CancellationSignal();
         }
 
         FSCursor cursor = (FSCursor) resolver.preserveQueryStateAndGet();
@@ -64,6 +76,17 @@ public class FSCursorLoader<T extends Resolver, G extends FSGetApi, S extends FS
             }
         }
         return cursor;
+    }
+
+    @Override
+    public void cancelLoadInBackground() {
+        super.cancelLoadInBackground();
+
+        synchronized (this) {
+            if (mCancellationSignal != null) {
+                mCancellationSignal.cancel();
+            }
+        }
     }
 
     @Override
@@ -91,10 +114,7 @@ public class FSCursorLoader<T extends Resolver, G extends FSGetApi, S extends FS
 
         releaseResources(cursor);
 
-        if (mObserver != null) {
-            mObserver.unregister();
-            mObserver = null;
-        }
+        mObserver.unregister();
     }
 
     /**
@@ -116,9 +136,7 @@ public class FSCursorLoader<T extends Resolver, G extends FSGetApi, S extends FS
             deliverResult(mCursor);
         }
 
-        if (mObserver == null) {
-            mObserver = new MultiTableObserver();
-        }
+        mObserver.register();
 
         if (takeContentChanged() || mCursor == null) {
             forceLoad();
@@ -139,46 +157,12 @@ public class FSCursorLoader<T extends Resolver, G extends FSGetApi, S extends FS
             mCursor = null;
         }
 
-        if (mObserver != null) {
-            mObserver.unregister();
-            mObserver = null;
-        }
+        mObserver.unregister();
     }
 
     private void releaseResources(FSCursor cursor) {
         if (cursor != null && !cursor.isClosed()) {
             cursor.close();
-        }
-    }
-
-    private final class MultiTableObserver extends ContentObserver {
-
-        public MultiTableObserver() {
-            super(handler);
-
-            // register for updates to all of the relevant tables
-            if (tableUris != null) {
-                for (Uri tableUri : tableUris) {
-                    getContext().getContentResolver().registerContentObserver(tableUri, true, this);
-                }
-            }
-        }
-
-        @Override
-        public boolean deliverSelfNotifications() {
-            return true;
-        }
-
-        @Override
-        public void onChange(boolean selfChange) {
-            onContentChanged();
-        }
-
-        public void unregister() {
-            if (tableUris == null) {
-                return;
-            }
-            getContext().getContentResolver().unregisterContentObserver(this);
         }
     }
 }
