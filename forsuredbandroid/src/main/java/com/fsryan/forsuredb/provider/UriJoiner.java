@@ -22,12 +22,11 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.fsryan.forsuredb.api.FSJoin;
-import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,7 +64,9 @@ public class UriJoiner {
         for (String pathSegment : uri.getPathSegments()) {
             ub.appendPath(pathSegment);
         }
-        Set<String> joinedTables = Sets.newHashSet(baseTableName);
+
+        Set<String> joinedTables = new HashSet<>();
+        joinedTables.add(baseTableName);
         for (FSJoin join : joins) {
             Pair<String, String> tableJoinTextPair = joinTextFrom(join, joinedTables);
             if (tableJoinTextPair == null) {
@@ -99,7 +100,7 @@ public class UriJoiner {
     }
 
     private static void appendJoinStringTo(StringBuffer sb, String joinType, String joinQuery) {
-        if (Strings.isNullOrEmpty(joinQuery)) {
+        if (joinQuery == null || joinQuery.isEmpty()) {
             return;
         }
         sb.append(" ").append(joinType).append(" ").append(joinQuery);

@@ -14,7 +14,7 @@ import com.forsuredb.testapp.model.ProfileInfoTable;
 import java.util.Arrays;
 
 import static com.forsuredb.testapp.ForSure.profileInfoTable;
-import static com.google.common.base.Strings.nullToEmpty;
+import static com.forsuredb.testapp.StringUtil.nullToEmpty;
 
 public class ProfileInfoTableRecyclerAdapter extends FSCursorRecyclerViewAdapter<ProfileInfoTable, ProfileInfoTableRecyclerAdapter.ViewHolder> {
 

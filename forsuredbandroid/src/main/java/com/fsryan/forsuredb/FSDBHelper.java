@@ -33,7 +33,6 @@ import java.util.List;
 
 public class FSDBHelper extends SQLiteOpenHelper {
 
-    private static final String LOG_TAG = FSDBHelper.class.getSimpleName();
     private static final SQLiteDatabase.CursorFactory cursorFactory = new FSCursorFactory();
 
     private final List<FSTableCreator> tables;

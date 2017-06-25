@@ -25,7 +25,6 @@ import com.fsryan.forsuredb.api.FSLogger;
 import com.fsryan.forsuredb.api.FSTableCreator;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.api.staticdata.StaticDataRetrieverFactory;
-import com.fsryan.forsuredb.sqlitelib.SqlGenerator;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,8 +32,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 /*package*/ class StaticDataSQL {
 
@@ -94,6 +91,8 @@ import static com.google.common.base.Strings.isNullOrEmpty;
     }
 
     private boolean canCreateStaticDataInsertionQueries() {
-        return !isNullOrEmpty(tableName) && !isNullOrEmpty(staticDataAsset) && !isNullOrEmpty(staticDataRecordName);
+        return tableName != null && !tableName.isEmpty()
+                && staticDataAsset != null && !staticDataAsset.isEmpty()
+                && staticDataRecordName != null && !staticDataRecordName.isEmpty();
     }
 }

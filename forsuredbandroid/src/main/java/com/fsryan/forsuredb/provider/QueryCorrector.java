@@ -19,10 +19,8 @@ package com.fsryan.forsuredb.provider;
 
 import android.net.Uri;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -56,7 +54,7 @@ public class QueryCorrector {
     }
 
     private String ensureIdInSelection(String selection) {
-        if (Strings.isNullOrEmpty(selection)) {
+        if (selection == null || selection.isEmpty()) {
             return ID_SELECTION;
         }
 
@@ -71,7 +69,10 @@ public class QueryCorrector {
             return selectionArgs;
         }
 
-        final List<String> selectionArgList = selectionArgs == null ? new ArrayList<String>() : Lists.newArrayList(selectionArgs);
+        final List<String> selectionArgList = new ArrayList<>();
+        if (selectionArgs != null) {
+            selectionArgList.addAll(Arrays.asList(selectionArgs));
+        }
         selectionArgList.add(0, uri.getLastPathSegment());  // <-- prepend because the modified selection string specifies the _id selection first
         return selectionArgList.toArray(new String[selectionArgList.size()]);
     }

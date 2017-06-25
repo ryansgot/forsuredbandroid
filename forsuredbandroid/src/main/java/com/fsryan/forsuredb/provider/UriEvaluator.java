@@ -21,7 +21,6 @@ import android.net.Uri;
 
 import com.fsryan.forsuredb.ForSureAndroidInfoFactory;
 import com.fsryan.forsuredb.api.FSJoin;
-import com.google.common.base.Strings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,7 +84,8 @@ public class UriEvaluator {
     public static boolean isJoin(Uri uri) {
         for (FSJoin.Type type : FSJoin.Type.values()) {
             try {
-                if (!Strings.isNullOrEmpty(uri.getQueryParameter(UriJoiner.joinMap.get(type)))) {
+                String join = uri.getQueryParameter(UriJoiner.joinMap.get(type));
+                if (join != null && !join.isEmpty()) {
                     return true;
                 }
             } catch (Exception e) {}
