@@ -114,10 +114,14 @@ public class UriJoiner {
         if (tableToJoin == null) {
             return null;
         }
-        String joinString = tableToJoin
-                + " ON " + join.getParentTable() + "." + join.getParentColumn()
-                + " = " + join.getChildTable() + "." + join.getChildColumn();
-        return Pair.create(tableToJoin, joinString);
+        final StringBuilder joinBuf = new StringBuilder(tableToJoin).append(" ON ");
+        for (Map.Entry<String, String> childToParentColumnMapEntry : join.getChildToParentColumnMap().entrySet()) {
+            joinBuf.append(join.getParentTable()).append(".").append(childToParentColumnMapEntry.getValue())
+                    .append(" = ")
+                    .append(join.getChildTable()).append(".").append(childToParentColumnMapEntry.getKey())
+                    .append(" AND ");
+        }
+        return Pair.create(tableToJoin, joinBuf.delete(joinBuf.length() - 5, joinBuf.length()).toString());
     }
 
     private static String tableToJoin(FSJoin join, Set<String> joinedTables) {
