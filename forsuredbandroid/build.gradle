@@ -51,6 +51,8 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile "org.mockito:mockito-core:$mockitoVersion"
 
+    androidTestCompile 'com.google.guava:guava:19.0'
+
     javadocSources "com.fsryan.forsuredb:forsuredbapi:$forsuredbVersion"
     javadocSources "com.fsryan.forsuredb:sqlitelib:$forsuredbSqliteVersion"
 }
