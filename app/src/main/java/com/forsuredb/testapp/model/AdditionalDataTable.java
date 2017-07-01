@@ -1,9 +1,10 @@
 package com.forsuredb.testapp.model;
 
 import com.fsryan.forsuredb.annotations.FSColumn;
+import com.fsryan.forsuredb.annotations.FSDefault;
+import com.fsryan.forsuredb.annotations.FSForeignKey;
 import com.fsryan.forsuredb.annotations.FSStaticData;
 import com.fsryan.forsuredb.annotations.FSTable;
-import com.fsryan.forsuredb.annotations.ForeignKey;
 import com.fsryan.forsuredb.api.FSGetApi;
 import com.fsryan.forsuredb.api.Retriever;
 
@@ -11,14 +12,32 @@ import com.fsryan.forsuredb.api.Retriever;
 @FSStaticData(asset = "additional_data.xml", recordName = "additional_data")
 public interface AdditionalDataTable extends FSGetApi {
 
-    @FSColumn(value = "profile_info_id", orderable = false, searchable = false)
-    @ForeignKey(apiClass = ProfileInfoTable.class, columnName = "_id")
-    long profileInfoId(Retriever retriever);
+    @FSColumn(value = "email", orderable = false, searchable = false)
+    @FSForeignKey(
+            compositeId = "profile_info_table", // <-- matching composite id for composite foreign key
+            apiClass = ProfileInfoTable.class,
+            columnName = "email_address",
+            updateAction = "CASCADE",
+            deleteAction = "CASCADE"
+    )
+    String emailAddress(Retriever retriever);
+
+    @FSColumn(value = "profile_info_uuid", orderable = false, searchable = false)
+    @FSForeignKey(
+            compositeId = "profile_info_table", // <-- matching composite id for composite foreign key
+            apiClass = ProfileInfoTable.class,
+            columnName = "uuid",
+            updateAction = "CASCADE",
+            deleteAction = "CASCADE"
+    )
+    String uuid(Retriever retriever);
 
     @FSColumn(value = "string_column", orderable = false, searchable = false)
+    @FSDefault("some string")
     String stringColumn(Retriever retriever);
 
     @FSColumn(value = "int_column", orderable = false, searchable = false)
+    @FSDefault("7")
     int intColumn(Retriever retriever);
 
     @FSColumn(value = "long_column", orderable = false, searchable = false)

@@ -23,7 +23,9 @@ import android.test.InstrumentationTestCase;
 import com.fsryan.forsuredb.api.FSJoin;
 import com.google.common.collect.Lists;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UriJoinerTest extends InstrumentationTestCase {
 
@@ -199,6 +201,8 @@ public class UriJoinerTest extends InstrumentationTestCase {
     }
 
     private FSJoin createJoin(final TableToJoin parent, final TableToJoin child, final FSJoin.Type type) {
-        return new FSJoin(type, parent.getTableName(), parent.getColumnName(), child.getTableName(), child.getColumnName());
+        Map<String, String> localToForeignColumnMap = new HashMap<>();
+        localToForeignColumnMap.put(child.getColumnName(), parent.getColumnName());
+        return new FSJoin(type, parent.getTableName(), child.getTableName(), localToForeignColumnMap);
     }
 }

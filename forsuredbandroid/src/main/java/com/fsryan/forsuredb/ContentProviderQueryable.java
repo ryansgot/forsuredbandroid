@@ -18,7 +18,6 @@
 package com.fsryan.forsuredb;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
 import com.fsryan.forsuredb.api.FSJoin;
@@ -29,7 +28,6 @@ import com.fsryan.forsuredb.api.Retriever;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.cursor.FSCursor;
 import com.fsryan.forsuredb.provider.FSContentValues;
-import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,7 +73,9 @@ import java.util.List;
 
     @Override
     public Retriever query(FSProjection projection, FSSelection selection, String sortOrder) {
-        final String[] p = formatProjection(Lists.newArrayList(projection));
+        List<FSProjection> projections = new ArrayList<>();
+        projections.add(projection);
+        final String[] p = formatProjection(projections);
         final String s = selection == null ? null : selection.where();
         final String[] sArgs = selection == null ? null : selection.replacements();
         return new FSCursor(appContext.getContentResolver().query(resourceFrom(resource, projection), p, s, sArgs, sortOrder));
@@ -95,7 +95,10 @@ import java.util.List;
                     .appendQueryParameter("DISTINCT", "false")
                     .build();
         }
-        return resourceFrom(uri, Lists.newArrayList(projection));
+
+        List<FSProjection> projections = new ArrayList<>();
+        projections.add(projection);
+        return resourceFrom(uri, projections);
     }
 
     private Uri resourceFrom(Uri uri, List<FSProjection> projections) {

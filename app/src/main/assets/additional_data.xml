@@ -1,22 +1,22 @@
 <resources>
-    <additional_data _id="1" profile_info_id="5" string_column="profile_info_id = 5" int_column="42" long_column="1000042" />
-    <additional_data _id="2" profile_info_id="4" string_column="profile_info_id = 4" int_column="43" long_column="1000043" />
-    <additional_data _id="3" profile_info_id="3" string_column="profile_info_id = 3" int_column="44" long_column="1000044" />
-    <additional_data _id="4" profile_info_id="2" string_column="profile_info_id = 2" int_column="45" long_column="1000045" />
-    <additional_data _id="5" profile_info_id="1" string_column="profile_info_id = 1" int_column="46" long_column="1000046" />
-    <additional_data _id="6" profile_info_id="6" string_column="profile_info_id = 6" int_column="47" long_column="1000047" />
-    <additional_data _id="7" profile_info_id="7" string_column="profile_info_id = 7" int_column="48" long_column="1000048" />
-    <additional_data _id="8" profile_info_id="8" string_column="profile_info_id = 8" int_column="49" long_column="1000049" />
-    <additional_data _id="9" profile_info_id="9" string_column="profile_info_id = 9" int_column="50" long_column="1000050" />
-    <additional_data _id="10" profile_info_id="10" string_column="profile_info_id = 10" int_column="51" long_column="1000051" />
-    <additional_data _id="11" profile_info_id="15" string_column="profile_info_id = 11" int_column="52" long_column="1000052" />
-    <additional_data _id="12" profile_info_id="14" string_column="profile_info_id = 12" int_column="53" long_column="1000053" />
-    <additional_data _id="13" profile_info_id="13" string_column="profile_info_id = 13" int_column="54" long_column="1000054" />
-    <additional_data _id="14" profile_info_id="12" string_column="profile_info_id = 14" int_column="55" long_column="1000055" />
-    <additional_data _id="15" profile_info_id="11" string_column="profile_info_id = 15" int_column="56" long_column="1000056" />
-    <additional_data _id="16" profile_info_id="16" string_column="profile_info_id = 16" int_column="57" long_column="1000057" />
-    <additional_data _id="17" profile_info_id="17" string_column="profile_info_id = 17" int_column="58" long_column="1000058" />
-    <additional_data _id="18" profile_info_id="18" string_column="profile_info_id = 18" int_column="59" long_column="1000059" />
-    <additional_data _id="19" profile_info_id="19" string_column="profile_info_id = 19" int_column="60" long_column="1000060" />
-    <additional_data _id="20" profile_info_id="20" string_column="profile_info_id = 20" int_column="61" long_column="1000061" />
+    <additional_data _id="1" email="user_id_1@email.com" profile_info_uuid="5a52c7b3-52e0-48e7-9303-958d4ca8ee9a" long_column="1000042" />
+    <additional_data _id="2" email="user_id_2@email.com" profile_info_uuid="ddfd618b-e3fe-4cac-b463-b77289bcb916" long_column="1000043" />
+    <additional_data _id="3" email="user_id_3@email.com" profile_info_uuid="aec3ba08-c9ed-45fd-976f-d494f7f7f411" long_column="1000044" />
+    <additional_data _id="4" email="user_id_4@email.com" profile_info_uuid="9c0eceab-105a-494a-b08f-38fe31e6cfbf" long_column="1000045" />
+    <additional_data _id="5" email="user_id_5@email.com" profile_info_uuid="fc1bc84b-2bde-4a63-a625-d91582de2824" long_column="1000046" />
+    <additional_data _id="6" email="user_id_6@email.com" profile_info_uuid="a3e6d347-0161-4f55-8cfb-2d87a0896195" long_column="1000047" />
+    <additional_data _id="7" email="user_id_7@email.com" profile_info_uuid="c0d4910a-2785-4293-83f8-9bbdf0cc23ac" long_column="1000048" />
+    <additional_data _id="8" email="user_id_8@email.com" profile_info_uuid="5c785800-8744-4f22-9457-aa3474b9e78b" long_column="1000049" />
+    <additional_data _id="9" email="user_id_9@email.com" profile_info_uuid="94f9b38a-e337-4566-b9dc-aede2a7e224a" long_column="1000050" />
+    <additional_data _id="10" email="user_id_10@email.com" profile_info_uuid="ea02713e-751b-436f-988e-66f7f2d65cc3" long_column="1000051" />
+    <additional_data _id="11" email="user_id_11@email.com" profile_info_uuid="223d4370-7e82-4c98-a800-6e3e522482dd" long_column="1000052" />
+    <additional_data _id="12" email="user_id_12@email.com" profile_info_uuid="04166150-826a-4051-97ac-183e8b162655" long_column="1000053" />
+    <additional_data _id="13" email="user_id_13@email.com" profile_info_uuid="1819c264-4f0d-49c0-b4c7-37e62254d937" long_column="1000054" />
+    <additional_data _id="14" email="user_id_14@email.com" profile_info_uuid="f3eac182-a01f-4dcc-9e1f-34e2952936c3" long_column="1000055" />
+    <additional_data _id="15" email="user_id_15@email.com" profile_info_uuid="02011e40-78eb-4f09-9c7f-ed68695d3bc1" long_column="1000056" />
+    <additional_data _id="16" email="user_id_16@email.com" profile_info_uuid="2a39c504-4f92-480f-8156-06a35f8d918d" long_column="1000057" />
+    <additional_data _id="17" email="user_id_17@email.com" profile_info_uuid="901dc687-f52f-45c8-a290-80b37ce7a7aa" long_column="1000058" />
+    <additional_data _id="18" email="user_id_18@email.com" profile_info_uuid="2b1addc7-dc09-4a61-bd6a-06699c2bd63d" long_column="1000059" />
+    <additional_data _id="19" email="user_id_19@email.com" profile_info_uuid="0bb9603e-71f3-4c03-8c1f-6014191991b3" long_column="1000060" />
+    <additional_data _id="20" email="user_id_20@email.com" profile_info_uuid="ad6fdd95-7f23-4430-9bfa-d8386c957d45" long_column="1000061" />
 </resources>

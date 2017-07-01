@@ -22,12 +22,11 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.fsryan.forsuredb.api.FSJoin;
-import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,7 +64,9 @@ public class UriJoiner {
         for (String pathSegment : uri.getPathSegments()) {
             ub.appendPath(pathSegment);
         }
-        Set<String> joinedTables = Sets.newHashSet(baseTableName);
+
+        Set<String> joinedTables = new HashSet<>();
+        joinedTables.add(baseTableName);
         for (FSJoin join : joins) {
             Pair<String, String> tableJoinTextPair = joinTextFrom(join, joinedTables);
             if (tableJoinTextPair == null) {
@@ -99,7 +100,7 @@ public class UriJoiner {
     }
 
     private static void appendJoinStringTo(StringBuffer sb, String joinType, String joinQuery) {
-        if (Strings.isNullOrEmpty(joinQuery)) {
+        if (joinQuery == null || joinQuery.isEmpty()) {
             return;
         }
         sb.append(" ").append(joinType).append(" ").append(joinQuery);
@@ -113,10 +114,14 @@ public class UriJoiner {
         if (tableToJoin == null) {
             return null;
         }
-        String joinString = tableToJoin
-                + " ON " + join.getParentTable() + "." + join.getParentColumn()
-                + " = " + join.getChildTable() + "." + join.getChildColumn();
-        return Pair.create(tableToJoin, joinString);
+        final StringBuilder joinBuf = new StringBuilder(tableToJoin).append(" ON ");
+        for (Map.Entry<String, String> childToParentColumnMapEntry : join.getChildToParentColumnMap().entrySet()) {
+            joinBuf.append(join.getParentTable()).append(".").append(childToParentColumnMapEntry.getValue())
+                    .append(" = ")
+                    .append(join.getChildTable()).append(".").append(childToParentColumnMapEntry.getKey())
+                    .append(" AND ");
+        }
+        return Pair.create(tableToJoin, joinBuf.delete(joinBuf.length() - 5, joinBuf.length()).toString());
     }
 
     private static String tableToJoin(FSJoin join, Set<String> joinedTables) {

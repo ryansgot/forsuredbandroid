@@ -2,9 +2,6 @@ package com.fsryan.forsuredb.provider;
 
 import android.net.Uri;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,29 +12,31 @@ import java.util.Set;
 
     public JoinUriParser(Uri uri) {
         this.uri = uri;
-        baseTableName = getBaseTableName();
+        baseTableName = uri == null ? null : uri.getPathSegments().get(0);
     }
 
     public Set<String> getJoinedTableNames() {
-        if (uri == null || Strings.isNullOrEmpty(uri.getQuery()) || Strings.isNullOrEmpty(baseTableName)) {
-            return Sets.newHashSet(baseTableName);
+        final Set<String> ret = new HashSet<>();
+        if (baseTableName != null && !baseTableName.isEmpty()) {
+            ret.add(baseTableName);
+        }
+        if (uri == null || uri.getQuery() == null || uri.getQuery().isEmpty()) {
+            return ret;
         }
 
         final String[] parsedQuery = uri.getQuery().split("&");
-        final Set<String> retSet = new HashSet<>();
-        retSet.add(baseTableName);
         for (String query : parsedQuery) {
             final String tableName = joinedTableNameFromIndividualQuery(query);
-            if (!Strings.isNullOrEmpty(tableName) && !retSet.contains(tableName)) {
-                retSet.add(tableName);
+            if (tableName != null && !tableName.isEmpty()) {
+                ret.add(tableName);
             }
         }
 
-        return retSet;
+        return ret;
     }
 
     private String joinedTableNameFromIndividualQuery(String query) {
-        if (Strings.isNullOrEmpty(query)) {
+        if (query == null || query.isEmpty()) {
             return null;
         }
 
@@ -56,12 +55,5 @@ import java.util.Set;
         }
 
         return splitRhs[0];
-    }
-
-    private String getBaseTableName() {
-        if (uri == null) {
-            return null;
-        }
-        return uri.getPathSegments().get(0);
     }
 }

@@ -30,16 +30,16 @@ import com.forsuredb.testapp.model.DocStoreTestBase;
 import com.fsryan.forsuredb.api.SaveResult;
 import com.fsryan.forsuredb.cursor.FSCursor;
 import com.fsryan.forsuredb.cursor.FSCursorLoader;
-import com.google.common.collect.Sets;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 import static com.forsuredb.testapp.ForSure.docStoreTestTable;
-import static com.google.common.base.Strings.nullToEmpty;
+import static com.forsuredb.testapp.StringUtil.nullToEmpty;
 import static com.fsryan.forsuredb.api.OrderBy.ORDER_DESC;
 
 public class DocStoreTestActivity extends AppCompatActivity implements TimePickerDialog.OnTimeSetListener, DatePickerDialog.OnDateSetListener {
@@ -55,7 +55,7 @@ public class DocStoreTestActivity extends AppCompatActivity implements TimePicke
     private Button timeButton;
     private Button saveButton;
 
-    private final Set<Class<? extends DocStoreTestBase>> classFilter = Sets.newHashSet(DocStoreIntPropertyExtension.class, DocStoreDoublePropertyExtension.class);
+    private final Set<Class<? extends DocStoreTestBase>> classFilter = new HashSet<>(Arrays.asList(DocStoreIntPropertyExtension.class, DocStoreDoublePropertyExtension.class));
 
     /*package*/ DocStoreTestAdapter adapter;
     private DocStoreTestLoader docStoreTestloader;

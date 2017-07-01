@@ -243,6 +243,7 @@ public class TestActivity extends AppCompatActivity {
                     .append("; profile_info_table.modified = ").append(profileInfoTable.modified(retriever))
                     .append("; profile_info_table.user_id = ").append(profileInfoTable.userId(retriever))
                     .append("; profile_info_table.email_address = ").append(profileInfoTable.emailAddress(retriever))
+                    .append("; profile_info_table.uuid = ").append(profileInfoTable.uuid(retriever))
                     .append("; profile_info_table.binary_data = ").append(profileInfoTable.binaryData(retriever))
                     .append("; profile_info_table.awesome = ").append(profileInfoTable.awesome(retriever));
         }
@@ -256,7 +257,8 @@ public class TestActivity extends AppCompatActivity {
                     .append("; additional_data_table.int_column = ").append(additionalDataTable.intColumn(retriever))
                     .append("; additional_data_table.long_column = ").append(additionalDataTable.longColumn(retriever))
                     .append("; additional_data_table.string_column = ").append(additionalDataTable.stringColumn(retriever))
-                    .append("; additional_data_table.profile_info_id = ").append(additionalDataTable.profileInfoId(retriever));
+                    .append("; additional_data_table.email_address = ").append(additionalDataTable.emailAddress(retriever))
+                    .append("; additional_data_table.uuid = ").append(additionalDataTable.uuid(retriever));
         }
         Log.i(LOG_TAG, sb.toString());
     }

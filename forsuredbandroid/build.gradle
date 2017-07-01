@@ -3,15 +3,15 @@ apply plugin: 'android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 group = 'com.fsryan.forsuredb'
-version = '0.10.1'
+version = '0.11.0'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
 
     defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 23
+        minSdkVersion 16
+        targetSdkVersion 25
     }
 
     compileOptions {
@@ -43,17 +43,19 @@ configurations {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:recyclerview-v7:23.4.0'
+    compile "com.android.support:recyclerview-v7:$supportLibVersion"
 
-    compile 'com.google.guava:guava:19.0'
-
-    compile 'com.fsryan.forsuredb:forsuredbapi:0.10.1'
-    compile 'com.fsryan.forsuredb:sqlitelib:0.4.0'
+    compile "com.fsryan.forsuredb:forsuredbapi:$forsuredbVersion"
+    compile "com.fsryan.forsuredb:sqlitelib:$forsuredbSqliteVersion"
 
     testCompile 'junit:junit:4.12'
-    testCompile 'org.mockito:mockito-core:1.9.5'
+    testCompile 'com.google.guava:guava:20.0'
+    testCompile "org.mockito:mockito-core:$mockitoVersion"
 
-    javadocSources 'com.google.guava:guava:19.0'
+    androidTestCompile 'com.google.guava:guava:20.0'
+
+    javadocSources "com.fsryan.forsuredb:forsuredbapi:$forsuredbVersion"
+    javadocSources "com.fsryan.forsuredb:sqlitelib:$forsuredbSqliteVersion"
 }
 
 String bintrayUserCredential = hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
@@ -110,10 +112,10 @@ bintray {
 //        publish = true
         publicDownloadNumbers = true
         version {
-            name = '0.10.1'
+            name = '0.11.0'
             desc = 'An android library leveraging the forsuredb project'
             released  = new Date()
-            vcsTag = 'v0.10.1'
+            vcsTag = 'v0.11.0'
         }
     }
 }
