@@ -1,9 +1,25 @@
 apply plugin: 'com.android.library'
-apply plugin: 'android-maven'
+apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 group = 'com.fsryan.forsuredb'
-version = '0.11.0'
+
+repositories {
+    maven {
+        url 's3://repo.fsryan.com/release'
+        credentials(AwsCredentials) {
+            accessKey project.hasProperty("awsAccessKey") ? project.property("awsAccessKey") : ""
+            secretKey project.hasProperty("awsSecretKey") ? project.property("awsSecretKey") : ""
+        }
+    }
+    maven {
+        url 's3://repo.fsryan.com/snapshot'
+        credentials(AwsCredentials) {
+            accessKey project.hasProperty("awsAccessKey") ? project.property("awsAccessKey") : ""
+            secretKey project.hasProperty("awsSecretKey") ? project.property("awsSecretKey") : ""
+        }
+    }
+}
 
 android {
     compileSdkVersion 25
@@ -39,6 +55,7 @@ android {
 
 configurations {
     javadocSources
+    mavenDeploy
 }
 
 dependencies {
@@ -54,16 +71,14 @@ dependencies {
 
     androidTestCompile 'com.google.guava:guava:20.0'
 
+    mavenDeploy 'org.kuali.maven.wagons:maven-s3-wagon:1.2.1'
+
     javadocSources "com.fsryan.forsuredb:forsuredbapi:$forsuredbVersion"
     javadocSources "com.fsryan.forsuredb:sqlitelib:$forsuredbSqliteVersion"
 }
 
-String bintrayUserCredential = hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
-String bintrayApiKeyCredential = hasProperty('bintrayApiKey') ? getProperty('bintrayApiKey') : ''
-
 install {
     repositories.mavenInstaller {
-        // This generates POM.xml with proper parameters
         pom {
             project {
                 packaging 'aar'
@@ -82,7 +97,7 @@ install {
                 }
                 developers {
                     developer {
-                        id bintrayUserCredential
+                        id hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
                         name 'Ryan Scott'
                         email 'ryansgot@gmail.com'
                     }
@@ -98,57 +113,108 @@ install {
 }
 
 bintray {
-    user = bintrayUserCredential
-    key = bintrayApiKeyCredential
+    user = hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
+    key = hasProperty('bintrayApiKey') ? getProperty('bintrayApiKey') : ''
 
     configurations = ['archives']
     pkg {
         repo = 'maven'
-        name = 'forsuredbandroid'
+        name = project.name
         desc = 'An android library leveraging the forsuredb project'
         websiteUrl = 'https://github.com/ryansgot/forsuredb'
         vcsUrl = 'https://github.com/ryansgot/forsuredb.git'
         licenses = ["Apache-2.0"]
-//        publish = true
+        publish = false
         publicDownloadNumbers = true
         version {
-            name = '0.11.0'
+            name = project.version
             desc = 'An android library leveraging the forsuredb project'
             released  = new Date()
-            vcsTag = 'v0.11.0'
+            vcsTag = "v${project.version}"
         }
     }
-}
-
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
-}
-
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    classpath.add(configurations.javadocSources.fileCollection {
-        include '**/*.jar'
-    })
-    for (File file : classpath.files) {
-        println("In Javadoc classpath: " + file.absolutePath)
-    }
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-    //options.encoding = 'UTF-8'
-}
-
-artifacts {
-    archives javadocJar
-    archives sourcesJar
 }
 
 task release(dependsOn: bintrayUpload) {
     doLast {
         println("Huzzah! forsuredbandroid uploaded to bintray!")
+    }
+}
+afterEvaluate { project ->
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+
+                configuration = configurations.mavenDeploy
+
+                pom.groupId = project.group
+                pom.artifactId = project.name
+                pom.version = project.version
+
+                repository(url: 's3://repo.fsryan.com/release')
+                snapshotRepository(url: 's3://repo.fsryan.com/snapshot')
+
+                pom.project {
+                    name 'forsuredbandroid library'
+                    packaging 'aar'
+                    description 'Android platform integration library for forsuredb'
+                    url 'https://github.com/ryansgot/forsuredbandroid'
+
+                    scm {
+                        url 'https://github.com/ryansgot/forsuredbandroid'
+                        connection 'scm:git@github.com/ryansgot/forsuredbandroid.git'
+                        developerConnection 'scm:git@github.com/ryansgot/forsuredbandroid.git'
+                    }
+
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id  hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
+                            name 'Ryan Scott'
+                            email 'ryansgot@gmail.com'
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    task androidJavadocs(type: Javadoc) {
+        source = android.sourceSets.main.java.srcDirs
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        classpath.add(configurations.javadocSources.fileCollection {
+            include '**/*.jar'
+        })
+        for (File file : classpath.files) {
+            println("In Javadoc classpath: " + file.absolutePath)
+        }
+    }
+
+    task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+        classifier = 'javadoc'
+        from androidJavadocs.destinationDir
+    }
+
+    task androidSourcesJar(type: Jar) {
+        classifier = 'sources'
+        from android.sourceSets.main.java.sourceFiles
+    }
+
+    artifacts {
+        archives androidSourcesJar
+        archives androidJavadocsJar
+    }
+
+    task releaseToS3(dependsOn: uploadArchives) {
+        doLast {
+            println("Huzzah! forsuredbandroid uploaded to s3!")
+        }
     }
 }
