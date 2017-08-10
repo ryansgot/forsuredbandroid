@@ -1,4 +1,6 @@
 machine:
+  environment:
+    QEMU_AUDIO_DRV: none
   java:
     version: oraclejdk8
 dependencies:
@@ -7,12 +9,29 @@ dependencies:
     - echo y | android update sdk --no-ui --all --filter build-tools-25.0.2,android-25
 test:
   pre:
-    - emulator -avd circleci-android22 -no-audio -no-window:
+    - emulator -avd circleci-android24 -no-audio -no-window:
         background: true
-        parallel: false
+        parallel: true
     - circle-android wait-for-boot
   override:
-    - ./gradlew clean compileDebugJava :forsuredbandroid:test :forsuredbandroid:connectedAndroidTest
+    - ./gradlew clean compileDebugJava :forsuredbandroid:test :forsuredbandroid:connectedAndroidTest bumpVersion
   post:
     - mkdir $CIRCLE_TEST_REPORTS/forsuredbandroid
     - cp -r forsuredbandroid/build/reports/* $CIRCLE_TEST_REPORTS/forsuredbandroid
+deployment:
+  stable: # just a label; label names are completely up to you
+    branch: master
+    commands:
+      - ./gradlew release
+  beta:
+    branch: beta
+    commands:
+      - ./gradlew release
+  alpha:
+    branch: alpha
+    commands:
+      - ./gradlew release
+  integration:
+    branch: integration
+    commands:
+      - ./gradlew releaseSnapshot
