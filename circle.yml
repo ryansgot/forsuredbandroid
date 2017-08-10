@@ -11,7 +11,7 @@ test:
   pre:
     - emulator -avd circleci-android24 -no-audio -no-window:
         background: true
-        parallel: true
+        parallel: false
     - circle-android wait-for-boot
   override:
     - ./gradlew clean compileDebugJava :forsuredbandroid:test :forsuredbandroid:connectedAndroidTest bumpVersion
