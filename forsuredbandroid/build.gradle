@@ -4,23 +4,6 @@ apply plugin: 'com.jfrog.bintray'
 
 group = 'com.fsryan.forsuredb'
 
-repositories {
-    maven {
-        url 's3://repo.fsryan.com/release'
-        credentials(AwsCredentials) {
-            accessKey project.hasProperty("awsAccessKey") ? project.property("awsAccessKey") : ""
-            secretKey project.hasProperty("awsSecretKey") ? project.property("awsSecretKey") : ""
-        }
-    }
-    maven {
-        url 's3://repo.fsryan.com/snapshot'
-        credentials(AwsCredentials) {
-            accessKey project.hasProperty("awsAccessKey") ? project.property("awsAccessKey") : ""
-            secretKey project.hasProperty("awsSecretKey") ? project.property("awsSecretKey") : ""
-        }
-    }
-}
-
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -97,7 +80,7 @@ install {
                 }
                 developers {
                     developer {
-                        id hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
+                        id 'ryansgot'
                         name 'Ryan Scott'
                         email 'ryansgot@gmail.com'
                     }
@@ -135,11 +118,6 @@ bintray {
     }
 }
 
-task release(dependsOn: bintrayUpload) {
-    doLast {
-        println("Huzzah! forsuredbandroid uploaded to bintray!")
-    }
-}
 afterEvaluate { project ->
     uploadArchives {
         repositories {
@@ -151,11 +129,15 @@ afterEvaluate { project ->
                 pom.artifactId = project.name
                 pom.version = project.version
 
-                repository(url: 's3://repo.fsryan.com/release')
-                snapshotRepository(url: 's3://repo.fsryan.com/snapshot')
+                // deploy to release if the release task was run--never run both release and releaseSnapshot at the same time
+                if (gradle.startParameter.taskNames.contains('release')) {
+                    repository(url: 's3://repo.fsryan.com/release')
+                } else {
+                    repository(url: 's3://repo.fsryan.com/snapshot')
+                }
 
                 pom.project {
-                    name 'forsuredbandroid library'
+                    name 'forsuredbandroid'
                     packaging 'aar'
                     description 'Android platform integration library for forsuredb'
                     url 'https://github.com/ryansgot/forsuredbandroid'
@@ -176,7 +158,7 @@ afterEvaluate { project ->
 
                     developers {
                         developer {
-                            id  hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
+                            id  'ryansgot'
                             name 'Ryan Scott'
                             email 'ryansgot@gmail.com'
                         }
@@ -212,9 +194,15 @@ afterEvaluate { project ->
         archives androidJavadocsJar
     }
 
-    task releaseToS3(dependsOn: uploadArchives) {
+    task release(dependsOn: [uploadArchives, bintrayUpload]) {
         doLast {
-            println("Huzzah! forsuredbandroid uploaded to s3!")
+            println("Huzzah! forsuredbandroid uploaded to S3 release and bintray!")
+        }
+    }
+
+    task releaseSnapshot(dependsOn: [uploadArchives, assembleDebug]) {
+        doLast {
+            println("Huzzah! forsuredbandroid uploaded to S3 snapshot!")
         }
     }
 }

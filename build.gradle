@@ -10,19 +10,30 @@ buildscript {
         classpath 'com.fsryan.gradle.autosemver:autosemver-git:0.1.0-alpha'
     }
 }
-apply plugin: 'autosemver-git'
 
 long buildTime = new Date().getTime()
 
-subprojects {
-    apply plugin: 'autosemver-git'
-}
-
 allprojects {
+    apply plugin: 'autosemver-git'
+
     repositories {
         jcenter()
         maven {
             url "https://dl.bintray.com/ryansgot/maven"
+        }
+        maven {
+            url 's3://repo.fsryan.com/snapshot'
+            credentials(AwsCredentials) {
+                accessKey project.hasProperty("awsAccessKey") ? project.property("awsAccessKey") : ""
+                secretKey project.hasProperty("awsSecretKey") ? project.property("awsSecretKey") : ""
+            }
+        }
+        maven {
+            url 's3://repo.fsryan.com/release'
+            credentials(AwsCredentials) {
+                accessKey project.hasProperty("awsAccessKey") ? project.property("awsAccessKey") : ""
+                secretKey project.hasProperty("awsSecretKey") ? project.property("awsSecretKey") : ""
+            }
         }
     }
 
