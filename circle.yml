@@ -1,6 +1,11 @@
 machine:
   environment:
     QEMU_AUDIO_DRV: none
+    GIT_AUTHOR_NAME: circleci
+    GIT_AUTHOR_EMAIL: noreply@circleci.com
+    GIT_COMMITTER_NAME: circleci
+    GIT_COMMITTER_EMAIL: noreply@circleci.com
+    EMAIL: noreply@circleci.com
   java:
     version: oraclejdk8
 dependencies:
