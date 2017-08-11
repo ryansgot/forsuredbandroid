@@ -19,10 +19,11 @@ test:
         parallel: false
     - circle-android wait-for-boot
   override:
-    - ./gradlew clean compileDebugJava :forsuredbandroid:test :forsuredbandroid:connectedAndroidTest bumpVersion
+    - ./gradlew clean :forsuredbandroid:createMergedDebugReport bumpVersion
   post:
     - mkdir $CIRCLE_TEST_REPORTS/forsuredbandroid
     - cp -r forsuredbandroid/build/reports/* $CIRCLE_TEST_REPORTS/forsuredbandroid
+    - bash <(curl -s https://codecov.io/bash) -Z -t $CODECOV_TOKEN -f $CIRCLE_TEST_REPORTS/app/jacoco/createMergedDebugReport/createMergedDebugReport.xml
 deployment:
   stable: # just a label; label names are completely up to you
     branch: master

@@ -1,6 +1,8 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
+apply plugin: 'jacoco'
+apply plugin: 'android-java-coverage-merger'
 
 group = 'com.fsryan.forsuredb'
 
@@ -22,6 +24,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            testCoverageEnabled = true
         }
     }
 
@@ -114,6 +119,21 @@ bintray {
             desc = 'An android library leveraging the forsuredb project'
             released  = new Date()
             vcsTag = "v${project.version}"
+        }
+    }
+}
+
+mergedReportConfig {
+    classFilters {
+        // buildType + flavor matches are additive rather than overriding
+        debug {
+            includes = ['**/com/fsryan/forsuredb/**']
+            excludes = [
+                    '**/R$*.class',                                 // generated R subclasses
+                    '**/R.class',                                   // generated R classes
+                    '**/*Test.class',                               // filter test classes
+                    '**/BuildConfig*',                              // generated BuildConfig classes
+            ]
         }
     }
 }
