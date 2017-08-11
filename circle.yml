@@ -9,7 +9,7 @@ dependencies:
     - echo y | android update sdk --no-ui --all --filter build-tools-25.0.2,android-25
 test:
   pre:
-    - emulator -avd circleci-android24 -no-audio -no-window:
+    - emulator -avd circleci-android22 -no-audio -no-window:
         background: true
         parallel: false
     - circle-android wait-for-boot
