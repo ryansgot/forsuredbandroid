@@ -88,7 +88,9 @@ public class UriEvaluator {
                 if (join != null && !join.isEmpty()) {
                     return true;
                 }
-            } catch (Exception e) {}
+            } catch (RuntimeException e) {
+
+            }
         }
         return false;
     }

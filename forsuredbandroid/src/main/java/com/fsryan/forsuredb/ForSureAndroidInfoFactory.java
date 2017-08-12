@@ -53,7 +53,7 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
      * @param appContext Your application's {@link Context}
      * @param authority the authority of your {@link android.content.ContentProvider}. This cannot be null.
      */
-    public static void init(Context appContext, String authority) {
+    public static synchronized void init(Context appContext, String authority) {
         if (authority == null || authority.isEmpty()) {
             throw new IllegalArgumentException("authority cannot be null.");
         }

@@ -19,25 +19,26 @@ test:
         parallel: false
     - circle-android wait-for-boot
   override:
-    - ./gradlew clean :forsuredbandroid:createMergedDebugReport bumpVersion
+    - ./gradlew clean :forsuredbandroid:createMergedDebugReport bumpVersion -PawsMavenAccessKey=$AWS_ACCESS_KEY_ID -PawsMavenSecretKey=$AWS_SECRET_KEY
   post:
     - mkdir $CIRCLE_TEST_REPORTS/forsuredbandroid
     - cp -r forsuredbandroid/build/reports/* $CIRCLE_TEST_REPORTS/forsuredbandroid
     - bash <(curl -s https://codecov.io/bash) -Z -t $CODECOV_TOKEN -f $CIRCLE_TEST_REPORTS/forsuredbandroid/jacoco/createMergedDebugReport/createMergedDebugReport.xml
+# TODO: move the findBugs portion to the testing step so that the artifacts can be copied
 deployment:
-  stable: # just a label; label names are completely up to you
+  stable:
     branch: master
     commands:
-      - ./gradlew release
+      - ./gradlew findBugsRelease release -PawsMavenAccessKey=$AWS_ACCESS_KEY_ID -PawsMavenSecretKey=$AWS_SECRET_KEY
   beta:
     branch: beta
     commands:
-      - ./gradlew release
+      - ./gradlew findBugsRelease release -PawsMavenAccessKey=$AWS_ACCESS_KEY_ID -PawsMavenSecretKey=$AWS_SECRET_KEY
   alpha:
     branch: alpha
     commands:
-      - ./gradlew release
+      - ./gradlew findBugsRelease release -PawsMavenAccessKey=$AWS_ACCESS_KEY_ID -PawsMavenSecretKey=$AWS_SECRET_KEY
   integration:
     branch: integration
     commands:
-      - ./gradlew releaseSnapshot
+      - ./gradlew findBugsDebug releaseSnapshot -PawsMavenAccessKey=$AWS_ACCESS_KEY_ID -PawsMavenSecretKey=$AWS_SECRET_KEY

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <Match>
+        <Class name="~.*\.R\$.*"/>
+    </Match>
+    <Match>
+        <Class name="~.*\.Manifest\$.*"/>
+    </Match>
+
+    <!-- Since FSContentValues is a wrapper to make a ContentValues that implements RecordContainer, this is fine -->
+    <Match>
+        <Class name="com.fsryan.forsuredb.provider.FSContentValues" />
+        <Bug pattern="EQ_CHECK_FOR_OPERAND_NOT_COMPATIBLE_WITH_THIS" />
+    </Match>
+
+    <!-- The array is being used to call a ContentProvider method that accepts nulls -->
+    <Match>
+        <Class name="com.fsryan.forsuredb.ContentProviderQueryable" />
+        <Method name="formatProjection" />
+        <Bug pattern="PZLA_PREFER_ZERO_LENGTH_ARRAYS" />
+    </Match>
+
+    <!-- Running this for years shows that this NPE path does not get executed. -->
+    <!-- TODO: update this and fix the test to account for the null pointer possibility -->
+    <Match>
+        <Class name="com.fsryan.forsuredb.provider.QueryCorrector" />
+        <Method name="selectionWasModified" />
+        <Bug pattern="NP_NULL_ON_SOME_PATH" />
+    </Match>
+
+    <!-- TODO: update the FSCursorViewHolder to not hold a copy of the view type. This gets set onCreteViewHolder -->
+    <Match>
+        <Class name="com.fsryan.forsuredb.cursor.FSCursorViewHolder" />
+        <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD" />
+    </Match>
+</FindBugsFilter>
