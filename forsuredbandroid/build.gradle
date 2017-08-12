@@ -3,6 +3,8 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'jacoco'
 apply plugin: 'android-java-coverage-merger'
+apply plugin: 'findbugs'
+apply plugin: 'findbugs-variants'
 
 group = 'com.fsryan.forsuredb'
 

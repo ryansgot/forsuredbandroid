@@ -19,7 +19,6 @@ package com.fsryan.forsuredb.cursor;
 
 import android.content.AsyncTaskLoader;
 import android.content.Context;
-import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.CancellationSignal;
 import android.os.Handler;
@@ -31,24 +30,17 @@ import com.fsryan.forsuredb.api.Finder;
 import com.fsryan.forsuredb.api.Resolver;
 import com.fsryan.forsuredb.api.OrderBy;
 import com.fsryan.forsuredb.provider.FSContentValues;
-import com.fsryan.forsuredb.provider.UriEvaluator;
-
-import java.util.List;
 
 public class FSCursorLoader<T extends Resolver, G extends FSGetApi, S extends FSSaveApi<Uri>, F extends Finder<T, F>, O extends OrderBy<T, O>> extends AsyncTaskLoader<FSCursor> {
 
     private FSCursor mCursor;
     private Resolver<T, Uri, FSContentValues, G, S, F, O> resolver;
-    private List<Uri> tableUris;
     private BaseResolverContentObserver<T> mObserver;
     private CancellationSignal mCancellationSignal;
-    private final Handler handler;
 
     public FSCursorLoader(Context context, Resolver<T, Uri, FSContentValues, G, S, F, O> resolver) {
         super(context);
         this.resolver = resolver;
-        tableUris = UriEvaluator.tableReferences(resolver.currentLocator());
-        handler = new Handler();
         mObserver = new BaseResolverContentObserver<T>(context, resolver, new Handler(), true) {
             @Override
             public void onChange(boolean selfChange, Uri tableUri, Resolver<T, Uri, FSContentValues, ?, ?, ?, ?> resolver) {

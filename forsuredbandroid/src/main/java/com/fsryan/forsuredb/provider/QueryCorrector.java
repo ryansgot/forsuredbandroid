@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
  * </p>
  * @author Ryan Scott
  */
-public class QueryCorrector {
+/*package*/ class QueryCorrector {
 
     private static final String ID_SELECTION = "_id = ?";
     private static final Pattern ID_SELECTION_PATTERN = Pattern.compile("_id *(=|IS) *\\?");
