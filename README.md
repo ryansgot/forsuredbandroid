@@ -1,6 +1,12 @@
 # forsuredbandroid
 Forsuredbandroid is the android framework component of the forsuredb project. If you're thinking about using forsuredb on Android, you should definitely use this library. It provides some handy tools like:
+Forsuredbandroid is the android framework component of the forsuredb project. If you're thinking about using forsuredb on Android, you should definitely use this library. It provides some handy tools like:
+- ```FSCursorLoader``` for writing custom ```LoaderManager.Callbacks``` that integrates nicely with the forsuredb ```Resolver``` concept
+- ```FSAndroidSQLiteGenerator```, an implementation of the SQLite DBMS integration that handles problems with ```SQLiteCursor``` and allows you to succcessfully join tables that have columns with the same name.
+- ```FSCursorRecyclerViewAdapter``` class that handles boilerplate for adapting data from an ```FSCursor```
+- ```FSDBHelper``` class to integrate with ```SQLiteOpenHelper```
 
+## Status Info
 Latest:
 [ ![Download](https://api.bintray.com/packages/ryansgot/maven/forsuredbandroid/images/download.svg) ](https://bintray.com/ryansgot/maven/forsuredbandroid/_latestVersion)
 
@@ -15,12 +21,6 @@ Alpha:
 
 Test:
 [![codecov](https://codecov.io/gh/ryansgot/forsuredbandroid/branch/integration/graph/badge.svg)](https://codecov.io/gh/ryansgot/forsuredbandroid) [![CircleCI](https://circleci.com/gh/ryansgot/forsuredbandroid/tree/integration.svg?style=svg)](https://circleci.com/gh/ryansgot/forsuredbandroid/tree/integration)
-
-Forsuredbandroid is the android framework component of the forsuredb project. If you're thinking about using forsuredb on Android, you should definitely use this library. It provides some handy tools like:
-- ```FSCursorLoader``` for writing custom ```LoaderManager.Callbacks``` that integrates nicely with the forsuredb ```Resolver``` concept
-- ```FSAndroidSQLiteGenerator```, an implementation of the SQLite DBMS integration that handles problems with ```SQLiteCursor``` and allows you to succcessfully join tables that have columns with the same name.
-- ```FSCursorRecyclerViewAdapter``` class that handles boilerplate for adapting data from an ```FSCursor```
-- ```FSDBHelper``` class to integrate with ```SQLiteOpenHelper```
 
 ## Quick Start Guide
 See https://github.com/ryansgot/forsuredbcompiler/blob/master/README.md#using-forsuredb-in-android
