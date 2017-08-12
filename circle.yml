@@ -12,6 +12,8 @@ dependencies:
   pre:
     - echo y | android update sdk --no-ui --all --filter tools,extra-android-m2repository
     - echo y | android update sdk --no-ui --all --filter build-tools-25.0.2,android-25
+  override:
+    - ./gradlew dependencies -PawsMavenAccessKey=$AWS_ACCESS_KEY_ID -PawsMavenSecretKey=$AWS_SECRET_KEY
 test:
   pre:
     - emulator -avd circleci-android22 -no-audio -no-window:
