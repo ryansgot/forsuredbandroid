@@ -26,7 +26,7 @@ buildscript {
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
         classpath 'com.fsryan.gradle.autosemver:autosemver-git:0.1.0-alpha'
         classpath 'com.fsryan.gradle.coverage:android-java-coverage-merger:0.0.0'
-        classpath 'com.fsryan.gradle.findbugsvariants:findbugs-variants:0.0.2-test+1502523525368'
+        classpath 'com.fsryan.gradle.findbugsvariants:findbugs-variants:0.1.0-alpha'
     }
 }
 
