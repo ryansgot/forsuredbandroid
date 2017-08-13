@@ -103,8 +103,8 @@ install {
 }
 
 bintray {
-    user = hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
-    key = hasProperty('bintrayApiKey') ? getProperty('bintrayApiKey') : ''
+    user = project.hasProperty('bintrayUser') ? project.getProperty('bintrayUser') : ''
+    key = project.hasProperty('bintrayApiKey') ? project.getProperty('bintrayApiKey') : ''
 
     configurations = ['archives']
     pkg {
