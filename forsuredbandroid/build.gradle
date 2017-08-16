@@ -222,9 +222,9 @@ afterEvaluate { project ->
         }
     }
 
-//    task releaseSnapshot(dependsOn: [uploadArchives, assembleDebug]) {
-//        doLast {
-//            println("Huzzah! forsuredbandroid uploaded to S3 snapshot!")
-//        }
-//    }
+    task releaseSnapshot(dependsOn: [uploadArchives, assembleDebug]) {
+        doLast {
+            println("Huzzah! forsuredbandroid uploaded to S3 snapshot!")
+        }
+    }
 }
