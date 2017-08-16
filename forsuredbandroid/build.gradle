@@ -10,7 +10,7 @@ group = 'com.fsryan.forsuredb'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion "25.0.3"
 
     defaultConfig {
         minSdkVersion 16
@@ -222,9 +222,9 @@ afterEvaluate { project ->
         }
     }
 
-    task releaseSnapshot(dependsOn: [uploadArchives, assembleDebug]) {
-        doLast {
-            println("Huzzah! forsuredbandroid uploaded to S3 snapshot!")
-        }
-    }
+//    task releaseSnapshot(dependsOn: [uploadArchives, assembleDebug]) {
+//        doLast {
+//            println("Huzzah! forsuredbandroid uploaded to S3 snapshot!")
+//        }
+//    }
 }

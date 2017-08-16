@@ -18,7 +18,9 @@
 package com.fsryan.forsuredb;
 
 import android.content.Context;
+import android.content.pm.ProviderInfo;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.fsryan.forsuredb.api.FSJoin;
 import com.fsryan.forsuredb.api.FSQueryable;
@@ -43,22 +45,38 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
 
     private final Context appContext;
     private final String uriPrefix;
+    private final boolean usingContentProvider;
 
-    private ForSureAndroidInfoFactory(Context appContext, String authority) {
-        this.appContext = appContext.getApplicationContext();
-        this.uriPrefix = "content://" + authority;
+    private ForSureAndroidInfoFactory(Context context, String authority) {
+        appContext = context.getApplicationContext();
+        uriPrefix = "content://" + authority;
+        usingContentProvider = contentProviderResolved(appContext, authority);
     }
 
     /**
+     * <p>
+     *     Initializes the {@link ForSureAndroidInfoFactory}. Use this when you want
+     *     your data to be accessible via a {@link android.content.ContentProvider}
+     * </p>
      * @param appContext Your application's {@link Context}
-     * @param authority the authority of your {@link android.content.ContentProvider}. This cannot be null.
+     * @param authority the authority of your {@link android.content.ContentProvider}.
      */
-    public static synchronized void init(Context appContext, String authority) {
-        if (authority == null || authority.isEmpty()) {
-            throw new IllegalArgumentException("authority cannot be null.");
-        }
+    public static synchronized void init(Context appContext, @NonNull String authority) {
         if (instance == null) {
             instance = new ForSureAndroidInfoFactory(appContext, authority);
+        }
+    }
+
+    /**
+     * <p>
+     *     Initializes the {@link ForSureAndroidInfoFactory}. Use this when you do not
+     *     want your data to be accessible via a {@link android.content.ContentProvider}
+     * </p>
+     * @param appContext Your application's {@link Context}
+     */
+    public static synchronized void initWithoutContentProvider(Context appContext) {
+        if (instance == null) {
+            instance = new ForSureAndroidInfoFactory(appContext, SQLiteDBQueryable.AUTHORITY);
         }
     }
 
@@ -71,7 +89,7 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
 
     @Override
     public FSQueryable<Uri, FSContentValues> createQueryable(Uri resource) {
-        return new ContentProviderQueryable(appContext, resource);
+        return usingContentProvider ? new ContentProviderQueryable(appContext, resource) : new SQLiteDBQueryable(tableName(resource));
     }
 
     @Override
@@ -105,6 +123,24 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
             return true;
         } catch (Exception e) {
             // do nothing
+        }
+        return false;
+    }
+
+    // Kind of complicated because of the way this is done
+    private static boolean contentProviderResolved(Context context, String authority) {
+        final List<ProviderInfo> providers = context.getPackageManager().queryContentProviders(null, 0, 0);
+        if (providers == null) {
+            return false;
+        }
+
+        for (ProviderInfo providerInfo : providers) {
+            final String providerPackage = providerInfo.applicationInfo.packageName;
+            // In order to ensure that this is not a vector for attack, both the authority string and the
+            // package name of the application that defined the provider are required to be checked.
+            if (authority.equals(providerInfo.authority) && context.getPackageName().equals(providerPackage)) {
+                return true;
+            }
         }
         return false;
     }
