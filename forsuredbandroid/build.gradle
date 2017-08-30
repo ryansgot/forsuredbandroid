@@ -196,9 +196,9 @@ afterEvaluate { project ->
         classpath.add(configurations.javadocSources.fileCollection {
             include '**/*.jar'
         })
-        for (File file : classpath.files) {
-            println("In Javadoc classpath: " + file.absolutePath)
-        }
+//        classpath.files.each { f ->
+//            println("In Javadoc classpath: " + f.absolutePath)
+//        }
     }
 
     task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {

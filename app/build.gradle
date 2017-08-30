@@ -57,5 +57,5 @@ dependencies {
 
     compile project(':forsuredbandroid')
 
-    annotationProcessor 'com.fsryan.forsuredb:forsuredbcompiler:0.11.0'
+    annotationProcessor "com.fsryan.forsuredb:forsuredbcompiler:$forsuredbVersion"
 }

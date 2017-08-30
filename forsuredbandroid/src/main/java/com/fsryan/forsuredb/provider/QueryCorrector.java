@@ -18,11 +18,23 @@
 package com.fsryan.forsuredb.provider;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.fsryan.forsuredb.ForSureAndroidInfoFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import static com.fsryan.forsuredb.provider.UriEvaluator.isSpecificRecordUri;
+import static com.fsryan.forsuredb.provider.UriEvaluator.limitFrom;
+import static com.fsryan.forsuredb.provider.UriEvaluator.offsetFrom;
+import static com.fsryan.forsuredb.provider.UriEvaluator.offsetFromLast;
+import static com.fsryan.forsuredb.provider.UriEvaluator.orderingFrom;
+import static com.fsryan.forsuredb.provider.UriJoiner.join;
+import static com.fsryan.forsuredb.provider.UriJoiner.joinStringFrom;
 
 /**
  * <p>
@@ -36,21 +48,109 @@ import java.util.regex.Pattern;
     private static final String ID_SELECTION = "_id = ?";
     private static final Pattern ID_SELECTION_PATTERN = Pattern.compile("_id *(=|IS) *\\?");
 
-    private final String selection;
+    private final String tableName;
+    private final String joinString;
+    private final String where;
     private final String[] selectionArgs;
+    private final String orderBy;
+    private final int offset;
+    private final int limit;
+    private final boolean findingLast;
 
-    public QueryCorrector(Uri uri, String selection, String[] selectionArgs) {
-        final boolean isSingleRecordQuery = UriEvaluator.isSpecificRecordUri(uri);
-        this.selection = isSingleRecordQuery ? ensureIdInSelection(selection) : selection;
-        this.selectionArgs = isSingleRecordQuery ? ensureIdInSelectionArgs(uri, selectionArgs) : selectionArgs;
+    public QueryCorrector(@NonNull Uri uri, @Nullable String where, @Nullable String[] whereArgs) {
+        this(
+                uri,
+                where == null ? "" : where,
+                whereArgs == null ? new String[0] : whereArgs,
+                orderingFrom(uri),
+                offsetFrom(uri),
+                limitFrom(uri),
+                offsetFromLast(uri)
+        );
     }
 
-    public String getSelection() {
-        return selection;
+    /*package*/ QueryCorrector(@NonNull Uri uri, @NonNull String where, @NonNull String[] selectionArgs, @NonNull String orderBy, int offset, int limit, boolean findingLast) {
+        tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
+        final String tmpJoinString = joinStringFrom(uri);
+        joinString = !tmpJoinString.isEmpty() ? tmpJoinString.substring(tableName.length()).trim() : ""; // <-- due to a quirk with how UriEvaluator works, the beginning will be the base table name
+        final boolean forSpecificRecord = isSpecificRecordUri(uri);
+        this.where = forSpecificRecord ? ensureIdInSelection(where) : where;
+        this.selectionArgs = forSpecificRecord ? ensureIdInSelectionArgs(uri, selectionArgs) : selectionArgs;
+        this.orderBy = orderBy.startsWith(" ORDER BY ") ? orderBy.substring(10) : orderBy;  // <-- quirk with the sqlitelib prefixing orderBy with this
+        this.offset = offset;
+        this.limit = limit;
+        this.findingLast = findingLast;
+    }
+
+    public String getSelection(boolean retrieval) {
+        // if finding last, then there is no choice but run an inner select query
+        if (findingLast) {
+            return innerSelectWhereClause();
+        }
+        // If deleting/updating, ContentResolver does not provide the interface necessary to
+        // perform limiting/offseting the records that we would like to be affected, so selection
+        // must become an inner select query when not retrieving and limit and/or offset set
+        return retrieval || (limit <= 0 && offset <= 0) ? where : innerSelectWhereClause();
+    }
+
+    public String getOrderBy() {
+        return findingLast && orderBy.isEmpty() ? tableName + "._id ASC" : orderBy;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public int getLimit() {
+        return limit;
     }
 
     public String[] getSelectionArgs() {
         return selectionArgs;
+    }
+
+    private String innerSelectWhereClause() {
+        // using rowid because _id is not always populated--will be null for anything that uses a non-default PRIMARY KEY
+        return tableName + ".rowid IN (SELECT " + tableName + ".rowid FROM "
+                + tableName
+                + (joinString.isEmpty() ? "" : " " + joinString)
+                + (where.isEmpty() ? "" : " WHERE " + where)
+                + " ORDER BY "
+                + (orderBy.isEmpty()
+                        ?  tableName + "._id " + (findingLast ? "DESC" : "ASC")
+                        : (findingLast ? flipOrderBy() : orderBy).trim())
+                + (limit > 0 ? " LIMIT " + limit : "")
+                + (offset > 0 ? " OFFSET " + offset : "")
+                + ")";
+    }
+
+    private String flipOrderBy() {
+        if (orderBy == null || orderBy.isEmpty()) {
+            return "";
+        }
+
+        final String[] split = orderBy.split(" +");
+        final StringBuilder buf = new StringBuilder(split[0].isEmpty() ? " " : split[0]);
+        for (int i = 1; i < split.length; i++) {
+            buf.append(" ");
+            switch (split[i]) {
+                case "DESC":
+                    buf.append("ASC");
+                    break;
+                case "DESC,":
+                    buf.append("ASC,");
+                    break;
+                case "ASC":
+                    buf.append("DESC");
+                    break;
+                case "ASC,":
+                    buf.append("DESC,");
+                    break;
+                default:
+                    buf.append(split[i]);
+            }
+        }
+        return buf.toString();
     }
 
     private String ensureIdInSelection(String selection) {
@@ -65,7 +165,7 @@ import java.util.regex.Pattern;
     }
 
     private String[] ensureIdInSelectionArgs(Uri uri, String[] selectionArgs) {
-        if (!selectionWasModified(selection, selectionArgs)) {
+        if (!selectionWasModified(where, selectionArgs)) {
             return selectionArgs;
         }
 

@@ -328,6 +328,13 @@ public class TestActivity extends AppCompatActivity {
                                                                                 // context
                     .find()                                                     // <-- enters the profile_info table's Finder
                                                                                 // context
+                            .last(5, 3)                                         // <-- limits the result set to 5 columns
+                                                                                // starting with the end of the result set
+                                                                                // and offsets the result set by 3. Since the
+                                                                                // last 5 rows will be returned, this now makes
+                                                                                // the result set return 9th through 4th from
+                                                                                // last in the result set.
+                                                                                // The offset argument is optional.
                             .byAwesome()                                        // <-- adds AND profile_info.awesome = 1 to the
                                                                                 // generated query's WHERE clause
                             .then()                                             // <-- exits the profile_info table's Finder
