@@ -328,6 +328,7 @@ public class TestActivity extends AppCompatActivity {
                                                                                 // context
                     .find()                                                     // <-- enters the profile_info table's Finder
                                                                                 // context
+                            .first(5)
                             .byAwesome()                                        // <-- adds AND profile_info.awesome = 1 to the
                                                                                 // generated query's WHERE clause
                             .then()                                             // <-- exits the profile_info table's Finder

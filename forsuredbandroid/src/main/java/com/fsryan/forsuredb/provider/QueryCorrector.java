@@ -22,7 +22,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.fsryan.forsuredb.ForSureAndroidInfoFactory;
-import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,7 +32,7 @@ import static com.fsryan.forsuredb.provider.UriEvaluator.isSpecificRecordUri;
 import static com.fsryan.forsuredb.provider.UriEvaluator.limitFrom;
 import static com.fsryan.forsuredb.provider.UriEvaluator.offsetFrom;
 import static com.fsryan.forsuredb.provider.UriEvaluator.offsetFromLast;
-import static com.fsryan.forsuredb.provider.UriEvaluator.sortFrom;
+import static com.fsryan.forsuredb.provider.UriEvaluator.orderingFrom;
 
 /**
  * <p>
@@ -60,7 +59,7 @@ import static com.fsryan.forsuredb.provider.UriEvaluator.sortFrom;
                 uri,
                 where == null ? "" : where,
                 whereArgs == null ? new String[0] : whereArgs,
-                sortFrom(uri),
+                orderingFrom(uri),
                 offsetFrom(uri),
                 limitFrom(uri),
                 offsetFromLast(uri)
@@ -79,19 +78,64 @@ import static com.fsryan.forsuredb.provider.UriEvaluator.sortFrom;
         this.findingLast = findingLast;
     }
 
-    public String getSelection(boolean query) {
-        // when not finding last or when not
-        return query && !findingLast
-                ? where
-                : "_id IN (SELECT _id FROM " + tableName + " WHERE " + where + " " + orderBy + (limit > 0 ? " LIMIT " + limit : "") + ")";
+    public String getSelection(boolean retrieval) {
+        // if finding last, then there is no choice but run an inner select query
+        if (findingLast) {
+            return innerSelectWhereClause();
+        }
+        // If deleting/updating, ContentResolver does not provide the interface necessary to
+        // perform limiting/offseting the records that we would like to be affected, so selection
+        // must become an inner select query when not retrieving and limit and/or offset set
+        return retrieval || (limit <= 0 && offset <= 0) ? where : innerSelectWhereClause();
     }
 
     public String getOrderBy() {
-        return findingLast ? flipOrderBy(orderBy) : orderBy;
+        return findingLast && orderBy.isEmpty() ? tableName + "._id ASC" : orderBy;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public int getLimit() {
+        return limit;
     }
 
     public String[] getSelectionArgs() {
         return selectionArgs;
+    }
+
+    private String innerSelectWhereClause() {
+        return tableName + "._id IN (SELECT _id FROM "
+                + tableName
+                + (where.isEmpty() ? "" : "WHERE " + where)
+                + " ORDER BY " + (orderBy.isEmpty()
+                ? tableName + "._id " + (findingLast ? "DESC" : "ASC")
+                : (findingLast ? flipOrderBy() : orderBy).trim())
+                + (limit > 0 ? " LIMIT " + limit : "")
+                + (offset > 0 ? " OFFSET " + offset : "")
+                + ")";
+    }
+
+    private String flipOrderBy() {
+        if (orderBy == null || orderBy.isEmpty()) {
+            return "";
+        }
+
+        // TODO: HANDLE comma case
+        String[] split = orderBy.split(" +");
+        StringBuilder buf = new StringBuilder(split[0].isEmpty() ? " " : split[0]);
+        for (int i = 1; i < split.length; i++) {
+            buf.append(" ");
+            if ("DESC".equals(split[i])) {
+                buf.append("ASC");
+            } else if ("ASC".equals(split[i])) {
+                buf.append("DESC");
+            } else {
+                buf.append(split[i]);
+            }
+        }
+        return buf.toString();
     }
 
     private String ensureIdInSelection(String selection) {

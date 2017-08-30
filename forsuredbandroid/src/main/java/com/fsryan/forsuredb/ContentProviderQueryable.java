@@ -89,7 +89,7 @@ import static com.fsryan.forsuredb.provider.UriEvaluator.ORDER_BY_QUERY_PARM;
     public Retriever query(FSProjection projection, FSSelection selection, List<FSOrdering> orderings) {
         final String[] p = formatProjection(Arrays.asList(projection));
         final Uri uri = enrichUri(projection, selection, orderings);
-        final String orderBy = Sql.generator().expressOrdering(orderings);
+        final String orderBy = Sql.generator().expressOrdering(orderings).replace("ORDER BY", "").trim();
         return selection == null
                 ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, orderBy))
                 : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), selection.replacements(), orderBy));
@@ -99,7 +99,7 @@ import static com.fsryan.forsuredb.provider.UriEvaluator.ORDER_BY_QUERY_PARM;
     public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
         final String[] p = formatProjection(projections);
         final Uri uri = enrichUri(projections, selection, orderings);
-        final String orderBy = Sql.generator().expressOrdering(orderings);
+        final String orderBy = Sql.generator().expressOrdering(orderings).replace("ORDER BY", "").trim();
         return selection == null
                 ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, orderBy))
                 : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), selection.replacements(), orderBy));

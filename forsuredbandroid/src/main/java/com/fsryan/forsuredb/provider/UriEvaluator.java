@@ -128,7 +128,7 @@ public class UriEvaluator {
     }
 
     @NonNull
-    public static String sortFrom(@NonNull Uri uri) {
+    public static String orderingFrom(@NonNull Uri uri) {
         String sort = uri.getQueryParameter(ORDER_BY_QUERY_PARM);
         return sort == null ? "" : sort;
     }

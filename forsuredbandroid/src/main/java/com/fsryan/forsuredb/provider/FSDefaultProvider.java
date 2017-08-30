@@ -67,7 +67,7 @@ public class FSDefaultProvider extends ContentProvider {
     public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
         final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
-        final int rowsAffected = FSDBHelper.inst().getWritableDatabase().update(tableName, values, qc.getSelection(), qc.getSelectionArgs());
+        final int rowsAffected = FSDBHelper.inst().getWritableDatabase().update(tableName, values, qc.getSelection(false), qc.getSelectionArgs());
         if (rowsAffected != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
         }
@@ -80,10 +80,10 @@ public class FSDefaultProvider extends ContentProvider {
         final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
 
         if (UriEvaluator.hasFirstOrLastParam(uri)) {
-            FSDBHelper.inst().getWritableDatabase().delete(tableName, qc.getSelection(), qc.getSelectionArgs());
+            FSDBHelper.inst().getWritableDatabase().delete(tableName, qc.getSelection(false), qc.getSelectionArgs());
         }
 
-        final int rowsAffected = FSDBHelper.inst().getWritableDatabase().delete(tableName, qc.getSelection(), qc.getSelectionArgs());
+        final int rowsAffected = FSDBHelper.inst().getWritableDatabase().delete(tableName, qc.getSelection(false), qc.getSelectionArgs());
         if (rowsAffected != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
         }
@@ -107,7 +107,7 @@ public class FSDefaultProvider extends ContentProvider {
         builder.setDistinct(isDistinct);
         return builder.query(FSDBHelper.inst().getReadableDatabase(),
                 projection,
-                qc.getSelection(),
+                qc.getSelection(true),
                 qc.getSelectionArgs(),
                 null,
                 null,
@@ -117,8 +117,8 @@ public class FSDefaultProvider extends ContentProvider {
     private Cursor performQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
         final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
-
+        final String limit = qc.getLimit() > 0 ? String.valueOf(qc.getLimit()) : null;
         boolean isDistinct = Boolean.parseBoolean(uri.getQueryParameter("DISTINCT"));
-        return FSDBHelper.inst().getReadableDatabase().query(isDistinct, tableName, projection, qc.getSelection(), qc.getSelectionArgs(), null, null, sortOrder, null);
+        return FSDBHelper.inst().getReadableDatabase().query(isDistinct, tableName, projection, qc.getSelection(true), qc.getSelectionArgs(), null, null, sortOrder, limit);
     }
 }
