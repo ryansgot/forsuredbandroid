@@ -1,23 +1,25 @@
 buildscript {
     repositories {
-        jcenter()
+        def awsAccesKeyId = project.hasProperty("awsMavenAccessKey") ? project.property("awsMavenAccessKey") : "${System.env.AWS_ACCES_KEY_ID}"
+        def awsSecretKey = project.hasProperty("awsMavenSecretKey") ? project.property("awsMavenSecretKey") : "${System.env.AWS_SECRET_KEY}"
         maven {
             url  "http://dl.bintray.com/ryansgot/maven"
         }
         maven {
             url 's3://repo.fsryan.com/release'
             credentials(AwsCredentials) {
-                accessKey = project.hasProperty("awsMavenAccessKey") ? project.property("awsMavenAccessKey") : ""
-                secretKey = project.hasProperty("awsMavenSecretKey") ? project.property("awsMavenSecretKey") : ""
+                accessKey = awsAccesKeyId
+                secretKey = awsSecretKey
             }
         }
         maven {
             url 's3://repo.fsryan.com/snapshot'
             credentials(AwsCredentials) {
-                accessKey = project.hasProperty("awsMavenAccessKey") ? project.property("awsMavenAccessKey") : ""
-                secretKey = project.hasProperty("awsMavenSecretKey") ? project.property("awsMavenSecretKey") : ""
+                accessKey = awsAccesKeyId
+                secretKey = awsSecretKey
             }
         }
+        jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.3'
@@ -36,24 +38,26 @@ allprojects {
     apply plugin: 'autosemver-git'
 
     repositories {
-        jcenter()
+        def awsAccesKeyId = project.hasProperty("awsMavenAccessKey") ? project.property("awsMavenAccessKey") : "${System.env.AWS_ACCES_KEY_ID}"
+        def awsSecretKey = project.hasProperty("awsMavenSecretKey") ? project.property("awsMavenSecretKey") : "${System.env.AWS_SECRET_KEY}"
         maven {
-            url "https://dl.bintray.com/ryansgot/maven"
-        }
-        maven {
-            url 's3://repo.fsryan.com/snapshot'
-            credentials(AwsCredentials) {
-                accessKey project.hasProperty("awsAccessKey") ? project.property("awsAccessKey") : ""
-                secretKey project.hasProperty("awsSecretKey") ? project.property("awsSecretKey") : ""
-            }
+            url  "http://dl.bintray.com/ryansgot/maven"
         }
         maven {
             url 's3://repo.fsryan.com/release'
             credentials(AwsCredentials) {
-                accessKey project.hasProperty("awsAccessKey") ? project.property("awsAccessKey") : ""
-                secretKey project.hasProperty("awsSecretKey") ? project.property("awsSecretKey") : ""
+                accessKey = awsAccesKeyId
+                secretKey = awsSecretKey
             }
         }
+        maven {
+            url 's3://repo.fsryan.com/snapshot'
+            credentials(AwsCredentials) {
+                accessKey = awsAccesKeyId
+                secretKey = awsSecretKey
+            }
+        }
+        jcenter()
     }
 
     ext {
@@ -61,8 +65,8 @@ allprojects {
 
         mockitoVersion = '1.10.19'
 
-        forsuredbVersion = '0.11.0'
-        forsuredbSqliteVersion = '0.5.0'
+        forsuredbVersion = '0.11.6-test+1503979631901'
+        forsuredbSqliteVersion = '0.5.2-test+1503982962236'
     }
 
     autosemver {

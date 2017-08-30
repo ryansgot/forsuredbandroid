@@ -24,9 +24,12 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.fsryan.forsuredb.FSDBHelper;
 import com.fsryan.forsuredb.ForSureAndroidInfoFactory;
+
+import static com.fsryan.forsuredb.provider.UriEvaluator.isJoin;
 
 /**
  * <p>
@@ -49,7 +52,7 @@ public class FSDefaultProvider extends ContentProvider {
     }
 
     @Override
-    public Uri insert(Uri uri, ContentValues values) {
+    public Uri insert(@NonNull Uri uri, ContentValues values) {
         final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
         long rowId = FSDBHelper.inst().getWritableDatabase().insertWithOnConflict(tableName, null, values, SQLiteDatabase.CONFLICT_IGNORE);
         if (rowId != -1) {
@@ -61,7 +64,7 @@ public class FSDefaultProvider extends ContentProvider {
     }
 
     @Override
-    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+    public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
         final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
         final int rowsAffected = FSDBHelper.inst().getWritableDatabase().update(tableName, values, qc.getSelection(), qc.getSelectionArgs());
@@ -72,9 +75,14 @@ public class FSDefaultProvider extends ContentProvider {
     }
 
     @Override
-    public int delete(Uri uri, String selection, String[] selectionArgs) {
+    public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
         final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
         final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
+
+        if (UriEvaluator.hasFirstOrLastParam(uri)) {
+            FSDBHelper.inst().getWritableDatabase().delete(tableName, qc.getSelection(), qc.getSelectionArgs());
+        }
+
         final int rowsAffected = FSDBHelper.inst().getWritableDatabase().delete(tableName, qc.getSelection(), qc.getSelectionArgs());
         if (rowsAffected != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
@@ -83,14 +91,15 @@ public class FSDefaultProvider extends ContentProvider {
     }
 
     @Override
-    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-        Cursor cursor = UriEvaluator.isJoin(uri) ? performJoinQuery(uri, projection, selection, selectionArgs, sortOrder)
-                                                 : performQuery(uri, projection, selection, selectionArgs, sortOrder);
+    public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        Cursor cursor = isJoin(uri)
+                ? performJoinQuery(uri, projection, selection, selectionArgs, sortOrder)
+                : performQuery(uri, projection, selection, selectionArgs, sortOrder);
         cursor.setNotificationUri(getContext().getContentResolver(), uri);  // <-- allows CursorLoader to auto reload
         return cursor;
     }
 
-    private Cursor performJoinQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+    private Cursor performJoinQuery(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
         SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
         builder.setTables(UriJoiner.joinStringFrom(uri));

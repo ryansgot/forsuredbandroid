@@ -6,10 +6,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
 import com.fsryan.forsuredb.api.FSJoin;
+import com.fsryan.forsuredb.api.FSOrdering;
 import com.fsryan.forsuredb.api.FSProjection;
 import com.fsryan.forsuredb.api.FSQueryable;
 import com.fsryan.forsuredb.api.FSSelection;
 import com.fsryan.forsuredb.api.Retriever;
+import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.cursor.FSCursor;
 import com.fsryan.forsuredb.provider.FSContentValues;
 
@@ -19,6 +21,8 @@ import java.util.Map;
 import static com.fsryan.forsuredb.ProjectionHelper.formatProjection;
 
 /*package*/ class SQLiteDBQueryable implements FSQueryable<Uri, FSContentValues> {
+
+    // TODO: account for possible usage of first/last and orderings
 
     /*package*/ interface DBProvider {
         SQLiteDatabase writeableDb();
@@ -76,39 +80,43 @@ import static com.fsryan.forsuredb.ProjectionHelper.formatProjection;
     }
 
     @Override
-    public int update(FSContentValues cv, FSSelection selection) {
+    public int update(FSContentValues cv, FSSelection selection, List<FSOrdering> ordering) {
         final String s = selection == null ? null : selection.where();
         final String[] sArgs = selection == null ? null : selection.replacements();
         return dbProvider.writeableDb().update(tableToQuery, cv.getContentValues(), s, sArgs);
     }
 
     @Override
-    public int delete(FSSelection selection) {
+    public int delete(FSSelection selection, List<FSOrdering> orderings) {
         final String s = selection == null ? null : selection.where();
         final String[] sArgs = selection == null ? null : selection.replacements();
         return dbProvider.writeableDb().delete(tableToQuery, s, sArgs);
     }
 
     @Override
-    public Retriever query(FSProjection projection, FSSelection selection, String sortOrder) {
+    public Retriever query(FSProjection projection, FSSelection selection, List<FSOrdering> orderings) {
         final String[] p = formatProjection(projection);
         final String s = selection == null ? null : selection.where();
         final String[] sArgs = selection == null ? null : selection.replacements();
+        final String sortOrder = Sql.generator().expressOrdering(orderings);
+        final String limit = selection == null || selection.limits() == null || selection.limits().count() <= 0 ? null : "LIMIT " + selection.limits();
         return (FSCursor) dbProvider.readableDb()
-                .query(projection.isDistinct(), tableToQuery, p, s, sArgs, null, null, sortOrder, null);
+                .query(projection.isDistinct(), tableToQuery, p, s, sArgs, null, null, sortOrder, limit);
     }
 
     @Override
-    public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, String sortOrder) {
-        final String s = selection == null ? null : selection.where();
+    public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
         final String[] sArgs = selection == null ? null : selection.replacements();
-        final String sql = buildJoinQuery(joins, projections, s);
+        final String sql = buildJoinQuery(joins, projections, selection, orderings);
         return (FSCursor) dbProvider.readableDb().rawQuery(sql, sArgs);
     }
 
     // TODO: move this to SQLGenerator
-    private String buildJoinQuery(List<FSJoin> joins, List<FSProjection> projections, String where) {
+    // TODO: this does not account for inner query when sorting and selecting last
+    private String buildJoinQuery(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
+        final String where = selection == null ? null : selection.where();
         final StringBuilder buf = new StringBuilder("SELECT ");
+        final String sortOrder = Sql.generator().expressOrdering(orderings);
 
         // projection
         final String[] p = formatProjection(projections);
@@ -146,6 +154,16 @@ import static com.fsryan.forsuredb.ProjectionHelper.formatProjection;
         // where
         if (where != null && !where.isEmpty()) {
             buf.append(" WHERE ").append(where);
+        }
+
+        // sort
+        if (sortOrder != null) {
+            buf.append(sortOrder);
+        }
+
+        // limit
+        if (selection != null && selection.limits() != null && selection.limits().count() >= 0) {
+            buf.append(" LIMIT ").append(selection.limits().count());
         }
 
         return buf.append(';').toString();

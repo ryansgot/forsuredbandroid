@@ -18,11 +18,22 @@
 package com.fsryan.forsuredb.provider;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import com.fsryan.forsuredb.ForSureAndroidInfoFactory;
+import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import static com.fsryan.forsuredb.provider.UriEvaluator.isSpecificRecordUri;
+import static com.fsryan.forsuredb.provider.UriEvaluator.limitFrom;
+import static com.fsryan.forsuredb.provider.UriEvaluator.offsetFrom;
+import static com.fsryan.forsuredb.provider.UriEvaluator.offsetFromLast;
+import static com.fsryan.forsuredb.provider.UriEvaluator.sortFrom;
 
 /**
  * <p>
@@ -36,17 +47,47 @@ import java.util.regex.Pattern;
     private static final String ID_SELECTION = "_id = ?";
     private static final Pattern ID_SELECTION_PATTERN = Pattern.compile("_id *(=|IS) *\\?");
 
-    private final String selection;
+    private final String tableName;
+    private final String where;
     private final String[] selectionArgs;
+    private final String orderBy;
+    private final int offset;
+    private final int limit;
+    private final boolean findingLast;
 
-    public QueryCorrector(Uri uri, String selection, String[] selectionArgs) {
-        final boolean isSingleRecordQuery = UriEvaluator.isSpecificRecordUri(uri);
-        this.selection = isSingleRecordQuery ? ensureIdInSelection(selection) : selection;
-        this.selectionArgs = isSingleRecordQuery ? ensureIdInSelectionArgs(uri, selectionArgs) : selectionArgs;
+    public QueryCorrector(@NonNull Uri uri, @Nullable String where, @Nullable String[] whereArgs) {
+        this(
+                uri,
+                where == null ? "" : where,
+                whereArgs == null ? new String[0] : whereArgs,
+                sortFrom(uri),
+                offsetFrom(uri),
+                limitFrom(uri),
+                offsetFromLast(uri)
+        );
     }
 
-    public String getSelection() {
-        return selection;
+    /*package*/ QueryCorrector(@NonNull Uri uri, @NonNull String where, @NonNull String[] selectionArgs, @NonNull String orderBy, int offset, int limit, boolean findingLast) {
+        this.tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
+
+        final boolean forSpecificRecord = isSpecificRecordUri(uri);
+        this.where = forSpecificRecord ? ensureIdInSelection(where) : where;
+        this.selectionArgs = forSpecificRecord ? ensureIdInSelectionArgs(uri, selectionArgs) : selectionArgs;
+        this.orderBy = orderBy;
+        this.offset = offset;
+        this.limit = limit;
+        this.findingLast = findingLast;
+    }
+
+    public String getSelection(boolean query) {
+        // when not finding last or when not
+        return query && !findingLast
+                ? where
+                : "_id IN (SELECT _id FROM " + tableName + " WHERE " + where + " " + orderBy + (limit > 0 ? " LIMIT " + limit : "") + ")";
+    }
+
+    public String getOrderBy() {
+        return findingLast ? flipOrderBy(orderBy) : orderBy;
     }
 
     public String[] getSelectionArgs() {
@@ -65,7 +106,7 @@ import java.util.regex.Pattern;
     }
 
     private String[] ensureIdInSelectionArgs(Uri uri, String[] selectionArgs) {
-        if (!selectionWasModified(selection, selectionArgs)) {
+        if (!selectionWasModified(where, selectionArgs)) {
             return selectionArgs;
         }
 
