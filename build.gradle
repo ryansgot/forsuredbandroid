@@ -32,6 +32,15 @@ buildscript {
     }
 }
 
+ext {
+    supportLibVersion = '25.3.1'
+
+    mockitoVersion = '1.10.19'
+
+    forsuredbVersion = '0.11.6-test+1503979631901'
+    forsuredbSqliteVersion = '0.5.3-test+1504075986526'
+}
+
 long buildTime = new Date().getTime()
 
 allprojects {
@@ -58,15 +67,6 @@ allprojects {
             }
         }
         jcenter()
-    }
-
-    ext {
-        supportLibVersion = '25.3.1'
-
-        mockitoVersion = '1.10.19'
-
-        forsuredbVersion = '0.11.6-test+1503979631901'
-        forsuredbSqliteVersion = '0.5.2-test+1503982962236'
     }
 
     autosemver {

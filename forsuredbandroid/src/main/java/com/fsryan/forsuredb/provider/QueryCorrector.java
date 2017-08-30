@@ -106,9 +106,9 @@ import static com.fsryan.forsuredb.provider.UriEvaluator.orderingFrom;
     }
 
     private String innerSelectWhereClause() {
-        return tableName + "._id IN (SELECT _id FROM "
+        return tableName + "._id IN (SELECT " + tableName + "._id FROM "
                 + tableName
-                + (where.isEmpty() ? "" : "WHERE " + where)
+                + (where.isEmpty() ? "" : " WHERE " + where)
                 + " ORDER BY " + (orderBy.isEmpty()
                 ? tableName + "._id " + (findingLast ? "DESC" : "ASC")
                 : (findingLast ? flipOrderBy() : orderBy).trim())
@@ -122,17 +122,25 @@ import static com.fsryan.forsuredb.provider.UriEvaluator.orderingFrom;
             return "";
         }
 
-        // TODO: HANDLE comma case
-        String[] split = orderBy.split(" +");
-        StringBuilder buf = new StringBuilder(split[0].isEmpty() ? " " : split[0]);
+        final String[] split = orderBy.split(" +");
+        final StringBuilder buf = new StringBuilder(split[0].isEmpty() ? " " : split[0]);
         for (int i = 1; i < split.length; i++) {
             buf.append(" ");
-            if ("DESC".equals(split[i])) {
-                buf.append("ASC");
-            } else if ("ASC".equals(split[i])) {
-                buf.append("DESC");
-            } else {
-                buf.append(split[i]);
+            switch (split[i]) {
+                case "DESC":
+                    buf.append("ASC");
+                    break;
+                case "DESC,":
+                    buf.append("ASC,");
+                    break;
+                case "ASC":
+                    buf.append("DESC");
+                    break;
+                case "ASC,":
+                    buf.append("DESC,");
+                    break;
+                default:
+                    buf.append(split[i]);
             }
         }
         return buf.toString();

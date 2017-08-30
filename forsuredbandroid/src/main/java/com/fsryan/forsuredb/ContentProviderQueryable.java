@@ -105,6 +105,7 @@ import static com.fsryan.forsuredb.provider.UriEvaluator.ORDER_BY_QUERY_PARM;
                 : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), selection.replacements(), orderBy));
     }
 
+    // TODO: create separate class for enriching Uris
     private Uri enrichUri(@Nullable FSSelection selection, @Nullable List<FSOrdering> orderings) {
         return enrichUri((FSProjection) null, selection, orderings);
     }

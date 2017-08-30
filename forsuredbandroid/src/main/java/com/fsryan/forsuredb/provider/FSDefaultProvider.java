@@ -105,13 +105,15 @@ public class FSDefaultProvider extends ContentProvider {
         builder.setTables(UriJoiner.joinStringFrom(uri));
         boolean isDistinct = Boolean.parseBoolean(uri.getQueryParameter("DISTINCT"));
         builder.setDistinct(isDistinct);
+        final String limit = qc.getLimit() > 0 ? String.valueOf(qc.getLimit()) : null;
         return builder.query(FSDBHelper.inst().getReadableDatabase(),
                 projection,
                 qc.getSelection(true),
                 qc.getSelectionArgs(),
                 null,
                 null,
-                sortOrder);
+                sortOrder,
+                limit);
     }
 
     private Cursor performQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
