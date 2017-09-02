@@ -33,7 +33,6 @@ import static com.fsryan.forsuredb.provider.UriEvaluator.limitFrom;
 import static com.fsryan.forsuredb.provider.UriEvaluator.offsetFrom;
 import static com.fsryan.forsuredb.provider.UriEvaluator.offsetFromLast;
 import static com.fsryan.forsuredb.provider.UriEvaluator.orderingFrom;
-import static com.fsryan.forsuredb.provider.UriJoiner.join;
 import static com.fsryan.forsuredb.provider.UriJoiner.joinStringFrom;
 
 /**
@@ -153,8 +152,8 @@ import static com.fsryan.forsuredb.provider.UriJoiner.joinStringFrom;
         return buf.toString();
     }
 
-    private String ensureIdInSelection(String selection) {
-        if (selection == null || selection.isEmpty()) {
+    private String ensureIdInSelection(@NonNull String selection) {
+        if (selection.isEmpty()) {
             return ID_SELECTION;
         }
 
@@ -164,38 +163,19 @@ import static com.fsryan.forsuredb.provider.UriJoiner.joinStringFrom;
         return selection;
     }
 
-    private String[] ensureIdInSelectionArgs(Uri uri, String[] selectionArgs) {
+    private String[] ensureIdInSelectionArgs(@NonNull Uri uri, @NonNull String[] selectionArgs) {
         if (!selectionWasModified(where, selectionArgs)) {
             return selectionArgs;
         }
 
-        final List<String> selectionArgList = new ArrayList<>();
-        if (selectionArgs != null) {
-            selectionArgList.addAll(Arrays.asList(selectionArgs));
-        }
+        final List<String> selectionArgList = new ArrayList<>(Arrays.asList(selectionArgs));
         selectionArgList.add(0, uri.getLastPathSegment());  // <-- prepend because the modified selection string specifies the _id selection first
         return selectionArgList.toArray(new String[selectionArgList.size()]);
     }
 
     // If the selection was modified, then the number of ? in the selection will be one more than the length of selectionArgs
-    private boolean selectionWasModified(String selection, String[] selectionArgs) {
-        final int qMarkOccurrences = occurrencesOf('?', selection);
-        return (selectionArgs == null && qMarkOccurrences != 0) || qMarkOccurrences == selectionArgs.length + 1;
-    }
-
-    /**
-     * <p>
-     *     an approximation of the one available in the Apache Commons library's StringUtils
-     *     countMatches method geared towards counts of characters
-     * </p>
-     * @param c character to count
-     * @param str String in which to count characters
-     * @return number of times c appears in str
-     */
-    private int occurrencesOf(char c, String str) {
-        if (str == null) {
-            return 0;
-        }
-        return str.replaceAll("[^" + c + "]", "").length();
+    private boolean selectionWasModified(@NonNull String selection, @NonNull String[] selectionArgs) {
+        final int qMarkOccurrences = selection.replaceAll("[^?]", "").length();
+        return qMarkOccurrences == selectionArgs.length + 1;
     }
 }
