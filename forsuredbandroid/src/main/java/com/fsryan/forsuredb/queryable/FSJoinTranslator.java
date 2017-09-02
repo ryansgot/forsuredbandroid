@@ -15,10 +15,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.fsryan.forsuredb.provider;
+package com.fsryan.forsuredb.queryable;
 
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.Pair;
 
@@ -30,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.fsryan.forsuredb.provider.UriEvaluator.isSpecificRecordUri;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.isSpecificRecordUri;
 
 /**
  * <p>
@@ -41,7 +42,7 @@ import static com.fsryan.forsuredb.provider.UriEvaluator.isSpecificRecordUri;
  * </p>
  * @author Ryan Scott
  */
-public class UriJoiner {
+public class FSJoinTranslator {
 
     /*package*/ static final Map<FSJoin.Type, String> joinMap = new HashMap<>();
     static {
@@ -71,7 +72,7 @@ public class UriJoiner {
         for (FSJoin join : joins) {
             Pair<String, String> tableJoinTextPair = joinTextFrom(join, joinedTables);
             if (tableJoinTextPair == null) {
-                Log.w(UriJoiner.class.getSimpleName(), "Cannot join " + join.getParentTable() + " and " + join.getChildTable() + " because both tables are already joined in this query");
+                Log.w(FSJoinTranslator.class.getSimpleName(), "Cannot join " + join.getParentTable() + " and " + join.getChildTable() + " because both tables are already joined in this query");
                 continue;
             }
             joinedTables.add(tableJoinTextPair.first);
@@ -79,6 +80,32 @@ public class UriJoiner {
         }
 
         return ub.build();
+    }
+
+    public static String joinStringFrom(@NonNull String baseTableName, @Nullable List<FSJoin> joins) {
+        if (joins == null || joins.isEmpty()) {
+            return "";
+        }
+
+        Set<String> joinedTables = new HashSet<>(2);
+        joinedTables.add(baseTableName);
+
+        StringBuilder buf = new StringBuilder(baseTableName);
+        for (FSJoin join : joins) {
+            final String tableToJoin = joinedTables.contains(join.getChildTable()) ? join.getParentTable() : join.getChildTable();
+            joinedTables.add(tableToJoin);
+
+            buf.append(" JOIN ").append(tableToJoin).append(" ON ");
+            for (Map.Entry<String, String> colEntry : join.getChildToParentColumnMap().entrySet()) {
+                buf.append(join.getChildTable()).append('.').append(colEntry.getKey())
+                        .append('=')
+                        .append(join.getParentTable()).append('.').append(colEntry.getValue())
+                        .append(" AND ");
+            }
+            buf.delete(buf.length() - 5, buf.length());
+        }
+
+        return buf.toString();
     }
 
     /**

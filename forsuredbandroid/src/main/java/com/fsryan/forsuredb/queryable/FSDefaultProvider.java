@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.fsryan.forsuredb.provider;
+package com.fsryan.forsuredb.queryable;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -29,7 +29,7 @@ import android.support.annotation.NonNull;
 import com.fsryan.forsuredb.FSDBHelper;
 import com.fsryan.forsuredb.ForSureAndroidInfoFactory;
 
-import static com.fsryan.forsuredb.provider.UriEvaluator.isJoin;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.isJoin;
 
 /**
  * <p>
@@ -102,7 +102,7 @@ public class FSDefaultProvider extends ContentProvider {
     private Cursor performJoinQuery(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
         SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
-        builder.setTables(UriJoiner.joinStringFrom(uri));
+        builder.setTables(FSJoinTranslator.joinStringFrom(uri));
         boolean isDistinct = Boolean.parseBoolean(uri.getQueryParameter("DISTINCT"));
         builder.setDistinct(isDistinct);
         final String limit = qc.getLimit() > 0 ? String.valueOf(qc.getLimit()) : null;

@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.fsryan.forsuredb.provider;
+package com.fsryan.forsuredb.queryable;
 
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -92,7 +92,7 @@ public class UriEvaluator {
     public static boolean isJoin(@NonNull Uri uri) {
         for (FSJoin.Type type : FSJoin.Type.values()) {
             try {
-                String join = uri.getQueryParameter(UriJoiner.joinMap.get(type));
+                String join = uri.getQueryParameter(FSJoinTranslator.joinMap.get(type));
                 if (join != null && !join.isEmpty()) {
                     return true;
                 }
@@ -112,18 +112,18 @@ public class UriEvaluator {
 
     public static int offsetFrom(@NonNull Uri uri) {
         String offset = uri.getQueryParameter(OFFSET_QUERY_PARAM);
-        return offset == null ? 0 : Integer.valueOf(offset);
+        return offset == null ? 0 : Integer.parseInt(offset);
     }
 
     public static int limitFrom(@NonNull Uri uri) {
         String offset = uri.getQueryParameter(FIRST_QUERY_PARAM);
         offset = offset == null ? uri.getQueryParameter(LAST_QUERY_PARAM) : offset;
-        return offset == null ? 0 : Integer.valueOf(offset);
+        return offset == null ? 0 : Integer.parseInt(offset);
     }
 
     public static boolean offsetFromLast(@NonNull Uri uri) {
         String offset = uri.getQueryParameter(FIRST_QUERY_PARAM);
-        int frontOffset = offset == null ? 0 : Integer.valueOf(offset);
+        int frontOffset = offset == null ? 0 : Integer.parseInt(offset);
         return frontOffset <= 0 && limitFrom(uri) > 0;
     }
 

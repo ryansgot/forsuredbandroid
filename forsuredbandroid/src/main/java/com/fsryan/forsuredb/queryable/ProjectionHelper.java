@@ -1,4 +1,4 @@
-package com.fsryan.forsuredb;
+package com.fsryan.forsuredb.queryable;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -20,11 +20,11 @@ import java.util.List;
         return false;
     }
 
-    @Nullable
+    @NonNull
     public static String[] formatProjection(@Nullable FSProjection projection, @Nullable FSProjection... projections) {
         final int size = (projection == null ? 0 : 1) + (projections == null ? 0 : projections.length);
         if (size == 0) {
-            return null;
+            return new String[0];
         }
 
         List<FSProjection> ps = new ArrayList<>(size);
@@ -40,10 +40,10 @@ import java.util.List;
         return formatProjection(ps);
     }
 
-    @Nullable
+    @NonNull
     public static String[] formatProjection(@Nullable List<FSProjection> projections) {
         if (projections == null || projections.size() == 0) {
-            return null;
+            return new String[0];
         }
         List<String> formattedProjectionList = new ArrayList<>();
         for (FSProjection projection : projections) {

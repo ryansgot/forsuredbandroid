@@ -15,7 +15,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.fsryan.forsuredb;
+package com.fsryan.forsuredb.queryable;
 
 import android.content.Context;
 import android.net.Uri;
@@ -31,20 +31,19 @@ import com.fsryan.forsuredb.api.Limits;
 import com.fsryan.forsuredb.api.Retriever;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.cursor.FSCursor;
-import com.fsryan.forsuredb.provider.FSContentValues;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static com.fsryan.forsuredb.ProjectionHelper.formatProjection;
-import static com.fsryan.forsuredb.ProjectionHelper.isDistinct;
-import static com.fsryan.forsuredb.provider.UriEvaluator.FIRST_QUERY_PARAM;
-import static com.fsryan.forsuredb.provider.UriEvaluator.OFFSET_QUERY_PARAM;
-import static com.fsryan.forsuredb.provider.UriEvaluator.LAST_QUERY_PARAM;
-import static com.fsryan.forsuredb.provider.UriEvaluator.ORDER_BY_QUERY_PARM;
+import static com.fsryan.forsuredb.queryable.ProjectionHelper.formatProjection;
+import static com.fsryan.forsuredb.queryable.ProjectionHelper.isDistinct;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.FIRST_QUERY_PARAM;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.OFFSET_QUERY_PARAM;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.LAST_QUERY_PARAM;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.ORDER_BY_QUERY_PARM;
 
-/*package*/ class ContentProviderQueryable implements FSQueryable<Uri, FSContentValues> {
+public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValues> {
 
     private final Context appContext;
     private final Uri resource;

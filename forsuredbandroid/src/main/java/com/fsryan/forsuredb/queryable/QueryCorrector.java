@@ -15,25 +15,30 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.fsryan.forsuredb.provider;
+package com.fsryan.forsuredb.queryable;
 
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.fsryan.forsuredb.ForSureAndroidInfoFactory;
+import com.fsryan.forsuredb.api.FSJoin;
+import com.fsryan.forsuredb.api.FSSelection;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
-import static com.fsryan.forsuredb.provider.UriEvaluator.isSpecificRecordUri;
-import static com.fsryan.forsuredb.provider.UriEvaluator.limitFrom;
-import static com.fsryan.forsuredb.provider.UriEvaluator.offsetFrom;
-import static com.fsryan.forsuredb.provider.UriEvaluator.offsetFromLast;
-import static com.fsryan.forsuredb.provider.UriEvaluator.orderingFrom;
-import static com.fsryan.forsuredb.provider.UriJoiner.joinStringFrom;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.isSpecificRecordUri;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.limitFrom;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.offsetFrom;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.offsetFromLast;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.orderingFrom;
+import static com.fsryan.forsuredb.queryable.FSJoinTranslator.joinStringFrom;
 
 /**
  * <p>
@@ -68,10 +73,23 @@ import static com.fsryan.forsuredb.provider.UriJoiner.joinStringFrom;
         );
     }
 
+    public QueryCorrector(@NonNull String tableName, @Nullable List<FSJoin> joins, @Nullable FSSelection selection, @Nullable String orderBy) {
+        this(
+                tableName,
+                joinStringFrom(tableName, joins),
+                selection == null || selection.where() == null ? "" : selection.where(),
+                selection == null || selection.replacements() == null ? new String[0] : selection.replacements(),
+                orderBy == null ? "" : orderBy,
+                selection == null || selection.limits() == null ? 0 : selection.limits().offset(),
+                selection == null || selection.limits() == null ? 0 : selection.limits().count(),
+                selection != null && selection.limits() != null && selection.limits().isBottom()
+        );
+    }
+
     /*package*/ QueryCorrector(@NonNull Uri uri, @NonNull String where, @NonNull String[] selectionArgs, @NonNull String orderBy, int offset, int limit, boolean findingLast) {
         tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
         final String tmpJoinString = joinStringFrom(uri);
-        joinString = !tmpJoinString.isEmpty() ? tmpJoinString.substring(tableName.length()).trim() : ""; // <-- due to a quirk with how UriEvaluator works, the beginning will be the base table name
+        joinString = tmpJoinString.isEmpty() ? "" : tmpJoinString.substring(tableName.length()).trim(); // <-- due to a quirk with how UriEvaluator works, the beginning will be the base table name
         final boolean forSpecificRecord = isSpecificRecordUri(uri);
         this.where = forSpecificRecord ? ensureIdInSelection(where) : where;
         this.selectionArgs = forSpecificRecord ? ensureIdInSelectionArgs(uri, selectionArgs) : selectionArgs;
@@ -81,6 +99,18 @@ import static com.fsryan.forsuredb.provider.UriJoiner.joinStringFrom;
         this.findingLast = findingLast;
     }
 
+    /*package*/ QueryCorrector(@NonNull String tableName, @NonNull String joinString, @NonNull String where, @NonNull String[] whereArgs, @NonNull String orderBy, int offset, int limit, boolean findingLast) {
+        this.tableName = tableName;
+        this.joinString = joinString.isEmpty() ? "" : joinString.substring(tableName.length()).trim(); // <-- due to a quirk with how UriEvaluator works, the beginning will be the base table name;
+        this.where = where;
+        this.selectionArgs = whereArgs;
+        this.orderBy = orderBy.startsWith(" ORDER BY ") ? orderBy.substring(10) : orderBy;  // <-- quirk with the sqlitelib prefixing orderBy with this
+        this.offset = offset;
+        this.limit = limit;
+        this.findingLast = findingLast;
+    }
+
+    @NonNull
     public String getSelection(boolean retrieval) {
         // if finding last, then there is no choice but run an inner select query
         if (findingLast) {
@@ -92,6 +122,7 @@ import static com.fsryan.forsuredb.provider.UriJoiner.joinStringFrom;
         return retrieval || (limit <= 0 && offset <= 0) ? where : innerSelectWhereClause();
     }
 
+    @NonNull
     public String getOrderBy() {
         return findingLast && orderBy.isEmpty() ? tableName + "._id ASC" : orderBy;
     }
@@ -104,6 +135,12 @@ import static com.fsryan.forsuredb.provider.UriJoiner.joinStringFrom;
         return limit;
     }
 
+    @NonNull
+    public String getJoinString() {
+        return joinString;
+    }
+
+    @NonNull
     public String[] getSelectionArgs() {
         return selectionArgs;
     }

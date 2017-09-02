@@ -1,10 +1,8 @@
 package com.fsryan.forsuredb.util;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
 
 import com.fsryan.forsuredb.api.FSJoin;
-import com.fsryan.forsuredb.api.info.JoinInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,11 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.fsryan.forsuredb.provider.UriEvaluator.DISTINCT_QUERY_PARAM;
-import static com.fsryan.forsuredb.provider.UriEvaluator.FIRST_QUERY_PARAM;
-import static com.fsryan.forsuredb.provider.UriEvaluator.LAST_QUERY_PARAM;
-import static com.fsryan.forsuredb.provider.UriEvaluator.OFFSET_QUERY_PARAM;
-import static com.fsryan.forsuredb.provider.UriEvaluator.ORDER_BY_QUERY_PARM;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.DISTINCT_QUERY_PARAM;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.FIRST_QUERY_PARAM;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.LAST_QUERY_PARAM;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.OFFSET_QUERY_PARAM;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.ORDER_BY_QUERY_PARM;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
