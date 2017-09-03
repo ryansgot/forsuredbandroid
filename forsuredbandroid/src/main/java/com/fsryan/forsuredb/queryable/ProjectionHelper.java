@@ -20,11 +20,11 @@ import java.util.List;
         return false;
     }
 
-    @NonNull
+    @Nullable
     public static String[] formatProjection(@Nullable FSProjection projection, @Nullable FSProjection... projections) {
         final int size = (projection == null ? 0 : 1) + (projections == null ? 0 : projections.length);
         if (size == 0) {
-            return new String[0];
+            return null;
         }
 
         List<FSProjection> ps = new ArrayList<>(size);
@@ -40,10 +40,10 @@ import java.util.List;
         return formatProjection(ps);
     }
 
-    @NonNull
+    @Nullable
     public static String[] formatProjection(@Nullable List<FSProjection> projections) {
         if (projections == null || projections.size() == 0) {
-            return new String[0];
+            return null;
         }
         List<String> formattedProjectionList = new ArrayList<>();
         for (FSProjection projection : projections) {

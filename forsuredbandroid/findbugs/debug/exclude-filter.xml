@@ -15,17 +15,9 @@
 
     <!-- The array is being used to call a ContentProvider method that accepts nulls -->
     <Match>
-        <Class name="com.fsryan.forsuredb.queryable.ContentProviderQueryable" />
+        <Class name="com.fsryan.forsuredb.queryable.ProjectionHelper" />
         <Method name="formatProjection" />
         <Bug pattern="PZLA_PREFER_ZERO_LENGTH_ARRAYS" />
-    </Match>
-
-    <!-- Running this for years shows that this NPE path does not get executed. -->
-    <!-- TODO: update this and fix the test to account for the null pointer possibility -->
-    <Match>
-        <Class name="com.fsryan.forsuredb.queryable.QueryCorrector" />
-        <Method name="selectionWasModified" />
-        <Bug pattern="NP_NULL_ON_SOME_PATH" />
     </Match>
 
     <!-- TODO: update the FSCursorViewHolder to not hold a copy of the view type. This gets set onCreteViewHolder -->
