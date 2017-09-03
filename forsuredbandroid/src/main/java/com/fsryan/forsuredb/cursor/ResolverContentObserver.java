@@ -6,7 +6,7 @@ import android.net.Uri;
 import android.os.Handler;
 
 import com.fsryan.forsuredb.api.Resolver;
-import com.fsryan.forsuredb.provider.FSContentValues;
+import com.fsryan.forsuredb.queryable.FSContentValues;
 
 /**
  * <p>

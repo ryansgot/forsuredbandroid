@@ -6,8 +6,8 @@ import android.net.Uri;
 import android.os.Handler;
 
 import com.fsryan.forsuredb.api.Resolver;
-import com.fsryan.forsuredb.provider.FSContentValues;
-import com.fsryan.forsuredb.provider.UriEvaluator;
+import com.fsryan.forsuredb.queryable.FSContentValues;
+import com.fsryan.forsuredb.queryable.UriEvaluator;
 
 import java.util.HashMap;
 import java.util.List;

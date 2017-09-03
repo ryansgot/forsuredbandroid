@@ -29,7 +29,7 @@ import com.fsryan.forsuredb.api.FSSaveApi;
 import com.fsryan.forsuredb.api.Finder;
 import com.fsryan.forsuredb.api.Resolver;
 import com.fsryan.forsuredb.api.OrderBy;
-import com.fsryan.forsuredb.provider.FSContentValues;
+import com.fsryan.forsuredb.queryable.FSContentValues;
 
 public class FSCursorLoader<T extends Resolver, G extends FSGetApi, S extends FSSaveApi<Uri>, F extends Finder<T, F>, O extends OrderBy<T, O>> extends AsyncTaskLoader<FSCursor> {
 

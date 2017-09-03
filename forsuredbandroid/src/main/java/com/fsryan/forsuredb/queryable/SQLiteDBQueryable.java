@@ -1,31 +1,34 @@
-package com.fsryan.forsuredb;
+package com.fsryan.forsuredb.queryable;
 
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
+import com.fsryan.forsuredb.FSDBHelper;
 import com.fsryan.forsuredb.api.FSJoin;
+import com.fsryan.forsuredb.api.FSOrdering;
 import com.fsryan.forsuredb.api.FSProjection;
 import com.fsryan.forsuredb.api.FSQueryable;
 import com.fsryan.forsuredb.api.FSSelection;
 import com.fsryan.forsuredb.api.Retriever;
+import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.cursor.FSCursor;
-import com.fsryan.forsuredb.provider.FSContentValues;
 
 import java.util.List;
-import java.util.Map;
 
-import static com.fsryan.forsuredb.ProjectionHelper.formatProjection;
+import static com.fsryan.forsuredb.queryable.ProjectionHelper.formatProjection;
 
-/*package*/ class SQLiteDBQueryable implements FSQueryable<Uri, FSContentValues> {
+public class SQLiteDBQueryable implements FSQueryable<Uri, FSContentValues> {
+
+    // TODO: account for possible usage of first/last and orderings
 
     /*package*/ interface DBProvider {
         SQLiteDatabase writeableDb();
         SQLiteDatabase readableDb();
     }
 
-    public static String AUTHORITY = "forsuredb";
+    public static final String AUTHORITY = "forsuredb";
     private static final String URI_FORMAT = "content://" + AUTHORITY + "/%s/%d";
 
     private static final DBProvider realProvider = new DBProvider() {
@@ -69,45 +72,40 @@ import static com.fsryan.forsuredb.ProjectionHelper.formatProjection;
         }
 
         long id = dbProvider.writeableDb().insert(tableToQuery, null, cv.getContentValues());
-        if (id > 0L) {
-
-        }
-        return toUri(id);
+        return id > 0L ? toUri(id) : null;
     }
 
     @Override
-    public int update(FSContentValues cv, FSSelection selection) {
-        final String s = selection == null ? null : selection.where();
-        final String[] sArgs = selection == null ? null : selection.replacements();
-        return dbProvider.writeableDb().update(tableToQuery, cv.getContentValues(), s, sArgs);
+    public int update(FSContentValues cv, FSSelection selection, List<FSOrdering> orderings) {
+        final QueryCorrector qc = new QueryCorrector(tableToQuery, null, selection, Sql.generator().expressOrdering(orderings));
+        return dbProvider.writeableDb().update(tableToQuery, cv.getContentValues(), qc.getSelection(false), qc.getSelectionArgs());
     }
 
     @Override
-    public int delete(FSSelection selection) {
-        final String s = selection == null ? null : selection.where();
-        final String[] sArgs = selection == null ? null : selection.replacements();
-        return dbProvider.writeableDb().delete(tableToQuery, s, sArgs);
+    public int delete(FSSelection selection, List<FSOrdering> orderings) {
+        final QueryCorrector qc = new QueryCorrector(tableToQuery, null, selection, Sql.generator().expressOrdering(orderings));
+        return dbProvider.writeableDb().delete(tableToQuery, qc.getSelection(false), qc.getSelectionArgs());
     }
 
     @Override
-    public Retriever query(FSProjection projection, FSSelection selection, String sortOrder) {
+    public Retriever query(FSProjection projection, FSSelection selection, List<FSOrdering> orderings) {
         final String[] p = formatProjection(projection);
-        final String s = selection == null ? null : selection.where();
-        final String[] sArgs = selection == null ? null : selection.replacements();
+        final String orderBy = Sql.generator().expressOrdering(orderings);
+        final QueryCorrector qc = new QueryCorrector(tableToQuery, null, selection, orderBy);
+        final String limit = qc.getLimit() > 0 ? "LIMIT " + qc.getLimit() : null;
+        final boolean distinct = projection != null && projection.isDistinct();
         return (FSCursor) dbProvider.readableDb()
-                .query(projection.isDistinct(), tableToQuery, p, s, sArgs, null, null, sortOrder, null);
+                .query(distinct, tableToQuery, p, qc.getSelection(true), qc.getSelectionArgs(), null, null, orderBy, limit);
     }
 
     @Override
-    public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, String sortOrder) {
-        final String s = selection == null ? null : selection.where();
-        final String[] sArgs = selection == null ? null : selection.replacements();
-        final String sql = buildJoinQuery(joins, projections, s);
-        return (FSCursor) dbProvider.readableDb().rawQuery(sql, sArgs);
+    public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
+        final QueryCorrector qc = new QueryCorrector(tableToQuery, joins, selection, Sql.generator().expressOrdering(orderings));
+        final String sql = buildJoinQuery(projections, qc);
+        return (FSCursor) dbProvider.readableDb().rawQuery(sql, qc.getSelectionArgs());
     }
 
-    // TODO: move this to SQLGenerator
-    private String buildJoinQuery(List<FSJoin> joins, List<FSProjection> projections, String where) {
+    private String buildJoinQuery(List<FSProjection> projections, QueryCorrector qc) {
         final StringBuilder buf = new StringBuilder("SELECT ");
 
         // projection
@@ -121,34 +119,17 @@ import static com.fsryan.forsuredb.ProjectionHelper.formatProjection;
             buf.delete(buf.length() - 2, buf.length());
         }
 
-        buf.append(" FROM ").append(tableToQuery);
-
-        // joins
-        if (joins != null && !joins.isEmpty()) {
-            for (FSJoin join : joins) {
-                buf.append(" JOIN ");
-                if (tableToQuery.equals(join.getChildTable())) {
-                    buf.append(join.getParentTable());
-                } else {
-                    buf.append(join.getChildTable());
-                }
-                buf.append(" ON ");
-                for (Map.Entry<String, String> colEntry : join.getChildToParentColumnMap().entrySet()) {
-                    buf.append(join.getChildTable()).append('.').append(colEntry.getKey())
-                            .append('=')
-                            .append(join.getParentTable()).append('.').append(colEntry.getValue())
-                            .append(" AND ");
-                }
-                buf.delete(buf.length() - 5, buf.length());
-            }
-        }
-
-        // where
-        if (where != null && !where.isEmpty()) {
-            buf.append(" WHERE ").append(where);
-        }
-
-        return buf.append(';').toString();
+        // TODO: using string concatenation in the string buffer is a little smelly
+        final String joinString = qc.getJoinString();
+        final String where = qc.getSelection(true);
+        final String orderBy = qc.getOrderBy();
+        return buf.append(" FROM ").append(tableToQuery)
+                .append(joinString.isEmpty() ? "" : " " + joinString)       // joins
+                .append(where.isEmpty() ? "" : " WHERE " + where)           // selection
+                .append(orderBy.isEmpty() ? "" : " ORDER BY " + orderBy)    // ordering
+                .append(qc.getLimit() > 0 ? " LIMIT " + qc.getLimit() : "") // limit
+                .append(';')
+                .toString();
     }
 
     private Uri toUri(long inserted) {

@@ -42,7 +42,7 @@ android {
 forsuredb {
     applicationPackageName = 'com.forsuredb.testapp'
     resultParameter = "android.net.Uri"
-    recordContainer = "com.fsryan.forsuredb.provider.FSContentValues"
+    recordContainer = "com.fsryan.forsuredb.queryable.FSContentValues"
     migrationDirectory = 'app/src/main/assets'
     appProjectDirectory = 'app'
     resourcesDirectory = 'app/src/main/resources'
@@ -57,5 +57,5 @@ dependencies {
 
     compile project(':forsuredbandroid')
 
-    annotationProcessor 'com.fsryan.forsuredb:forsuredbcompiler:0.11.0'
+    annotationProcessor "com.fsryan.forsuredb:forsuredbcompiler:$forsuredbVersion"
 }

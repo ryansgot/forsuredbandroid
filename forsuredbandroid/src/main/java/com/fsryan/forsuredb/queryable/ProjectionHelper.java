@@ -1,4 +1,7 @@
-package com.fsryan.forsuredb;
+package com.fsryan.forsuredb.queryable;
+
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.fsryan.forsuredb.api.FSProjection;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
@@ -8,7 +11,7 @@ import java.util.List;
 
 /*package*/ class ProjectionHelper {
 
-    public static boolean isDistinct(Iterable<FSProjection> projections) {
+    public static boolean isDistinct(@NonNull Iterable<FSProjection> projections) {
         for (FSProjection projection : projections) {
             if (projection.isDistinct()) {
                 return true;
@@ -17,7 +20,8 @@ import java.util.List;
         return false;
     }
 
-    public static String[] formatProjection(FSProjection projection, FSProjection... projections) {
+    @Nullable
+    public static String[] formatProjection(@Nullable FSProjection projection, @Nullable FSProjection... projections) {
         final int size = (projection == null ? 0 : 1) + (projections == null ? 0 : projections.length);
         if (size == 0) {
             return null;
@@ -36,7 +40,8 @@ import java.util.List;
         return formatProjection(ps);
     }
 
-    public static String[] formatProjection(List<FSProjection> projections) {
+    @Nullable
+    public static String[] formatProjection(@Nullable List<FSProjection> projections) {
         if (projections == null || projections.size() == 0) {
             return null;
         }

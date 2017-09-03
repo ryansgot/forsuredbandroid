@@ -1,6 +1,7 @@
-package com.fsryan.forsuredb;
+package com.fsryan.forsuredb.queryable;
 
 import com.fsryan.forsuredb.api.FSProjection;
+import com.fsryan.forsuredb.queryable.ProjectionHelper;
 
 import org.junit.Test;
 

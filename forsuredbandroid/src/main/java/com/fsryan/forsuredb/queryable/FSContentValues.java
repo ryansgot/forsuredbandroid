@@ -15,9 +15,10 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.fsryan.forsuredb.provider;
+package com.fsryan.forsuredb.queryable;
 
 import android.content.ContentValues;
+import android.support.annotation.VisibleForTesting;
 
 import com.fsryan.forsuredb.api.RecordContainer;
 
@@ -41,7 +42,8 @@ public class FSContentValues implements RecordContainer {
      * </p>
      * @param cv The {@link ContentValues} object to wrap
      */
-    private FSContentValues(ContentValues cv) {
+    @VisibleForTesting
+    /*package*/ FSContentValues(ContentValues cv) {
         this.cv = cv;
     }
 

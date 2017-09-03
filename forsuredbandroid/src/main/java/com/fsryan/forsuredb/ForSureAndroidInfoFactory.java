@@ -25,8 +25,10 @@ import android.support.annotation.NonNull;
 import com.fsryan.forsuredb.api.FSJoin;
 import com.fsryan.forsuredb.api.FSQueryable;
 import com.fsryan.forsuredb.api.ForSureInfoFactory;
-import com.fsryan.forsuredb.provider.FSContentValues;
-import com.fsryan.forsuredb.provider.UriJoiner;
+import com.fsryan.forsuredb.queryable.ContentProviderQueryable;
+import com.fsryan.forsuredb.queryable.FSContentValues;
+import com.fsryan.forsuredb.queryable.SQLiteDBQueryable;
+import com.fsryan.forsuredb.queryable.FSJoinTranslator;
 
 import java.util.List;
 
@@ -109,7 +111,7 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
 
     @Override
     public Uri locatorWithJoins(Uri uri, List<FSJoin> joins) {
-        return UriJoiner.join(uri, tableName(uri), joins);
+        return FSJoinTranslator.join(uri, tableName(uri), joins);
     }
 
     @Override

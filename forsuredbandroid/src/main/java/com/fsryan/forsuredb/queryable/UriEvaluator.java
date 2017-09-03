@@ -15,15 +15,17 @@
    See the License for the specific language governing permissions and
    limitations under the License.
  */
-package com.fsryan.forsuredb.provider;
+package com.fsryan.forsuredb.queryable;
 
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 import com.fsryan.forsuredb.ForSureAndroidInfoFactory;
 import com.fsryan.forsuredb.api.FSJoin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -33,6 +35,12 @@ import java.util.List;
  * @author Ryan Scott
  */
 public class UriEvaluator {
+
+    public static final String DISTINCT_QUERY_PARAM = "DISTINCT";
+    public static final String LAST_QUERY_PARAM = "LAST";
+    public static final String FIRST_QUERY_PARAM = "FIRST";
+    public static final String OFFSET_QUERY_PARAM = "OFFSET";
+    public static final String ORDER_BY_QUERY_PARM = "ORDER_BY";
 
     /**
      * TODO: this is probably not correct, but it doesn't seem broken for the way {@link Uri} is being used
@@ -81,10 +89,10 @@ public class UriEvaluator {
      * @param uri The {@link Uri} to evaluate
      * @return true if the {@link Uri} is a join; false otherwise
      */
-    public static boolean isJoin(Uri uri) {
+    public static boolean isJoin(@NonNull Uri uri) {
         for (FSJoin.Type type : FSJoin.Type.values()) {
             try {
-                String join = uri.getQueryParameter(UriJoiner.joinMap.get(type));
+                String join = uri.getQueryParameter(FSJoinTranslator.joinMap.get(type));
                 if (join != null && !join.isEmpty()) {
                     return true;
                 }
@@ -93,5 +101,35 @@ public class UriEvaluator {
             }
         }
         return false;
+    }
+
+    public static boolean hasFirstOrLastParam(@NonNull Uri uri) {
+        final Set<String> names = uri.getQueryParameterNames();
+        return names.contains(FIRST_QUERY_PARAM)
+                || names.contains(LAST_QUERY_PARAM)
+                || names.contains(OFFSET_QUERY_PARAM);
+    }
+
+    public static int offsetFrom(@NonNull Uri uri) {
+        String offset = uri.getQueryParameter(OFFSET_QUERY_PARAM);
+        return offset == null ? 0 : Integer.parseInt(offset);
+    }
+
+    public static int limitFrom(@NonNull Uri uri) {
+        String offset = uri.getQueryParameter(FIRST_QUERY_PARAM);
+        offset = offset == null ? uri.getQueryParameter(LAST_QUERY_PARAM) : offset;
+        return offset == null ? 0 : Integer.parseInt(offset);
+    }
+
+    public static boolean offsetFromLast(@NonNull Uri uri) {
+        String offset = uri.getQueryParameter(FIRST_QUERY_PARAM);
+        int frontOffset = offset == null ? 0 : Integer.parseInt(offset);
+        return frontOffset <= 0 && limitFrom(uri) > 0;
+    }
+
+    @NonNull
+    public static String orderingFrom(@NonNull Uri uri) {
+        String sort = uri.getQueryParameter(ORDER_BY_QUERY_PARM);
+        return sort == null ? "" : sort;
     }
 }

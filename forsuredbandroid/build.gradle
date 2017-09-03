@@ -15,6 +15,8 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 25
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -59,7 +61,12 @@ dependencies {
     testCompile 'com.google.guava:guava:20.0'
     testCompile "org.mockito:mockito-core:$mockitoVersion"
 
+    androidTestCompile 'com.android.support.test:runner:1.0.1'
+    androidTestCompile "com.android.support:support-annotations:$supportLibVersion"
+//    androidTestCompile "org.mockito:mockito-core:$mockitoVersion"
+//    androidTestCompile "com.linkedin.dexmaker:dexmaker-mockito:1.5.1"
     androidTestCompile 'com.google.guava:guava:20.0'
+    androidTestCompile 'junit:junit:4.12'
 
     mavenDeploy 'org.kuali.maven.wagons:maven-s3-wagon:1.2.1'
 
@@ -196,9 +203,9 @@ afterEvaluate { project ->
         classpath.add(configurations.javadocSources.fileCollection {
             include '**/*.jar'
         })
-        for (File file : classpath.files) {
-            println("In Javadoc classpath: " + file.absolutePath)
-        }
+//        classpath.files.each { f ->
+//            println("In Javadoc classpath: " + f.absolutePath)
+//        }
     }
 
     task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
