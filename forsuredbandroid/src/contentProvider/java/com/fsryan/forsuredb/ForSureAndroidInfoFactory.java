@@ -18,7 +18,6 @@
 package com.fsryan.forsuredb;
 
 import android.content.Context;
-import android.content.pm.ProviderInfo;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
@@ -27,8 +26,7 @@ import com.fsryan.forsuredb.api.FSQueryable;
 import com.fsryan.forsuredb.api.ForSureInfoFactory;
 import com.fsryan.forsuredb.queryable.ContentProviderQueryable;
 import com.fsryan.forsuredb.queryable.FSContentValues;
-import com.fsryan.forsuredb.queryable.SQLiteDBQueryable;
-import com.fsryan.forsuredb.queryable.FSJoinTranslator;
+import com.fsryan.forsuredb.queryable.UriJoinTranslator;
 
 import java.util.List;
 
@@ -47,12 +45,10 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
 
     private final Context appContext;
     private final String uriPrefix;
-    private final boolean usingContentProvider;
 
     private ForSureAndroidInfoFactory(Context context, String authority) {
         appContext = context.getApplicationContext();
         uriPrefix = "content://" + authority;
-        usingContentProvider = contentProviderResolved(appContext, authority);
     }
 
     /**
@@ -69,19 +65,6 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
         }
     }
 
-    /**
-     * <p>
-     *     Initializes the {@link ForSureAndroidInfoFactory}. Use this when you do not
-     *     want your data to be accessible via a {@link android.content.ContentProvider}
-     * </p>
-     * @param appContext Your application's {@link Context}
-     */
-    public static synchronized void initWithoutContentProvider(Context appContext) {
-        if (instance == null) {
-            instance = new ForSureAndroidInfoFactory(appContext, SQLiteDBQueryable.AUTHORITY);
-        }
-    }
-
     public static ForSureAndroidInfoFactory inst() {
         if (instance == null) {
             throw new IllegalStateException("Must call init before inst");
@@ -91,7 +74,7 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
 
     @Override
     public FSQueryable<Uri, FSContentValues> createQueryable(Uri resource) {
-        return usingContentProvider ? new ContentProviderQueryable(appContext, resource) : new SQLiteDBQueryable(tableName(resource));
+        return new ContentProviderQueryable(appContext, resource);
     }
 
     @Override
@@ -111,7 +94,7 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
 
     @Override
     public Uri locatorWithJoins(Uri uri, List<FSJoin> joins) {
-        return FSJoinTranslator.join(uri, tableName(uri), joins);
+        return UriJoinTranslator.join(uri, tableName(uri), joins);
     }
 
     @Override
@@ -125,24 +108,6 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
             return true;
         } catch (Exception e) {
             // do nothing
-        }
-        return false;
-    }
-
-    // Kind of complicated because of the way this is done
-    private static boolean contentProviderResolved(Context context, String authority) {
-        final List<ProviderInfo> providers = context.getPackageManager().queryContentProviders(null, 0, 0);
-        if (providers == null) {
-            return false;
-        }
-
-        for (ProviderInfo providerInfo : providers) {
-            final String providerPackage = providerInfo.applicationInfo.packageName;
-            // In order to ensure that this is not a vector for attack, both the authority string and the
-            // package name of the application that defined the provider are required to be checked.
-            if (authority.equals(providerInfo.authority) && context.getPackageName().equals(providerPackage)) {
-                return true;
-            }
         }
         return false;
     }

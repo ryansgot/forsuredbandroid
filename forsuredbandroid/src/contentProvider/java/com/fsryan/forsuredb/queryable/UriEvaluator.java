@@ -92,7 +92,7 @@ public class UriEvaluator {
     public static boolean isJoin(@NonNull Uri uri) {
         for (FSJoin.Type type : FSJoin.Type.values()) {
             try {
-                String join = uri.getQueryParameter(FSJoinTranslator.joinMap.get(type));
+                String join = uri.getQueryParameter(UriJoinTranslator.joinMap.get(type));
                 if (join != null && !join.isEmpty()) {
                     return true;
                 }

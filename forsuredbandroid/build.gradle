@@ -34,6 +34,13 @@ android {
         }
     }
 
+    productFlavors {
+        contentProvider {
+        }
+        directDB {
+        }
+    }
+
     testOptions {
         unitTests.returnDefaultValues = true    // <-- Uri.parse() now returns null
     }
@@ -232,6 +239,14 @@ afterEvaluate { project ->
     task releaseSnapshot(dependsOn: [uploadArchives, assembleDebug]) {
         doLast {
             println("Huzzah! forsuredbandroid uploaded to S3 snapshot!")
+        }
+    }
+}
+
+task printSourceSets {
+    doLast {
+        project.android.sourceSets.each { ss ->
+            println "Source Set: ${ss.name}; ${ss.java}"
         }
     }
 }

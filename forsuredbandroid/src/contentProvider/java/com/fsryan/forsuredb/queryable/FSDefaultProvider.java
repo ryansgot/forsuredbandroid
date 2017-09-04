@@ -66,7 +66,7 @@ public class FSDefaultProvider extends ContentProvider {
     @Override
     public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
-        final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
+        final QueryCorrector qc = new UriQueryCorrector(uri, selection, selectionArgs);
         final int rowsAffected = FSDBHelper.inst().getWritableDatabase().update(tableName, values, qc.getSelection(false), qc.getSelectionArgs());
         if (rowsAffected != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
@@ -77,7 +77,7 @@ public class FSDefaultProvider extends ContentProvider {
     @Override
     public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
         final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
-        final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
+        final QueryCorrector qc = new UriQueryCorrector(uri, selection, selectionArgs);
 
         if (UriEvaluator.hasFirstOrLastParam(uri)) {
             FSDBHelper.inst().getWritableDatabase().delete(tableName, qc.getSelection(false), qc.getSelectionArgs());
@@ -100,9 +100,9 @@ public class FSDefaultProvider extends ContentProvider {
     }
 
     private Cursor performJoinQuery(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-        QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
+        QueryCorrector qc = new UriQueryCorrector(uri, selection, selectionArgs);
         SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
-        builder.setTables(FSJoinTranslator.joinStringFrom(uri));
+        builder.setTables(UriJoinTranslator.joinStringFrom(uri));
         boolean isDistinct = Boolean.parseBoolean(uri.getQueryParameter("DISTINCT"));
         builder.setDistinct(isDistinct);
         final String limit = qc.getLimit() > 0 ? String.valueOf(qc.getLimit()) : null;
@@ -118,7 +118,7 @@ public class FSDefaultProvider extends ContentProvider {
 
     private Cursor performQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
-        final QueryCorrector qc = new QueryCorrector(uri, selection, selectionArgs);
+        final QueryCorrector qc = new UriQueryCorrector(uri, selection, selectionArgs);
         final String limit = qc.getLimit() > 0 ? String.valueOf(qc.getLimit()) : null;
         boolean isDistinct = Boolean.parseBoolean(uri.getQueryParameter("DISTINCT"));
         return FSDBHelper.inst().getReadableDatabase().query(isDistinct, tableName, projection, qc.getSelection(true), qc.getSelectionArgs(), null, null, sortOrder, limit);
