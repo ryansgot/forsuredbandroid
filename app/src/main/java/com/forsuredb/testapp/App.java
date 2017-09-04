@@ -13,8 +13,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
 
-        FSDBHelper.initDebug(this, "testapp.db", TableGenerator.generate(authority));
-        ForSureAndroidInfoFactory.init(this, authority);
+        FSDBHelper.initDebug(this, "testapp.db", TableGenerator.generate());
         ForSure.init(ForSureAndroidInfoFactory.inst());
 
         // The current test app is a poor demonstration (because it relies upon content observers),

@@ -16,7 +16,7 @@ import java.util.List;
 
 import static android.support.test.InstrumentationRegistry.getTargetContext;
 
-public abstract class DefaultContentProviderTest {
+public abstract class BaseQueryableTest {
 
     private static final String dbName = "test.db";
     private static final String authority = "com.fsryan.forsuredb.debug.content";

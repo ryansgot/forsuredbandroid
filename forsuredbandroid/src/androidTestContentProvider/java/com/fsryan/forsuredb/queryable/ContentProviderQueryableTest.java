@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
-public class ContentProviderQueryableTest extends DefaultContentProviderTest {
+public class ContentProviderQueryableTest extends BaseQueryableTest {
 
     private static final double ACCEPTABLE_DELTA = 0.000001D;
 

@@ -8,6 +8,10 @@ apply plugin: 'findbugs-variants'
 
 group = 'com.fsryan.forsuredb'
 
+jacoco {
+    toolVersion = "0.7.4.+"
+}
+
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.3"
@@ -34,10 +38,13 @@ android {
         }
     }
 
+    flavorDimensions 'queryable'
     productFlavors {
         contentProvider {
+            dimension 'queryable'
         }
         directDB {
+            dimension 'queryable'
         }
     }
 

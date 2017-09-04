@@ -141,9 +141,9 @@ public class UriJoinTranslator {
         }
         final StringBuilder joinBuf = new StringBuilder(tableToJoin).append(" ON ");
         for (Map.Entry<String, String> childToParentColumnMapEntry : join.getChildToParentColumnMap().entrySet()) {
-            joinBuf.append(join.getParentTable()).append("").append(childToParentColumnMapEntry.getValue())
+            joinBuf.append(join.getParentTable()).append(".").append(childToParentColumnMapEntry.getValue())
                     .append(" = ")
-                    .append(join.getChildTable()).append("").append(childToParentColumnMapEntry.getKey())
+                    .append(join.getChildTable()).append(".").append(childToParentColumnMapEntry.getKey())
                     .append(" AND ");
         }
         return Pair.create(tableToJoin, joinBuf.delete(joinBuf.length() - 5, joinBuf.length()).toString());

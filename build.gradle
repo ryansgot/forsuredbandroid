@@ -20,9 +20,10 @@ buildscript {
             }
         }
         jcenter()
+        google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.3'
+        classpath 'com.android.tools.build:gradle:3.0.0-beta4'
         classpath 'com.fsryan:forsuredbplugin:0.4.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
@@ -37,7 +38,7 @@ ext {
 
     mockitoVersion = '1.10.19'
 
-    forsuredbVersion = '0.11.6-test+1503979631901'
+    forsuredbVersion = '0.11.7-test+1504500965893'
     forsuredbSqliteVersion = '0.5.3-test+1504075986526'
 }
 
@@ -67,9 +68,7 @@ allprojects {
             }
         }
         jcenter()
-        maven {
-            url "https://maven.google.com"
-        }
+        google()
     }
 
     autosemver {
