@@ -20,7 +20,7 @@ android {
         minSdkVersion 16
         targetSdkVersion 25
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
     }
 
     compileOptions {
@@ -246,14 +246,6 @@ afterEvaluate { project ->
     task releaseSnapshot(dependsOn: [uploadArchives, assembleDebug]) {
         doLast {
             println("Huzzah! forsuredbandroid uploaded to S3 snapshot!")
-        }
-    }
-}
-
-task printSourceSets {
-    doLast {
-        project.android.sourceSets.each { ss ->
-            println "Source Set: ${ss.name}; ${ss.java}"
         }
     }
 }
