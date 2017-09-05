@@ -16,7 +16,7 @@ buildscript { scriptHandler ->
 
             'supportLibrary': '25.3.1',
             'androidPlugin': '3.0.0-beta2',
-            'forsuredb': '0.11.7-test+1504500965893',
+            'forsuredb': '0.12.0-alpha',
             'release': [
                     'buildTime': Long.toString(new Date().getTime()),
                     'remote': 'origin',
@@ -51,7 +51,7 @@ buildscript { scriptHandler ->
                     'plugin': 'com.fsryan:forsuredbplugin:0.4.0',
                     'api': "com.fsryan.forsuredb:forsuredbapi:${versions.forsuredb}",
                     'compiler': "com.fsryan.forsuredb:forsuredbcompiler:${versions.forsuredb}",
-                    'sqlitelib': 'com.fsryan.forsuredb:sqlitelib:0.5.3-test+1504075986526'
+                    'sqlitelib': 'com.fsryan.forsuredb:sqlitelib:0.6.0-alpha'
             ]
     ]
 

@@ -99,8 +99,6 @@ afterEvaluate {
                 publicationNames.add(publicationName)
                 publicationNames.add(s3PublicationName)
 
-                println "Added $publicationName and $s3PublicationName"
-
                 "$publicationName"(MavenPublication) {
                     artifactId variantArtifactId
                     group project.group
