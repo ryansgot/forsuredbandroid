@@ -1,0 +1,242 @@
+// most of this was taken from here:
+// https://stackoverflow.com/questions/34331713/publishing-android-library-aar-to-bintray-with-chosen-flavors
+
+def siteUrl = 'https://github.com/ryansgot/forsuredbandroid'
+def pomConfig = {
+    licenses {
+        license {
+            name 'The Apache Software License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+        }
+    }
+    developers {
+        developer {
+            id 'ryansgot'
+            name 'Ryan'
+            email 'fsryan.developer@gmail.com'
+        }
+    }
+    scm {
+        connection 'https://github.com/ryansgot/forsuredbandroid.git'
+        developerConnection 'https://github.com/ryansgot/forsuredbandroid.git'
+        url siteUrl
+    }
+}
+
+afterEvaluate {
+    def publicationNames = []
+    publishing {
+        repositories {
+            maven {
+                name 'release'
+                url "s3://repo.fsryan.com/release"
+                credentials(AwsCredentials) {
+                    accessKey = keys.aws.accessKeyId
+                    secretKey = keys.aws.secretKey
+                }
+            }
+            maven {
+                name 'snapshot'
+                url "s3://repo.fsryan.com/snapshot"
+                credentials(AwsCredentials) {
+                    accessKey = keys.aws.accessKeyId
+                    secretKey = keys.aws.secretKey
+                }
+            }
+        }
+
+        publications {
+            android.libraryVariants.all { variant ->
+                if (variant.buildType.name == "debug") {
+                    return
+                }
+
+                def flavored = !variant.flavorName.isEmpty()
+                def variantArtifactId = flavored ? "${project.name}-${variant.flavorName.replace('_', '-').toLowerCase()}" : project.name
+
+                /**
+                 * If the javadoc destinationDir wasn't changed per flavor, the libraryVariants would
+                 * overwrite the javaDoc as all variants would write in the same directory
+                 * before the last javadoc jar would have been built, which would cause the last javadoc
+                 * jar to include classes from other flavors that it doesn't include.
+                 *
+                 * Yes, tricky.
+                 *
+                 * Note that "${buildDir}/docs/javadoc" is the default javadoc destinationDir.
+                 */
+                def javaDocDestDir = file("${buildDir}${File.separator}docs${File.separator}javadoc${flavored ? "${File.separator}${variant.flavorName.replace('_', '-')}" : ""}")
+                def sourceDirs = variant.sourceSets.collect {
+                    it.javaDirectories // Also includes kotlin sources if any.
+                }
+
+                def javadoc = task("${variant.name}Javadoc", type: Javadoc) {
+                    description "Generates Javadoc for ${variant.name}."
+                    source = variant.javaCompile.source
+                    destinationDir = javaDocDestDir
+                    classpath += files(android.getBootClasspath().join(File.pathSeparator))
+                    classpath += files(configurations.compile)
+                    options.links("http://docs.oracle.com/javase/7/docs/api/");
+                    options.links("http://d.android.com/reference/");
+                    exclude '**/BuildConfig.java'
+                    exclude '**/R.java'
+                    failOnError false
+                }
+
+                def javadocJar = task("${variant.name}JavadocJar", type: Jar, dependsOn: javadoc) {
+                    description "Puts Javadoc for ${variant.name} in a jar."
+                    classifier = 'javadoc'
+                    from javadoc.destinationDir
+                }
+
+                def sourcesJar = task("${variant.name}SourcesJar", type: Jar) {
+                    description "Puts sources for ${variant.name} in a jar."
+                    from sourceDirs
+                    classifier = 'sources'
+                }
+
+                def publicationName = "forsuredbandroid${variant.name.capitalize()}"
+                def s3PublicationName = "forsuredbandroidS3${variant.name.capitalize()}"
+                publicationNames.add(publicationName)
+                publicationNames.add(s3PublicationName)
+
+                println "Added $publicationName and $s3PublicationName"
+
+                "$publicationName"(MavenPublication) {
+                    artifactId variantArtifactId
+                    group project.group
+                    version project.version
+
+                    artifact variant.outputs[0].packageLibrary // This is the aar library
+                    artifact sourcesJar
+                    artifact javadocJar
+
+                    pom {
+                        packaging 'aar'
+                        withXml {
+                            def root = asNode()
+                            root.appendNode("name", variantArtifactId)
+                            root.appendNode("url", siteUrl)
+                            root.children().last() + pomConfig
+                            def depsNode = root["dependencies"][0] ?: root.appendNode("dependencies")
+
+                            def addDep = {
+                                if (it.group == null) return // Avoid empty dependency nodes
+                                def dependencyNode = depsNode.appendNode('dependency')
+                                dependencyNode.appendNode('groupId', it.group)
+                                dependencyNode.appendNode('artifactId', it.name)
+                                dependencyNode.appendNode('version', it.version)
+                                if (it.hasProperty('optional') && it.optional) {
+                                    dependencyNode.appendNode('optional', 'true')
+                                }
+                            }
+
+                            // Add deps that everyone has
+                            configurations.compile.allDependencies.each addDep
+                            // Add flavor specific deps
+                            if (flavored) {
+                                configurations["${variant.flavorName}Compile"].allDependencies.each addDep
+                            }
+                        }
+                    }
+                }
+
+                // TODO: DRY this up--the only difference is the added build extension to the pom
+                "$s3PublicationName"(MavenPublication) {
+                    group = project.group
+                    artifactId = variantArtifactId
+                    version = project.version
+
+                    artifact variant.outputs[0].packageLibrary // This is the aar library
+                    artifact sourcesJar
+                    artifact javadocJar
+
+                    pom {
+                        packaging 'aar'
+                        withXml {
+                            def root = asNode()
+
+                            root.appendNode("name", variantArtifactId)
+                            root.appendNode("url", siteUrl)
+                            root.children().last() + pomConfig
+                            def depsNode = root["dependencies"][0] ?: root.appendNode("dependencies")
+
+                            def addDep = {
+                                if (it.group == null) return // Avoid empty dependency nodes
+                                def dependencyNode = depsNode.appendNode('dependency')
+                                dependencyNode.appendNode('groupId', it.group)
+                                dependencyNode.appendNode('artifactId', it.name)
+                                dependencyNode.appendNode('version', it.version)
+                                if (it.hasProperty('optional') && it.optional) {
+                                    dependencyNode.appendNode('optional', 'true')
+                                }
+                            }
+
+                            // Add deps that everyone has
+                            configurations.compile.allDependencies.each addDep
+                            // Add flavor specific deps
+                            if (flavored) {
+                                configurations["${variant.flavorName}Compile"].allDependencies.each addDep
+                            }
+
+                            // allows for use of maven-s3-wagon for upload to s3 repos
+                            root.appendNode('build')
+                                    .appendNode('extensions')
+                                    .appendNode('extension')
+                                    .appendNode('groupId', 'org.kuali.maven.wagons').parent()
+                                    .appendNode('artifactId', 'maven-s3-wagon').parent()
+                                    .appendNode('version', '1.2.1')
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    bintray {
+        user = keys.bintray.user
+        key = keys.bintray.apiKey
+        publications = ['forsuredbandroidContentProviderRelease', 'forsuredbandroidDirectDBRelease']
+
+        override = true
+        pkg {
+            repo = 'maven'
+            name = project.name
+            desc = 'An android library leveraging the forsuredb project'
+            websiteUrl = siteUrl
+            issueTrackerUrl = "$siteUrl/issues"
+            vcsUrl = "${siteUrl}.git"
+            licenses = ['Apache-2.0']
+            publicDownloadNumbers = true
+            githubRepo = 'ryansgot/forsuredbandroid'
+            version {
+                name = project.version
+                desc = 'An android library leveraging the forsuredb project'
+                released  = new Date()
+                vcsTag = "v${project.version}"
+            }
+        }
+    }
+
+    task release(dependsOn: [
+            'publishForsuredbandroidS3ContentProviderReleasePublicationToReleaseRepository',
+            'publishForsuredbandroidS3DirectDBReleasePublicationToReleaseRepository',
+            'bintrayUpload'
+    ]) {
+        group 'publishing'
+        description "publish ${project.name}-contentprovider and ${project.name}-directdb to bintray and S3 release repository"
+        doLast {
+            println "Huzzah! ${project.name}-contentprovider and ${project.name}-directdb to bintray and S3 release repository"
+        }
+    }
+
+    task releaseSnapshot(dependsOn: [
+            'publishForsuredbandroidS3ContentProviderReleasePublicationToSnapshotRepository',
+            'publishForsuredbandroidS3DirectDBReleasePublicationToSnapshotRepository'
+    ]) {
+        group 'publishing'
+        description "publish ${project.name}-contentprovider and ${project.name}-directdb to bintray and S3 release repository"
+        doLast {
+            println "Huzzah! ${project.name}-contentprovider and ${project.name}-directdb to bintray and S3 release repository"
+        }
+    }
+}

@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'jacoco'
 apply plugin: 'android-java-coverage-merger'
@@ -8,15 +9,19 @@ apply plugin: 'findbugs-variants'
 
 group = 'com.fsryan.forsuredb'
 
+jacoco {
+    toolVersion = "0.7.4.+"
+}
+
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.3"
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 25
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.compileSdk
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
     }
 
     compileOptions {
@@ -34,6 +39,16 @@ android {
         }
     }
 
+    flavorDimensions 'queryable'
+    productFlavors {
+        contentProvider {
+            dimension 'queryable'
+        }
+        directDB {
+            dimension 'queryable'
+        }
+    }
+
     testOptions {
         unitTests.returnDefaultValues = true    // <-- Uri.parse() now returns null
     }
@@ -45,91 +60,21 @@ android {
     }
 }
 
-configurations {
-    javadocSources
-    mavenDeploy
-}
-
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile "com.android.support:recyclerview-v7:$supportLibVersion"
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation deps.support.recyclerviewv7
 
-    compile "com.fsryan.forsuredb:forsuredbapi:$forsuredbVersion"
-    compile "com.fsryan.forsuredb:sqlitelib:$forsuredbSqliteVersion"
+    api deps.forsuredb.api
+    api deps.forsuredb.sqlitelib
 
-    testCompile 'junit:junit:4.12'
-    testCompile 'com.google.guava:guava:20.0'
-    testCompile "org.mockito:mockito-core:$mockitoVersion"
+    testImplementation deps.junit
+    testImplementation deps.guava
+    testImplementation deps.mockito
 
-    androidTestCompile 'com.android.support.test:runner:1.0.1'
-    androidTestCompile "com.android.support:support-annotations:$supportLibVersion"
-//    androidTestCompile "org.mockito:mockito-core:$mockitoVersion"
-//    androidTestCompile "com.linkedin.dexmaker:dexmaker-mockito:1.5.1"
-    androidTestCompile 'com.google.guava:guava:20.0'
-    androidTestCompile 'junit:junit:4.12'
-
-    mavenDeploy 'org.kuali.maven.wagons:maven-s3-wagon:1.2.1'
-
-    javadocSources "com.fsryan.forsuredb:forsuredbapi:$forsuredbVersion"
-    javadocSources "com.fsryan.forsuredb:sqlitelib:$forsuredbSqliteVersion"
-}
-
-install {
-    repositories.mavenInstaller {
-        pom {
-            project {
-                packaging 'aar'
-
-                // Add your description here
-                name 'forsuredbandroid'
-                description 'An android library leveraging the forsuredb project'
-                url 'https://github.com/ryansgot/forsuredbandroid'
-
-                // Set your license
-                licenses {
-                    license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
-                developers {
-                    developer {
-                        id 'ryansgot'
-                        name 'Ryan Scott'
-                        email 'ryansgot@gmail.com'
-                    }
-                }
-                scm {
-                    connection 'https://github.com/ryansgot/forsuredbandroid.git'
-                    developerConnection 'https://github.com/ryansgot/forsuredbandroid.git'
-                    url 'https://github.com/ryansgot/forsuredbandroid'
-                }
-            }
-        }
-    }
-}
-
-bintray {
-    user = project.hasProperty('bintrayUser') ? project.getProperty('bintrayUser') : ''
-    key = project.hasProperty('bintrayApiKey') ? project.getProperty('bintrayApiKey') : ''
-
-    configurations = ['archives']
-    pkg {
-        repo = 'maven'
-        name = project.name
-        desc = 'An android library leveraging the forsuredb project'
-        websiteUrl = 'https://github.com/ryansgot/forsuredb'
-        vcsUrl = 'https://github.com/ryansgot/forsuredb.git'
-        licenses = ["Apache-2.0"]
-        publish = false
-        publicDownloadNumbers = true
-        version {
-            name = project.version
-            desc = 'An android library leveraging the forsuredb project'
-            released  = new Date()
-            vcsTag = "v${project.version}"
-        }
-    }
+    androidTestImplementation deps.support.test.runner
+    androidTestImplementation deps.support.annotations
+    androidTestImplementation deps.guava
+    androidTestImplementation deps.junit
 }
 
 mergedReportConfig {
@@ -147,91 +92,4 @@ mergedReportConfig {
     }
 }
 
-afterEvaluate { project ->
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-
-                configuration = configurations.mavenDeploy
-
-                pom.groupId = project.group
-                pom.artifactId = project.name
-                pom.version = project.version
-
-                // deploy to release if the release task was run--never run both release and releaseSnapshot at the same time
-                if (gradle.startParameter.taskNames.contains('release')) {
-                    repository(url: 's3://repo.fsryan.com/release')
-                } else {
-                    repository(url: 's3://repo.fsryan.com/snapshot')
-                }
-
-                pom.project {
-                    name 'forsuredbandroid'
-                    packaging 'aar'
-                    description 'Android platform integration library for forsuredb'
-                    url 'https://github.com/ryansgot/forsuredbandroid'
-
-                    scm {
-                        url 'https://github.com/ryansgot/forsuredbandroid'
-                        connection 'scm:git@github.com/ryansgot/forsuredbandroid.git'
-                        developerConnection 'scm:git@github.com/ryansgot/forsuredbandroid.git'
-                    }
-
-                    licenses {
-                        license {
-                            name 'The Apache Software License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                            distribution 'repo'
-                        }
-                    }
-
-                    developers {
-                        developer {
-                            id  'ryansgot'
-                            name 'Ryan Scott'
-                            email 'ryansgot@gmail.com'
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    task androidJavadocs(type: Javadoc) {
-        source = android.sourceSets.main.java.srcDirs
-        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-        classpath.add(configurations.javadocSources.fileCollection {
-            include '**/*.jar'
-        })
-//        classpath.files.each { f ->
-//            println("In Javadoc classpath: " + f.absolutePath)
-//        }
-    }
-
-    task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-        classifier = 'javadoc'
-        from androidJavadocs.destinationDir
-    }
-
-    task androidSourcesJar(type: Jar) {
-        classifier = 'sources'
-        from android.sourceSets.main.java.sourceFiles
-    }
-
-    artifacts {
-        archives androidSourcesJar
-        archives androidJavadocsJar
-    }
-
-    task release(dependsOn: [uploadArchives, bintrayUpload]) {
-        doLast {
-            println("Huzzah! forsuredbandroid uploaded to S3 release and bintray!")
-        }
-    }
-
-    task releaseSnapshot(dependsOn: [uploadArchives, assembleDebug]) {
-        doLast {
-            println("Huzzah! forsuredbandroid uploaded to S3 snapshot!")
-        }
-    }
-}
+apply from: 'publish.gradle'

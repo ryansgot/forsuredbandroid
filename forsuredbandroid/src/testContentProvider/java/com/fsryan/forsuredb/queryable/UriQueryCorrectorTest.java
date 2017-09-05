@@ -39,7 +39,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
-public abstract class QueryCorrectorTest {
+public abstract class UriQueryCorrectorTest {
 
     private static final String[] emptySelectionArgs = new String[0];
     private static final String emptySelection = "";
@@ -58,7 +58,7 @@ public abstract class QueryCorrectorTest {
     protected String inputSelection;
     protected String[] inputSelectionArgs;
 
-    public QueryCorrectorTest(Uri inputUri, String inputSelection, String[] inputSelectionArgs) {
+    public UriQueryCorrectorTest(Uri inputUri, String inputSelection, String[] inputSelectionArgs) {
         this.inputUri = inputUri;
         this.inputSelection = inputSelection;
         this.inputSelectionArgs = inputSelectionArgs;
@@ -72,11 +72,11 @@ public abstract class QueryCorrectorTest {
 
         ForSureAndroidInfoFactory.init(mockContext, "authority");
 
-        queryCorrectorUnderTest = new QueryCorrector(inputUri, inputSelection, inputSelectionArgs);
+        queryCorrectorUnderTest = new UriQueryCorrector(inputUri, inputSelection, inputSelectionArgs);
     }
 
     @RunWith(Parameterized.class)
-    public static class Selection extends QueryCorrectorTest {
+    public static class Selection extends UriQueryCorrectorTest {
 
         // expectations
         private String expectedSelection;
@@ -150,7 +150,7 @@ public abstract class QueryCorrectorTest {
     }
 
     @RunWith(Parameterized.class)
-    public static class FullFeaturedSelection extends QueryCorrectorTest {
+    public static class FullFeaturedSelection extends UriQueryCorrectorTest {
 
         private final String expectedSelectionRetrieval;
         private final String expectedSelectionEdit;

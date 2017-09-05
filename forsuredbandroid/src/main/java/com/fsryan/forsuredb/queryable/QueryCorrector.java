@@ -21,24 +21,14 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.fsryan.forsuredb.ForSureAndroidInfoFactory;
 import com.fsryan.forsuredb.api.FSJoin;
 import com.fsryan.forsuredb.api.FSSelection;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
-import static com.fsryan.forsuredb.queryable.UriEvaluator.isSpecificRecordUri;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.limitFrom;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.offsetFrom;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.offsetFromLast;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.orderingFrom;
-import static com.fsryan.forsuredb.queryable.FSJoinTranslator.joinStringFrom;
 
 /**
  * <p>
@@ -49,9 +39,6 @@ import static com.fsryan.forsuredb.queryable.FSJoinTranslator.joinStringFrom;
  */
 /*package*/ class QueryCorrector {
 
-    private static final String ID_SELECTION = "_id = ?";
-    private static final Pattern ID_SELECTION_PATTERN = Pattern.compile("_id *(=|IS) *\\?");
-
     private final String tableName;
     private final String joinString;
     private final String where;
@@ -60,18 +47,6 @@ import static com.fsryan.forsuredb.queryable.FSJoinTranslator.joinStringFrom;
     private final int offset;
     private final int limit;
     private final boolean findingLast;
-
-    public QueryCorrector(@NonNull Uri uri, @Nullable String where, @Nullable String[] whereArgs) {
-        this(
-                uri,
-                where == null ? "" : where,
-                whereArgs == null ? new String[0] : whereArgs,
-                orderingFrom(uri),
-                offsetFrom(uri),
-                limitFrom(uri),
-                offsetFromLast(uri)
-        );
-    }
 
     public QueryCorrector(@NonNull String tableName, @Nullable List<FSJoin> joins, @Nullable FSSelection selection, @Nullable String orderBy) {
         this(
@@ -84,19 +59,6 @@ import static com.fsryan.forsuredb.queryable.FSJoinTranslator.joinStringFrom;
                 selection == null || selection.limits() == null ? 0 : selection.limits().count(),
                 selection != null && selection.limits() != null && selection.limits().isBottom()
         );
-    }
-
-    /*package*/ QueryCorrector(@NonNull Uri uri, @NonNull String where, @NonNull String[] selectionArgs, @NonNull String orderBy, int offset, int limit, boolean findingLast) {
-        tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
-        final String tmpJoinString = joinStringFrom(uri);
-        joinString = tmpJoinString.isEmpty() ? "" : tmpJoinString.substring(tableName.length()).trim(); // <-- due to a quirk with how UriEvaluator works, the beginning will be the base table name
-        final boolean forSpecificRecord = isSpecificRecordUri(uri);
-        this.where = forSpecificRecord ? ensureIdInSelection(where) : where;
-        this.selectionArgs = forSpecificRecord ? ensureIdInSelectionArgs(uri, selectionArgs) : selectionArgs;
-        this.orderBy = orderBy.startsWith(" ORDER BY ") ? orderBy.substring(10) : orderBy;  // <-- quirk with the sqlitelib prefixing orderBy with this
-        this.offset = offset;
-        this.limit = limit;
-        this.findingLast = findingLast;
     }
 
     /*package*/ QueryCorrector(@NonNull String tableName, @NonNull String joinString, @NonNull String where, @NonNull String[] whereArgs, @NonNull String orderBy, int offset, int limit, boolean findingLast) {
@@ -189,30 +151,30 @@ import static com.fsryan.forsuredb.queryable.FSJoinTranslator.joinStringFrom;
         return buf.toString();
     }
 
-    private String ensureIdInSelection(@NonNull String selection) {
-        if (selection.isEmpty()) {
-            return ID_SELECTION;
+    private static String joinStringFrom(@NonNull String baseTableName, @Nullable List<FSJoin> joins) {
+        if (joins == null || joins.isEmpty()) {
+            return "";
         }
 
-        if (!ID_SELECTION_PATTERN.matcher(selection).find()) {
-            return ID_SELECTION + " AND (" + selection + ")";    // <-- insert the _id selection if it doesn't exist
+        Set<String> joinedTables = new HashSet<>(2);
+        joinedTables.add(baseTableName);
+
+        StringBuilder buf = new StringBuilder(baseTableName);
+        for (FSJoin join : joins) {
+            final String tableToJoin = joinedTables.contains(join.getChildTable()) ? join.getParentTable() : join.getChildTable();
+            joinedTables.add(tableToJoin);
+
+            buf.append(" JOIN ").append(tableToJoin).append(" ON ");
+            for (Map.Entry<String, String> colEntry : join.getChildToParentColumnMap().entrySet()) {
+                buf.append(join.getChildTable()).append('.').append(colEntry.getKey())
+                        .append('=')
+                        .append(join.getParentTable()).append('.').append(colEntry.getValue())
+                        .append(" AND ");
+            }
+            buf.delete(buf.length() - 5, buf.length());
         }
-        return selection;
+
+        return buf.toString();
     }
 
-    private String[] ensureIdInSelectionArgs(@NonNull Uri uri, @NonNull String[] selectionArgs) {
-        if (!selectionWasModified(where, selectionArgs)) {
-            return selectionArgs;
-        }
-
-        final List<String> selectionArgList = new ArrayList<>(Arrays.asList(selectionArgs));
-        selectionArgList.add(0, uri.getLastPathSegment());  // <-- prepend because the modified selection string specifies the _id selection first
-        return selectionArgList.toArray(new String[selectionArgList.size()]);
-    }
-
-    // If the selection was modified, then the number of ? in the selection will be one more than the length of selectionArgs
-    private boolean selectionWasModified(@NonNull String selection, @NonNull String[] selectionArgs) {
-        final int qMarkOccurrences = selection.replaceAll("[^?]", "").length();
-        return qMarkOccurrences == selectionArgs.length + 1;
-    }
 }

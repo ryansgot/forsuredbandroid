@@ -52,7 +52,7 @@ public class UriJoinerTest extends InstrumentationTestCase {
                         + TableToJoin.PARENT.getTableName() + "." + TableToJoin.PARENT.getColumnName()
                         + " = " + TableToJoin.CHILD1.getTableName() + "." + TableToJoin.CHILD1.getColumnName())
                 .build();
-        final Uri actual = FSJoinTranslator.join(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName()).build(), TableToJoin.PARENT.getTableName(), joins);
+        final Uri actual = UriJoinTranslator.join(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName()).build(), TableToJoin.PARENT.getTableName(), joins);
         assertEquals(expected, actual);
     }
 
@@ -64,7 +64,7 @@ public class UriJoinerTest extends InstrumentationTestCase {
                         + TableToJoin.PARENT.getTableName() + "." + TableToJoin.PARENT.getColumnName()
                         + " = " + TableToJoin.CHILD1.getTableName() + "." + TableToJoin.CHILD1.getColumnName())
                 .build();
-        final Uri actual = FSJoinTranslator.join(inputUriBuilder.appendPath(TableToJoin.CHILD1.getTableName()).build(), TableToJoin.CHILD1.getTableName(), joins);
+        final Uri actual = UriJoinTranslator.join(inputUriBuilder.appendPath(TableToJoin.CHILD1.getTableName()).build(), TableToJoin.CHILD1.getTableName(), joins);
         assertEquals(expected, actual);
     }
 
@@ -81,7 +81,7 @@ public class UriJoinerTest extends InstrumentationTestCase {
                         + TableToJoin.PARENT.getTableName() + "." + TableToJoin.PARENT.getColumnName()
                         + " = " + TableToJoin.CHILD2.getTableName() + "." + TableToJoin.CHILD2.getColumnName())
                 .build();
-        final Uri actual = FSJoinTranslator.join(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName()).build(), TableToJoin.PARENT.getTableName(), joins);
+        final Uri actual = UriJoinTranslator.join(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName()).build(), TableToJoin.PARENT.getTableName(), joins);
         assertEquals(expected, actual);
     }
 
@@ -98,7 +98,7 @@ public class UriJoinerTest extends InstrumentationTestCase {
                         + TableToJoin.PARENT.getTableName() + "." + TableToJoin.PARENT.getColumnName()
                         + " = " + TableToJoin.CHILD2.getTableName() + "." + TableToJoin.CHILD2.getColumnName())
                 .build();
-        final Uri actual = FSJoinTranslator.join(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName()).build(), TableToJoin.PARENT.getTableName(), joins);
+        final Uri actual = UriJoinTranslator.join(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName()).build(), TableToJoin.PARENT.getTableName(), joins);
         assertEquals(expected, actual);
     }
 
@@ -115,7 +115,7 @@ public class UriJoinerTest extends InstrumentationTestCase {
                         + TableToJoin.CHILD1.getTableName() + "." + TableToJoin.CHILD1.getColumnName()
                         + " = " + TableToJoin.CHILD1_CHILD.getTableName() + "." + TableToJoin.CHILD1_CHILD.getColumnName())
                 .build();
-        final Uri actual = FSJoinTranslator.join(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName()).build(), TableToJoin.PARENT.getTableName(), joins);
+        final Uri actual = UriJoinTranslator.join(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName()).build(), TableToJoin.PARENT.getTableName(), joins);
         assertEquals(expected, actual);
     }
 
@@ -124,7 +124,7 @@ public class UriJoinerTest extends InstrumentationTestCase {
                 + " ON "
                 + TableToJoin.PARENT.getTableName() + "." + TableToJoin.PARENT.getColumnName()
                 + " = " + TableToJoin.CHILD1.getTableName() + "." + TableToJoin.CHILD1.getColumnName();
-        final String actual = FSJoinTranslator.joinStringFrom(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName())
+        final String actual = UriJoinTranslator.joinStringFrom(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName())
                 .appendQueryParameter("INNER JOIN", TableToJoin.CHILD1.getTableName()
                         + " ON "
                         + TableToJoin.PARENT.getTableName() + "." + TableToJoin.PARENT.getColumnName()
@@ -142,7 +142,7 @@ public class UriJoinerTest extends InstrumentationTestCase {
                 + " ON "
                 + TableToJoin.CHILD1.getTableName() + "." + TableToJoin.CHILD1.getColumnName()
                 + " = " + TableToJoin.CHILD1_CHILD.getTableName() + "." + TableToJoin.CHILD1_CHILD.getColumnName();
-        final String actual = FSJoinTranslator.joinStringFrom(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName())
+        final String actual = UriJoinTranslator.joinStringFrom(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName())
                 .appendQueryParameter("INNER JOIN", TableToJoin.CHILD1.getTableName()
                         + " ON "
                         + TableToJoin.PARENT.getTableName() + "." + TableToJoin.PARENT.getColumnName()
@@ -164,7 +164,7 @@ public class UriJoinerTest extends InstrumentationTestCase {
                 + " ON "
                 + TableToJoin.CHILD1.getTableName() + "." + TableToJoin.CHILD1.getColumnName()
                 + " = " + TableToJoin.CHILD1_CHILD.getTableName() + "." + TableToJoin.CHILD1_CHILD.getColumnName();
-        final String actual = FSJoinTranslator.joinStringFrom(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName())
+        final String actual = UriJoinTranslator.joinStringFrom(inputUriBuilder.appendPath(TableToJoin.PARENT.getTableName())
                 .appendQueryParameter("INNER JOIN", TableToJoin.CHILD1.getTableName()
                         + " ON "
                         + TableToJoin.PARENT.getTableName() + "." + TableToJoin.PARENT.getColumnName()

@@ -19,17 +19,12 @@ import java.util.List;
 
 import static com.fsryan.forsuredb.queryable.ProjectionHelper.formatProjection;
 
-public class SQLiteDBQueryable implements FSQueryable<Uri, FSContentValues> {
-
-    // TODO: account for possible usage of first/last and orderings
+public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentValues> {
 
     /*package*/ interface DBProvider {
         SQLiteDatabase writeableDb();
         SQLiteDatabase readableDb();
     }
-
-    public static final String AUTHORITY = "forsuredb";
-    private static final String URI_FORMAT = "content://" + AUTHORITY + "/%s/%d";
 
     private static final DBProvider realProvider = new DBProvider() {
         @NonNull
@@ -45,21 +40,25 @@ public class SQLiteDBQueryable implements FSQueryable<Uri, FSContentValues> {
         }
     };
 
-    private final String tableToQuery;
+    private final DirectLocator locator;
     private final DBProvider dbProvider;
 
-    public SQLiteDBQueryable(String tableToQuery) {
-        this(tableToQuery, realProvider);
+    public SQLiteDBQueryable(@NonNull String tableToQuery) {
+        this(new DirectLocator(tableToQuery));
+    }
+
+    public SQLiteDBQueryable(@NonNull DirectLocator locator) {
+        this(locator, realProvider);
     }
 
     @VisibleForTesting
-    /*package*/ SQLiteDBQueryable(String tableToQuery, DBProvider dbProvider) {
-        this.tableToQuery = tableToQuery;
+    /*package*/ SQLiteDBQueryable(@NonNull DirectLocator locator, @NonNull DBProvider dbProvider) {
+        this.locator = locator;
         this.dbProvider = dbProvider;
     }
 
     @Override
-    public Uri insert(FSContentValues cv) {
+    public DirectLocator insert(FSContentValues cv) {
         // SQLite either requires that there be a value for a column in an insert query or that the query be in the following
         // form: INSERT INTO table DEFAULT VALUES;
         // Since executing raw SQL on the SQLiteDatabase reference would achieve the desired result, but return void, we would
@@ -71,36 +70,39 @@ public class SQLiteDBQueryable implements FSQueryable<Uri, FSContentValues> {
             cv.put("deleted", 0);
         }
 
-        long id = dbProvider.writeableDb().insert(tableToQuery, null, cv.getContentValues());
-        return id > 0L ? toUri(id) : null;
+        long id = dbProvider.writeableDb().insert(locator.table, null, cv.getContentValues());
+        // TODO: check whether returning null is okay
+        return id < 1 ? null : new DirectLocator(locator.table, id);
     }
 
     @Override
     public int update(FSContentValues cv, FSSelection selection, List<FSOrdering> orderings) {
-        final QueryCorrector qc = new QueryCorrector(tableToQuery, null, selection, Sql.generator().expressOrdering(orderings));
-        return dbProvider.writeableDb().update(tableToQuery, cv.getContentValues(), qc.getSelection(false), qc.getSelectionArgs());
+        final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, Sql.generator().expressOrdering(orderings));
+        return dbProvider.writeableDb()
+                .update(locator.table, cv.getContentValues(), qc.getSelection(false), qc.getSelectionArgs());
     }
 
     @Override
     public int delete(FSSelection selection, List<FSOrdering> orderings) {
-        final QueryCorrector qc = new QueryCorrector(tableToQuery, null, selection, Sql.generator().expressOrdering(orderings));
-        return dbProvider.writeableDb().delete(tableToQuery, qc.getSelection(false), qc.getSelectionArgs());
+        final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, Sql.generator().expressOrdering(orderings));
+        return dbProvider.writeableDb()
+                .delete(locator.table, qc.getSelection(false), qc.getSelectionArgs());
     }
 
     @Override
     public Retriever query(FSProjection projection, FSSelection selection, List<FSOrdering> orderings) {
         final String[] p = formatProjection(projection);
         final String orderBy = Sql.generator().expressOrdering(orderings);
-        final QueryCorrector qc = new QueryCorrector(tableToQuery, null, selection, orderBy);
+        final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, orderBy);
         final String limit = qc.getLimit() > 0 ? "LIMIT " + qc.getLimit() : null;
         final boolean distinct = projection != null && projection.isDistinct();
         return (FSCursor) dbProvider.readableDb()
-                .query(distinct, tableToQuery, p, qc.getSelection(true), qc.getSelectionArgs(), null, null, orderBy, limit);
+                .query(distinct, locator.table, p, qc.getSelection(true), qc.getSelectionArgs(), null, null, orderBy, limit);
     }
 
     @Override
     public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
-        final QueryCorrector qc = new QueryCorrector(tableToQuery, joins, selection, Sql.generator().expressOrdering(orderings));
+        final QueryCorrector qc = new QueryCorrector(locator.table, joins, selection, Sql.generator().expressOrdering(orderings));
         final String sql = buildJoinQuery(projections, qc);
         return (FSCursor) dbProvider.readableDb().rawQuery(sql, qc.getSelectionArgs());
     }
@@ -123,16 +125,12 @@ public class SQLiteDBQueryable implements FSQueryable<Uri, FSContentValues> {
         final String joinString = qc.getJoinString();
         final String where = qc.getSelection(true);
         final String orderBy = qc.getOrderBy();
-        return buf.append(" FROM ").append(tableToQuery)
+        return buf.append(" FROM ").append(locator.table)
                 .append(joinString.isEmpty() ? "" : " " + joinString)       // joins
                 .append(where.isEmpty() ? "" : " WHERE " + where)           // selection
                 .append(orderBy.isEmpty() ? "" : " ORDER BY " + orderBy)    // ordering
                 .append(qc.getLimit() > 0 ? " LIMIT " + qc.getLimit() : "") // limit
                 .append(';')
                 .toString();
-    }
-
-    private Uri toUri(long inserted) {
-        return Uri.parse(String.format(URI_FORMAT, tableToQuery, inserted));
     }
 }

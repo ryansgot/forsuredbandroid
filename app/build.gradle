@@ -23,13 +23,24 @@ android {
         }
     }
 
+    flavorDimensions 'serializer', 'queryable'
     productFlavors {
-        javaserializableserializer {
+        serializable {
+            dimension 'serializer'
             buildConfigField "String", "SERIALIZER", "\"java_serializable\""
         }
 
-        gsonserializer {
+        gson {
+            dimension 'serializer'
             buildConfigField "String", "SERIALIZER", "\"gson\""
+        }
+
+        directDB {
+            dimension 'queryable'
+        }
+
+        contentProvider {
+            dimension 'queryable'
         }
     }
 
@@ -52,10 +63,10 @@ forsuredb {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile "com.android.support:appcompat-v7:$supportLibVersion"
-    compile "com.android.support:recyclerview-v7:$supportLibVersion"
+    implementation deps.support.appcompatv7
+    implementation deps.support.recyclerviewv7
 
-    compile project(':forsuredbandroid')
+    implementation project(':forsuredbandroid')
 
-    annotationProcessor "com.fsryan.forsuredb:forsuredbcompiler:$forsuredbVersion"
+    annotationProcessor deps.forsuredb.compiler
 }
