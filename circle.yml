@@ -25,7 +25,7 @@ test:
   post:
     - mkdir $CIRCLE_TEST_REPORTS/forsuredbandroid
     - cp -r forsuredbandroid/build/reports/* $CIRCLE_TEST_REPORTS/forsuredbandroid
-    - bash <(curl -s https://codecov.io/bash) -Z -t $CODECOV_TOKEN -f $CIRCLE_TEST_REPORTS/forsuredbandroid/jacoco/createMergedDebugReport/createMergedDebugReport.xml
+    - bash <(curl -s https://codecov.io/bash) -Z -t $CODECOV_TOKEN
 # TODO: move the findBugs portion to the testing step so that the artifacts can be copied
 deployment:
   stable:
