@@ -1,17 +1,27 @@
 apply plugin: 'com.android.library'
-apply plugin: 'android-maven'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
+apply plugin: 'jacoco'
+apply plugin: 'android-java-coverage-merger'
+apply plugin: 'findbugs'
+apply plugin: 'findbugs-variants'
 
 group = 'com.fsryan.forsuredb'
-version = '0.11.0'
+
+jacoco {
+    toolVersion = "0.7.4.+"
+}
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion "25.0.3"
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 25
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.compileSdk
+
+        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
     }
 
     compileOptions {
@@ -23,6 +33,19 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            testCoverageEnabled = true
+        }
+    }
+
+    flavorDimensions 'queryable'
+    productFlavors {
+        contentProvider {
+            dimension 'queryable'
+        }
+        directDB {
+            dimension 'queryable'
         }
     }
 
@@ -37,118 +60,36 @@ android {
     }
 }
 
-configurations {
-    javadocSources
-}
-
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile "com.android.support:recyclerview-v7:$supportLibVersion"
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation deps.support.recyclerviewv7
 
-    compile "com.fsryan.forsuredb:forsuredbapi:$forsuredbVersion"
-    compile "com.fsryan.forsuredb:sqlitelib:$forsuredbSqliteVersion"
+    api deps.forsuredb.api
+    api deps.forsuredb.sqlitelib
 
-    testCompile 'junit:junit:4.12'
-    testCompile 'com.google.guava:guava:20.0'
-    testCompile "org.mockito:mockito-core:$mockitoVersion"
+    testImplementation deps.junit
+    testImplementation deps.guava
+    testImplementation deps.mockito
 
-    androidTestCompile 'com.google.guava:guava:20.0'
-
-    javadocSources "com.fsryan.forsuredb:forsuredbapi:$forsuredbVersion"
-    javadocSources "com.fsryan.forsuredb:sqlitelib:$forsuredbSqliteVersion"
+    androidTestImplementation deps.support.test.runner
+    androidTestImplementation deps.support.annotations
+    androidTestImplementation deps.guava
+    androidTestImplementation deps.junit
 }
 
-String bintrayUserCredential = hasProperty('bintrayUser') ? getProperty('bintrayUser') : ''
-String bintrayApiKeyCredential = hasProperty('bintrayApiKey') ? getProperty('bintrayApiKey') : ''
-
-install {
-    repositories.mavenInstaller {
-        // This generates POM.xml with proper parameters
-        pom {
-            project {
-                packaging 'aar'
-
-                // Add your description here
-                name 'forsuredbandroid'
-                description 'An android library leveraging the forsuredb project'
-                url 'https://github.com/ryansgot/forsuredbandroid'
-
-                // Set your license
-                licenses {
-                    license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
-                developers {
-                    developer {
-                        id bintrayUserCredential
-                        name 'Ryan Scott'
-                        email 'ryansgot@gmail.com'
-                    }
-                }
-                scm {
-                    connection 'https://github.com/ryansgot/forsuredbandroid.git'
-                    developerConnection 'https://github.com/ryansgot/forsuredbandroid.git'
-                    url 'https://github.com/ryansgot/forsuredbandroid'
-                }
-            }
+mergedReportConfig {
+    classFilters {
+        // buildType + flavor matches are additive rather than overriding
+        debug {
+            includes = ['**/com/fsryan/forsuredb/**']
+            excludes = [
+                    '**/R$*.class',                                 // generated R subclasses
+                    '**/R.class',                                   // generated R classes
+                    '**/*Test.class',                               // filter test classes
+                    '**/BuildConfig*',                              // generated BuildConfig classes
+            ]
         }
     }
 }
 
-bintray {
-    user = bintrayUserCredential
-    key = bintrayApiKeyCredential
-
-    configurations = ['archives']
-    pkg {
-        repo = 'maven'
-        name = 'forsuredbandroid'
-        desc = 'An android library leveraging the forsuredb project'
-        websiteUrl = 'https://github.com/ryansgot/forsuredb'
-        vcsUrl = 'https://github.com/ryansgot/forsuredb.git'
-        licenses = ["Apache-2.0"]
-//        publish = true
-        publicDownloadNumbers = true
-        version {
-            name = '0.11.0'
-            desc = 'An android library leveraging the forsuredb project'
-            released  = new Date()
-            vcsTag = 'v0.11.0'
-        }
-    }
-}
-
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
-}
-
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    classpath.add(configurations.javadocSources.fileCollection {
-        include '**/*.jar'
-    })
-    for (File file : classpath.files) {
-        println("In Javadoc classpath: " + file.absolutePath)
-    }
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-    //options.encoding = 'UTF-8'
-}
-
-artifacts {
-    archives javadocJar
-    archives sourcesJar
-}
-
-task release(dependsOn: bintrayUpload) {
-    doLast {
-        println("Huzzah! forsuredbandroid uploaded to bintray!")
-    }
-}
+apply from: 'publish.gradle'
