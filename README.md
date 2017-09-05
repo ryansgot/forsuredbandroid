@@ -28,6 +28,44 @@ Quick Start Guide depends upon the channel you're using:
 - [beta](https://github.com/ryansgot/forsuredbcompiler/blob/beta/README.md#using-forsuredb-in-android)
 - [stable](https://github.com/ryansgot/forsuredbcompiler/blob/master/README.md#using-forsuredb-in-android)
 
+## Release Notes
+
+### 0.12.0-alpha
+- Split library into two release variants:
+  - forsuredbandroid-contentprovider: the version that uses a ```ContentProvider``` under the hood to query the database
+  - forsuredbandroid-directdb: the version that uses an ```SQLiteDatabase``` instance to directly query the database
+- first/last/offset to support pagination or otherwise limiting the number of records returned by a query. For example:
+```java
+// returns the top 10 records, ordered by _id in descending order, with _id less than 34
+// and offset by 20 from the top
+// in other words, records with _id in the range 13..4
+ForSure.myTable()
+        .find()
+        .first(10, 20)
+        .byIdLessThan(34L)
+        .and().then()
+        .orderBy().created(OrderBy.ORDER_DESC)
+        .then()
+        .get();
+```
+```java
+// returns the bottom 10 records, ordered by _id in descending order, with _id less than 34
+// and offset by 20 from the bottom
+// in other words, records with _id in the range 30..21
+ForSure.myTable()
+        .find()
+        .last(10, 20)
+        .byIdLessThan(34L)
+        .and().then()
+        .orderBy().created(OrderBy.ORDER_DESC)
+        .then()
+        .get();
+```
+### 0.11.0
+- Removed guava dependency
+- ContentObserver abstraction that is capable of observing all tables associated with a ```Resolver```
+- Demonstrated usage of composite keys in example app
+
 ## Proguard Considerations
 forsuredb leverages ```javax.annotation.processing.AbstractProcessor```, reflection and ```java.lang.reflect.Proxy```, so if you use proguard to minify your project, you'll have to include the following lines in your proguard-rules.pro file:
 ```
