@@ -1,12 +1,9 @@
 package com.fsryan.forsuredb.queryable;
 
-import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.v4.util.Pair;
 
 import com.fsryan.forsuredb.FSDBHelper;
 import com.fsryan.forsuredb.api.FSGetApi;
-import com.fsryan.forsuredb.api.FSQueryable;
 import com.fsryan.forsuredb.api.FSTableCreator;
 
 import org.junit.AfterClass;
@@ -18,7 +15,7 @@ import java.util.List;
 
 import static android.support.test.InstrumentationRegistry.getTargetContext;
 
-public abstract class BaseQueryableTest<L> {
+public abstract class BaseQueryableTest {
 
     /*package*/ static final String AUTHORITY = "com.fsryan.forsuredb.test.content";
 
