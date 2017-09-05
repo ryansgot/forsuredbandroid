@@ -17,7 +17,7 @@ import static android.support.test.InstrumentationRegistry.getTargetContext;
 
 public abstract class BaseQueryableTest {
 
-    /*package*/ static final String AUTHORITY = "com.fsryan.forsuredb.test.content";
+    public static final String AUTHORITY = "com.fsryan.forsuredb.test.content";
 
     private static final String dbName = "test.db";
 

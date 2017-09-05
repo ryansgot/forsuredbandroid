@@ -22,7 +22,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQueryableTest<L> {
+public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQueryableTest {
 
     /*package*/ static final double ACCEPTABLE_DELTA = 0.000001D;
 
