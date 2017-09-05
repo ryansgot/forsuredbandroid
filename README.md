@@ -23,7 +23,10 @@ Test:
 [![codecov](https://codecov.io/gh/ryansgot/forsuredbandroid/branch/integration/graph/badge.svg)](https://codecov.io/gh/ryansgot/forsuredbandroid) [![CircleCI](https://circleci.com/gh/ryansgot/forsuredbandroid/tree/integration.svg?style=svg)](https://circleci.com/gh/ryansgot/forsuredbandroid/tree/integration)
 
 ## Quick Start Guide
-See https://github.com/ryansgot/forsuredbcompiler/blob/master/README.md#using-forsuredb-in-android
+Quick Start Guide depends upon the channel you're using:
+- [alpha](https://github.com/ryansgot/forsuredbcompiler/blob/alpha/README.md#using-forsuredb-in-android)
+- [beta](https://github.com/ryansgot/forsuredbcompiler/blob/beta/README.md#using-forsuredb-in-android)
+- [stable](https://github.com/ryansgot/forsuredbcompiler/blob/master/README.md#using-forsuredb-in-android)
 
 ## Proguard Considerations
 forsuredb leverages ```javax.annotation.processing.AbstractProcessor```, reflection and ```java.lang.reflect.Proxy```, so if you use proguard to minify your project, you'll have to include the following lines in your proguard-rules.pro file:
