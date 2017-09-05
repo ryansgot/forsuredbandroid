@@ -17,10 +17,6 @@
  */
 package com.fsryan.forsuredb;
 
-import android.content.Context;
-import android.content.pm.ProviderInfo;
-import android.net.Uri;
-
 import com.fsryan.forsuredb.api.FSJoin;
 import com.fsryan.forsuredb.api.FSQueryable;
 import com.fsryan.forsuredb.api.ForSureInfoFactory;
@@ -79,33 +75,5 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<DirectLocat
     @Override
     public String tableName(DirectLocator locator) {
         return locator.table;
-    }
-
-    private boolean isSingleRecord(Uri uri) {
-        try {
-            Long.parseLong(uri.getLastPathSegment());
-            return true;
-        } catch (Exception e) {
-            // do nothing
-        }
-        return false;
-    }
-
-    // Kind of complicated because of the way this is done
-    private static boolean contentProviderResolved(Context context, String authority) {
-        final List<ProviderInfo> providers = context.getPackageManager().queryContentProviders(null, 0, 0);
-        if (providers == null) {
-            return false;
-        }
-
-        for (ProviderInfo providerInfo : providers) {
-            final String providerPackage = providerInfo.applicationInfo.packageName;
-            // In order to ensure that this is not a vector for attack, both the authority string and the
-            // package name of the application that defined the provider are required to be checked.
-            if (authority.equals(providerInfo.authority) && context.getPackageName().equals(providerPackage)) {
-                return true;
-            }
-        }
-        return false;
     }
 }
