@@ -25,8 +25,8 @@ import android.util.Log;
 import com.fsryan.forsuredb.api.FSTableCreator;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.cursor.FSCursorFactory;
-import com.fsryan.forsuredb.api.migration.Migration;
-import com.fsryan.forsuredb.api.migration.MigrationSet;
+import com.fsryan.forsuredb.migration.MigrationSet;
+import com.fsryan.forsuredb.serialization.FSDbInfoSerializer;
 
 import java.util.Collections;
 import java.util.List;
@@ -38,13 +38,20 @@ public class FSDBHelper extends SQLiteOpenHelper {
     private final List<FSTableCreator> tables;
     private final List<MigrationSet> migrationSets;
     private final Context context;
+    private final FSDbInfoSerializer dbInfoSerializer;
     private final boolean debugMode;
 
-    private FSDBHelper(Context context, String dbName, List<FSTableCreator> tables, List<MigrationSet> migrationSets, boolean debugMode) {
+    private FSDBHelper(Context context,
+                       String dbName,
+                       List<FSTableCreator> tables,
+                       List<MigrationSet> migrationSets,
+                       FSDbInfoSerializer dbInfoSerializer,
+                       boolean debugMode) {
         super(context, dbName, cursorFactory, identifyDbVersion(migrationSets));
         this.context = context;
         this.tables = tables;
         this.migrationSets = migrationSets;
+        this.dbInfoSerializer = dbInfoSerializer;
         this.debugMode = debugMode;
     }
 
@@ -56,16 +63,20 @@ public class FSDBHelper extends SQLiteOpenHelper {
      * <p>
      *     Call this initializer in onCreate of your {@link android.app.Application} class with
      *     the production version of your app. It has debug mode set to false. If you want
-     *     debugMode on, then call {@link #initDebug(Context, String, List)}.
+     *     debugMode on, then call {@link #initDebug(Context, String, List, FSDbInfoSerializer)}.
      * </p>
      * @param context The application context
      * @param dbName The name of your database
      * @param tables The information for creating tables
-     * @see #initDebug(Context, String, List)
+     * @see #initDebug(Context, String, List, FSDbInfoSerializer)
      */
-    public static synchronized void init(Context context, String dbName, List<FSTableCreator> tables) {
+    public static synchronized void init(Context context,
+                                         String dbName,
+                                         List<FSTableCreator> tables,
+                                         FSDbInfoSerializer dbInfoSerializer) {
         if (Holder.instance == null) {
-            Holder.instance = new FSDBHelper(context, dbName, tables, new Migrator(context).getMigrationSets(), false);
+            List<MigrationSet> migrationSets = new Migrator(context, dbInfoSerializer).getMigrationSets();
+            Holder.instance = new FSDBHelper(context, dbName, tables, migrationSets, dbInfoSerializer, false);
         }
     }
 
@@ -73,17 +84,21 @@ public class FSDBHelper extends SQLiteOpenHelper {
      * <p>
      *     Call this initializer in onCreate of your {@link android.app.Application} class with
      *     if you want to output all of your queries to logcat with the tag FSCursorFactory.
-     *     Otherwise, you can just call {@link #init(Context, String, List)}, which defaults to
+     *     Otherwise, you can just call {@link #init(Context, String, List, FSDbInfoSerializer)}, which defaults to
      *     debugMode off.
      * </p>
      * @param context The application context
      * @param dbName The name of your database
      * @param tables The information for creating tables
-     * @see #init(Context, String, List)
+     * @see #init(Context, String, List, FSDbInfoSerializer)
      */
-    public static synchronized void initDebug(Context context, String dbName, List<FSTableCreator> tables) {
+    public static synchronized void initDebug(Context context,
+                                              String dbName,
+                                              List<FSTableCreator> tables,
+                                              FSDbInfoSerializer dbInfoSerializer) {
         if (Holder.instance == null) {
-            Holder.instance = new FSDBHelper(context, dbName, tables, new Migrator(context).getMigrationSets(), true);
+            List<MigrationSet> migrationSets = new Migrator(context, dbInfoSerializer).getMigrationSets();
+            Holder.instance = new FSDBHelper(context, dbName, tables, migrationSets, dbInfoSerializer, true);
         }
     }
 
@@ -122,7 +137,8 @@ public class FSDBHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * @param migrationSets The {@link List} of {@link Migration}
+     * @param migrationSets The {@link List} of
+     * {@link com.fsryan.forsuredb.migration.MigrationSet MigrationSet}
      * @return either 1 or the largest dbVersion in the migrationSets list
      */
     private static int identifyDbVersion(List<MigrationSet> migrationSets) {
@@ -132,28 +148,29 @@ public class FSDBHelper extends SQLiteOpenHelper {
 
         int version = 1;
         for (MigrationSet migrationSet : migrationSets) {
-            version = migrationSet.getDbVersion() > version ? migrationSet.getDbVersion() : version;
+            version = migrationSet.dbVersion() > version ? migrationSet.dbVersion() : version;
         }
         return version;
     }
 
     private void applyMigrations(SQLiteDatabase db, int previousVersion) {
         for (MigrationSet migrationSet : migrationSets) {
-            if (previousVersion >= migrationSet.getDbVersion()) {
+            if (previousVersion >= migrationSet.dbVersion()) {
                 continue;
             }
-            executeSqlList(db, Sql.generator().generateMigrationSql(migrationSet), "performing migration sql: ");
+            final List<String> sqlScript = Sql.generator().generateMigrationSql(migrationSet, dbInfoSerializer);
+            executeSqlList(db, sqlScript, "performing migration sql: ");
         }
     }
 
-    private void executeSqlList(SQLiteDatabase db, List<String> sqlList, String logPrefix) {
+    private void executeSqlList(SQLiteDatabase db, List<String> sqlScript, String logPrefix) {
         if (debugMode) {
-            for (String insertionSqlString : sqlList) {
+            for (String insertionSqlString : sqlScript) {
                 Log.d("forsuredb", logPrefix + insertionSqlString);
                 db.execSQL(insertionSqlString);
             }
         } else {
-            for (String insertionSqlString : sqlList) {
+            for (String insertionSqlString : sqlScript) {
                 db.execSQL(insertionSqlString);
             }
         }

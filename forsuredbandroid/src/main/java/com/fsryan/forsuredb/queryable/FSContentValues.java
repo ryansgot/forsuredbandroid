@@ -122,6 +122,11 @@ public class FSContentValues implements RecordContainer {
         cv.put(column, value);
     }
 
+    @Override
+    public void put(String column, float value) {
+        cv.put(column, value);
+    }
+
     /**
      * @see ContentValues#put(String, byte[])
      */
