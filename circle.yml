@@ -10,7 +10,7 @@ machine:
     version: oraclejdk8
 dependencies:
   pre:
-    - sdkmanager 'build-tools;26.0.2' 'extras;google;m2repository'
+    - /usr/local/android-sdk-linux/tools/bin/sdkmanager 'build-tools;26.0.2' 'extras;google;m2repository'
   override:
     - ./gradlew dependencies -PawsMavenAccessKey=$AWS_ACCESS_KEY_ID -PawsMavenSecretKey=$AWS_SECRET_KEY
 test:
