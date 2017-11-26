@@ -76,6 +76,7 @@ dependencies {
     androidTestImplementation deps.support.annotations
     androidTestImplementation deps.guava
     androidTestImplementation deps.junit
+    androidTestImplementation deps.forsuredb.modelsGson
 }
 
 mergedReportConfig {
