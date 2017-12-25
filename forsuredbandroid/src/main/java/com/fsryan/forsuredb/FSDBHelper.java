@@ -20,16 +20,29 @@ package com.fsryan.forsuredb;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 import com.fsryan.forsuredb.api.FSTableCreator;
+import com.fsryan.forsuredb.api.RecordContainer;
+import com.fsryan.forsuredb.api.TableInfoUtil;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
+import com.fsryan.forsuredb.api.staticdata.OnRecordRetrievedListener;
+import com.fsryan.forsuredb.api.staticdata.StaticDataRetrieverFactory;
 import com.fsryan.forsuredb.cursor.FSCursorFactory;
+import com.fsryan.forsuredb.info.TableInfo;
 import com.fsryan.forsuredb.migration.MigrationSet;
 import com.fsryan.forsuredb.serialization.FSDbInfoSerializer;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static com.fsryan.forsuredb.StatementBinder.bindObjects;
 
 public class FSDBHelper extends SQLiteOpenHelper {
 
@@ -50,6 +63,7 @@ public class FSDBHelper extends SQLiteOpenHelper {
         super(context, dbName, cursorFactory, identifyDbVersion(migrationSets));
         this.context = context;
         this.tables = tables;
+        Collections.sort(this.tables);
         this.migrationSets = migrationSets;
         this.dbInfoSerializer = dbInfoSerializer;
         this.debugMode = debugMode;
@@ -112,11 +126,6 @@ public class FSDBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         applyMigrations(db, 0);
-
-        Collections.sort(tables);
-        for (FSTableCreator table : tables) {
-            executeSqlList(db, new StaticDataSQL(table).getInsertionSQL(context), "inserting static data: ");
-        }
     }
 
     @Override
@@ -154,16 +163,59 @@ public class FSDBHelper extends SQLiteOpenHelper {
     }
 
     private void applyMigrations(SQLiteDatabase db, int previousVersion) {
-        for (MigrationSet migrationSet : migrationSets) {
-            if (previousVersion >= migrationSet.dbVersion()) {
+        int staticDataInsertFromVersion = 0;
+        final Map<String, Map<Integer, List<RecordContainer>>> versionToStaticDataRecordContainers = new HashMap<>();
+        while (migrationSets.size() > 0) {
+            MigrationSet migrationSet = migrationSets.get(0);
+            int version = migrationSet.dbVersion();
+            if (previousVersion >= version) {
+                migrationSets.remove(0);
                 continue;
             }
+
+            if (staticDataInsertFromVersion == 0) {
+                staticDataInsertFromVersion = migrationSet.dbVersion();
+                versionToStaticDataRecordContainers.putAll(createStaticDataRecordContainers());
+            }
+            migrationSets.remove(0);
+
             final List<String> sqlScript = Sql.generator().generateMigrationSql(migrationSet, dbInfoSerializer);
-            executeSqlList(db, sqlScript, "performing migration sql: ");
+            migrateSchema(db, sqlScript, "performing migration sql: ");
+            insertStaticData(db, migrationSet, versionToStaticDataRecordContainers);
+        }
+    }
+    private void insertStaticData(SQLiteDatabase db, MigrationSet migrationSet, Map<String, Map<Integer, List<RecordContainer>>> versionToStaticDataRecordContainers) {
+        // TODO: use map instead of list to store TableCreators
+        for (TableInfo table : TableInfoUtil.bestEffortDAGSort(migrationSet.targetSchema())) {
+            if (!hasStaticData(table.tableName())) {
+                continue;
+            }
+
+            Map<Integer, List<RecordContainer>> versionRecordMap = versionToStaticDataRecordContainers.get(table.tableName());
+            if (versionRecordMap == null) {
+                continue;
+            }
+
+            List<RecordContainer> records = versionRecordMap.get(migrationSet.dbVersion());
+            if (records == null) {
+                continue;
+            }
+            insertStaticData(db, table.tableName(), records);
         }
     }
 
-    private void executeSqlList(SQLiteDatabase db, List<String> sqlScript, String logPrefix) {
+    private boolean hasStaticData(String tableName) {
+        for (FSTableCreator tc : tables) {
+            if (!tc.getTableName().equals(tableName)) {
+                continue;
+            }
+            return tc.getStaticDataAsset() != null && !tc.getStaticDataAsset().isEmpty();
+        }
+        return false;
+    }
+
+    private void migrateSchema(SQLiteDatabase db, List<String> sqlScript, String logPrefix) {
+        // TODO: use preparedstatements
         if (debugMode) {
             for (String insertionSqlString : sqlScript) {
                 Log.d("forsuredb", logPrefix + insertionSqlString);
@@ -173,6 +225,51 @@ public class FSDBHelper extends SQLiteOpenHelper {
             for (String insertionSqlString : sqlScript) {
                 db.execSQL(insertionSqlString);
             }
+        }
+    }
+
+    private Map<String, Map<Integer, List<RecordContainer>>> createStaticDataRecordContainers() {
+        final Map<String, Map<Integer, List<RecordContainer>>> ret = new HashMap<>();
+        for (final FSTableCreator tc : tables) {
+            String staticDataAsset = tc.getStaticDataAsset();
+            if (staticDataAsset == null || staticDataAsset.isEmpty()) {
+                continue;
+            }
+
+            InputStream xmlStream = null;
+            try {
+                xmlStream = context.getAssets().open(staticDataAsset);
+                StaticDataRetrieverFactory.createFor(tc.getTableName(), migrationSets, xmlStream)
+                        .retrieve(new OnRecordRetrievedListener() {
+                    @Override
+                    public void onRecord(Map<Integer, List<RecordContainer>> versionRecordMap) {
+                        ret.put(tc.getTableName(), versionRecordMap);
+                    }
+                });
+            } catch (IOException ioe) {
+                throw new RuntimeException(ioe);
+            } finally {
+                if (xmlStream != null) {
+                    try {
+                        xmlStream.close();
+                    } catch (IOException e) {
+                        //
+                    }
+                }
+            }
+        }
+        return ret;
+    }
+
+    private void insertStaticData(SQLiteDatabase db, String tableName, List<RecordContainer> records) {
+        // TODO: records are inserted individually, but there is not a strong reason why they should--investigate batching instead of individual record insertion
+        for (RecordContainer record : records) {
+            final List<String> columns = new ArrayList<>(record.keySet());
+            String sql = Sql.generator().newSingleRowInsertionSql(tableName, columns);
+            SQLiteStatement statement = db.compileStatement(sql);
+            bindObjects(statement, columns, record);
+            statement.executeInsert();  // TODO: figure out what to do with the return
+            statement.close();
         }
     }
 }

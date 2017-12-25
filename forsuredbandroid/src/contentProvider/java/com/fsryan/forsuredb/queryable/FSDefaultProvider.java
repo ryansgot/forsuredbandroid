@@ -63,15 +63,22 @@ public class FSDefaultProvider extends ContentProvider {
         return null;
     }
 
+    /**
+     * <p>Actually an upsert, you can pass in the query parameter UPSERT=true on the {@link Uri}
+     * in order to run a transaction which first checks for existence of any records matching the
+     * selection criteria. If such a record exists, then all matching records are updated. If such
+     * a record does not exist, then one is inserted.
+     * @param uri the {@link Uri} describing the resource including any query parameters
+     * @param values the {@link ContentValues} to update
+     * @param selection the parameterized WHERE clause (prameterized using ?s for values)
+     * @param selectionArgs the replacements for the parameterized WHERE clause
+     * @return the number of rows affected by the query
+     */
     @Override
     public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-        final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
-        final QueryCorrector qc = new UriQueryCorrector(uri, selection, selectionArgs);
-        final int rowsAffected = FSDBHelper.inst().getWritableDatabase().update(tableName, values, qc.getSelection(false), qc.getSelectionArgs());
-        if (rowsAffected != 0) {
-            getContext().getContentResolver().notifyChange(uri, null);
-        }
-        return rowsAffected;
+        return Boolean.parseBoolean(uri.getQueryParameter("UPSERT"))
+                ? performUpsert(uri, values, selection, selectionArgs)
+                : updateInternal(uri, values, selection, selectionArgs);
     }
 
     @Override
@@ -122,5 +129,60 @@ public class FSDefaultProvider extends ContentProvider {
         final String limit = qc.getLimit() > 0 ? String.valueOf(qc.getLimit()) : null;
         boolean isDistinct = Boolean.parseBoolean(uri.getQueryParameter("DISTINCT"));
         return FSDBHelper.inst().getReadableDatabase().query(isDistinct, tableName, projection, qc.getSelection(true), qc.getSelectionArgs(), null, null, sortOrder, limit);
+    }
+
+    private int performUpsert(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        SQLiteDatabase db = FSDBHelper.inst().getWritableDatabase();
+        db.beginTransaction();
+        try {
+            int rowsAffected;
+            if (countOf(uri, selection, selectionArgs) < 1) {
+                Uri inserted = insert(uri, values);
+                rowsAffected = inserted == null ? 0 : 1;
+            } else {
+                rowsAffected = updateInternal(uri, values, selection, selectionArgs);
+                return rowsAffected;
+            }
+            if (rowsAffected > 0) {
+                db.setTransactionSuccessful();
+            }
+            return rowsAffected;
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    private int updateInternal(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
+        final QueryCorrector qc = new UriQueryCorrector(uri, selection, selectionArgs);
+        final int rowsAffected = FSDBHelper.inst().getWritableDatabase().update(tableName, values, qc.getSelection(false), qc.getSelectionArgs());
+        if (rowsAffected != 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return rowsAffected;
+    }
+
+    private int countOf(Uri uri, String where, String[] selectionArgs) {
+        // TODO: make the select query generation part of the DBMSIntegrator
+        QueryCorrector qc = new UriQueryCorrector(uri, where, selectionArgs);
+        Cursor c = null;
+        try {
+            SQLiteQueryBuilder sql = new SQLiteQueryBuilder();
+            sql.setTables(ForSureAndroidInfoFactory.inst().tableName(uri));
+            c = sql.query(FSDBHelper.inst().getReadableDatabase(),
+                    new String[] {"COUNT(*)"},
+                    qc.getSelection(true),
+                    qc.getSelectionArgs(),
+                    null,
+                    null,
+                    null
+            );
+
+            return c == null || !c.moveToFirst() ? 0 : c.getInt(0);
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
     }
 }

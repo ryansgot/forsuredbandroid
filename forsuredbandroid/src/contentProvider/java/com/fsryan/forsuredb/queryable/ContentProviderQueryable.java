@@ -29,6 +29,8 @@ import com.fsryan.forsuredb.api.FSQueryable;
 import com.fsryan.forsuredb.api.FSSelection;
 import com.fsryan.forsuredb.api.Limits;
 import com.fsryan.forsuredb.api.Retriever;
+import com.fsryan.forsuredb.api.SaveResult;
+import com.fsryan.forsuredb.api.adapter.SaveResultFactory;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.cursor.FSCursor;
 
@@ -70,15 +72,28 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
 
     @Override
     public int update(FSContentValues cv, FSSelection selection, List<FSOrdering> orderings) {
-        final Uri uri = enrichUri(selection, orderings);
+        final Uri uri = enrichUri(selection, orderings, false);
         return selection == null
                 ? appContext.getContentResolver().update(uri, cv.getContentValues(),null, null)
                 : appContext.getContentResolver().update(uri, cv.getContentValues(), selection.where(), selection.replacements());
     }
 
     @Override
+    public SaveResult<Uri> upsert(FSContentValues cv, FSSelection selection, List<FSOrdering> orderings) {
+        final Uri uri = enrichUri(selection, orderings, true);
+        try {
+            int rowsAffected = selection == null
+                    ? appContext.getContentResolver().update(uri, cv.getContentValues(), null, null)
+                    : appContext.getContentResolver().update(uri, cv.getContentValues(), selection.where(), selection.replacements());
+            return SaveResultFactory.create(null, rowsAffected, null);
+        } catch (Exception e) {
+            return SaveResultFactory.create(null, 0, e);
+        }
+    }
+
+    @Override
     public int delete(FSSelection selection, List<FSOrdering> orderings) {
-        final Uri uri = enrichUri(selection, orderings);
+        final Uri uri = enrichUri(selection, orderings, false);
         return selection == null
                 ? appContext.getContentResolver().delete(uri, null, null)
                 : appContext.getContentResolver().delete(uri, selection.where(), selection.replacements());
@@ -87,7 +102,7 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
     @Override
     public Retriever query(FSProjection projection, FSSelection selection, List<FSOrdering> orderings) {
         final String[] p = formatProjection(Arrays.asList(projection));
-        final Uri uri = enrichUri(projection, selection, orderings);
+        final Uri uri = enrichUri(projection, selection, orderings, false);
         final String orderBy = Sql.generator().expressOrdering(orderings).replace("ORDER BY", "").trim();
         return selection == null
                 ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, orderBy))
@@ -97,7 +112,7 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
     @Override
     public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
         final String[] p = formatProjection(projections);
-        final Uri uri = enrichUri(projections, selection, orderings);
+        final Uri uri = enrichUri(projections, selection, orderings, false);
         final String orderBy = Sql.generator().expressOrdering(orderings).replace("ORDER BY", "").trim();
         return selection == null
                 ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, orderBy))
@@ -105,29 +120,43 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
     }
 
     // TODO: create separate class for enriching Uris
-    private Uri enrichUri(@Nullable FSSelection selection, @Nullable List<FSOrdering> orderings) {
-        return enrichUri((FSProjection) null, selection, orderings);
+    private Uri enrichUri(@Nullable FSSelection selection, @Nullable List<FSOrdering> orderings, boolean upsert) {
+        return enrichUri((FSProjection) null, selection, orderings, upsert);
     }
 
-    private Uri enrichUri(@Nullable FSProjection projection, @Nullable FSSelection selection, @Nullable List<FSOrdering> orderings) {
+    private Uri enrichUri(@Nullable FSProjection projection,
+                          @Nullable FSSelection selection,
+                          @Nullable List<FSOrdering> orderings,
+                          boolean upsert) {
         return enrichUri(
                 projection == null ? Collections.<FSProjection>emptyList() : Arrays.asList(projection),
                 selection,
-                orderings
+                orderings,
+                upsert
         );
     }
 
-    private Uri enrichUri(@NonNull List<FSProjection> projections, @Nullable FSSelection selection, @Nullable List<FSOrdering> orderings) {
+    private Uri enrichUri(@NonNull List<FSProjection> projections,
+                          @Nullable FSSelection selection,
+                          @Nullable List<FSOrdering> orderings,
+                          boolean upsert) {
         return enrichUri(
                 projections,
                 selection == null || selection.limits() == null ? Limits.NONE : selection.limits(),
-                orderings == null ? Collections.<FSOrdering>emptyList() : orderings
+                orderings == null ? Collections.<FSOrdering>emptyList() : orderings,
+                upsert
         );
     }
 
-    private Uri enrichUri(@NonNull List<FSProjection> projections, @NonNull Limits limits, @NonNull List<FSOrdering> orderings) {
+    private Uri enrichUri(@NonNull List<FSProjection> projections,
+                          @NonNull Limits limits,
+                          @NonNull List<FSOrdering> orderings,
+                          boolean upsert) {
         Uri.Builder builder = resource.buildUpon()
                 .appendQueryParameter("DISTINCT", isDistinct(projections) ? "true" : "false");
+        if (upsert) {
+            builder.appendQueryParameter("UPSERT", "true");
+        }
 
         if (limits.offset() > 0 || limits.count() > 0) {
             final String limitType = limits.isBottom() ? LAST_QUERY_PARAM : FIRST_QUERY_PARAM;
