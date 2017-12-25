@@ -141,7 +141,6 @@ public class FSDefaultProvider extends ContentProvider {
                 rowsAffected = inserted == null ? 0 : 1;
             } else {
                 rowsAffected = updateInternal(uri, values, selection, selectionArgs);
-                return rowsAffected;
             }
             if (rowsAffected > 0) {
                 db.setTransactionSuccessful();
