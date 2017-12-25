@@ -1,5 +1,5 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.fsryan.forsuredb'
+apply plugin: 'com.fsryan.gradle.forsuredb'
 
 android {
     compileSdkVersion versions.compileSdk
@@ -63,6 +63,7 @@ forsuredb {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+
     implementation deps.support.appcompatv7
     implementation deps.support.recyclerviewv7
 

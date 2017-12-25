@@ -4,7 +4,7 @@ import android.app.Application;
 
 import com.fsryan.forsuredb.FSDBHelper;
 import com.fsryan.forsuredb.ForSureAndroidInfoFactory;
-import com.fsryan.forsuredb.serialization.FSDbInfoGsonSerializer;
+import com.fsryan.forsuredb.gsonserialization.FSDbInfoGsonSerializer;
 
 public class App extends Application {
 
