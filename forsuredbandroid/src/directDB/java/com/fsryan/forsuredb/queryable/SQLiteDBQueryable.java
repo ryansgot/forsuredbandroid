@@ -3,8 +3,6 @@ package com.fsryan.forsuredb.queryable;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
-import android.database.sqlite.SQLiteStatement;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
@@ -141,6 +139,7 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
         return (FSCursor) dbProvider.readableDb().rawQuery(sql, qc.getSelectionArgs());
     }
 
+    // TODO: get rid of this ugly code and just use the DBMSIntegrator to handle query generation
     private String buildJoinQuery(List<FSProjection> projections, QueryCorrector qc) {
         final StringBuilder buf = new StringBuilder("SELECT ");
 

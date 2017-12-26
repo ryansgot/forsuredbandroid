@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import com.fsryan.forsuredb.FSDBHelper;
 import com.fsryan.forsuredb.api.FSGetApi;
 import com.fsryan.forsuredb.api.FSTableCreator;
-import com.fsryan.forsuredb.serialization.FSDbInfoGsonSerializer;
+import com.fsryan.forsuredb.gsonserialization.FSDbInfoGsonSerializer;
 
 import org.junit.AfterClass;
 import org.junit.Before;

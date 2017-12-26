@@ -32,7 +32,7 @@ public class ContentProviderQueryableTest extends BasicQueryableTestsWithSeedDat
 
     @Override
     protected Uri recordLocator(String table, long id) {
-        return ForSureAndroidInfoFactory.inst().locatorFor(table, 1L);
+        return ForSureAndroidInfoFactory.inst().locatorFor(table, id);
     }
 
     @Override

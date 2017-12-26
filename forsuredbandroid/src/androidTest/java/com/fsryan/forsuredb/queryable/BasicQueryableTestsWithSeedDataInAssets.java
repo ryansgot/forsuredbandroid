@@ -6,7 +6,10 @@ import android.support.v4.util.Pair;
 import com.fsryan.forsuredb.api.FSJoin;
 import com.fsryan.forsuredb.api.FSProjection;
 import com.fsryan.forsuredb.api.FSQueryable;
+import com.fsryan.forsuredb.api.FSSelection;
+import com.fsryan.forsuredb.api.Limits;
 import com.fsryan.forsuredb.api.Retriever;
+import com.fsryan.forsuredb.api.SaveResult;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.After;
@@ -115,6 +118,33 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
         assertProfileInfoValueInCursorAtPosition(r, 0, standardProfileInfoUserId, standardProfileInfoEmailAddress, standardProfileInfoUuid, standardProfileInfoAwesome, standardProfileInfoBinaryData);
     }
 
+    @Test
+    public void shouldInsertWhenUpsertCalledAndNoMatches() {
+        L locator = insertStandardUser();
+
+        final FSContentValues update = new FSContentValues(userCV(3.1, BigDecimal.ONE, 2L, 3));
+        // id 2 does not exist in database yet
+        SaveResult<L> result = createQueryable(userTableLocator()).upsert(update, createIdSelection(2L), null);
+        assertEquals(1, result.rowsAffected());
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(),null, null);
+        assertUserValueInCursorAtPosition(r, 0, standardUserAppRating, standardUserCompetitorAppRating, standardUserGlobalId, standardUserLoginCount);
+        assertUserValueInCursorAtPosition(r, 1, 3.1, BigDecimal.ONE, 2L, 3);
+    }
+
+    @Test
+    public void shouldUpdateWhenUpsertCalledAndHasMatches() {
+        insertStandardUser();
+
+        final FSContentValues update = new FSContentValues(userCV(3.1, BigDecimal.ONE, 2L, 3));
+        // id 1 was just inserted above
+        SaveResult<L> result = createQueryable(userTableLocator()).upsert(update, createIdSelection(1L), null);
+        assertEquals(1, result.rowsAffected());
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), createIdSelection(1L), null);
+        assertUserValueInCursorAtPosition(r, 0, 3.1, BigDecimal.ONE, 2L, 3);
+    }
+
     protected abstract FSQueryable<L, FSContentValues> createQueryable(L locator);
 
     protected abstract L recordLocator(String table, long id);
@@ -144,7 +174,7 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
         assertEquals(emailAddress, c.getString("profile_info_email_address"));
         assertEquals(uuid, c.getString("profile_info_uuid"));
         assertEquals(awesome ? 1 : 0, c.getInt("profile_info_awesome"));
-        assertArrayEquals(binaryData, c.getBlob("profile_info_binary_data"));
+        assertArrayEquals(binaryData, c.getBytes("profile_info_binary_data"));
     }
 
     private static ContentValues profileInfoCV(long userId, String emailAddress, String uuid, boolean awesome, byte[] binaryData) {
@@ -199,6 +229,25 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
             @Override
             public boolean isDistinct() {
                 return distinct;
+            }
+        };
+    }
+
+    private static FSSelection createIdSelection(final long id) {
+        return new FSSelection() {
+            @Override
+            public String where() {
+                return "_id=?";
+            }
+
+            @Override
+            public String[] replacements() {
+                return new String[] {Long.toString(id)};
+            }
+
+            @Override
+            public Limits limits() {
+                return null;
             }
         };
     }
