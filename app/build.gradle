@@ -3,14 +3,12 @@ apply plugin: 'com.fsryan.forsuredb'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion "25.0.3"
 
     defaultConfig {
         applicationId "com.forsuredb.testapp"
         minSdkVersion 16
         targetSdkVersion 25
-        versionCode 1
-        versionName "1.0"
     }
 
     compileOptions {
@@ -25,13 +23,24 @@ android {
         }
     }
 
+    flavorDimensions 'serializer', 'queryable'
     productFlavors {
-        javaserializableserializer {
+        serializable {
+            dimension 'serializer'
             buildConfigField "String", "SERIALIZER", "\"java_serializable\""
         }
 
-        gsonserializer {
+        gson {
+            dimension 'serializer'
             buildConfigField "String", "SERIALIZER", "\"gson\""
+        }
+
+        directDB {
+            dimension 'queryable'
+        }
+
+        contentProvider {
+            dimension 'queryable'
         }
     }
 
@@ -44,7 +53,7 @@ android {
 forsuredb {
     applicationPackageName = 'com.forsuredb.testapp'
     resultParameter = "android.net.Uri"
-    recordContainer = "com.fsryan.forsuredb.provider.FSContentValues"
+    recordContainer = "com.fsryan.forsuredb.queryable.FSContentValues"
     migrationDirectory = 'app/src/main/assets'
     appProjectDirectory = 'app'
     resourcesDirectory = 'app/src/main/resources'
@@ -54,10 +63,10 @@ forsuredb {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile "com.android.support:appcompat-v7:$supportLibVersion"
-    compile "com.android.support:recyclerview-v7:$supportLibVersion"
+    implementation deps.support.appcompatv7
+    implementation deps.support.recyclerviewv7
 
-    compile project(':forsuredbandroid')
+    implementation project(':forsuredbandroid')
 
-    annotationProcessor 'com.fsryan.forsuredb:forsuredbcompiler:0.11.0'
+    annotationProcessor deps.forsuredb.compiler
 }
