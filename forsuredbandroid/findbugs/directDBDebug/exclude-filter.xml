@@ -7,6 +7,12 @@
         <Class name="~.*\.Manifest\$.*"/>
     </Match>
 
+    <!-- this is actually fine. findbugs suggestion is correct, but it's easier to read the way it is -->
+    <Match>
+        <Class name="com.fsryan.forsuredb.FSDBHelper$1" />
+        <Bug pattern="SIC_INNER_SHOULD_BE_STATIC_ANON" />
+    </Match>
+
     <!-- Since FSContentValues is a wrapper to make a ContentValues that implements RecordContainer, this is fine -->
     <Match>
         <Class name="com.fsryan.forsuredb.queryable.FSContentValues" />
