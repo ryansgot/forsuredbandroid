@@ -16,7 +16,7 @@ buildscript { scriptHandler ->
 
             'supportLibrary': '26.0.2',
             'androidPlugin': '3.0.0',
-            'forsuredb': '0.12.13-test+1514211003905',
+            'forsuredb': '0.13.0-alpha',
             'release': [
                     'buildTime': Long.toString(new Date().getTime()),
                     'remote': 'origin',
