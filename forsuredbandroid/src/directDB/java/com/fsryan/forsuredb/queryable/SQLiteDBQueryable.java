@@ -100,7 +100,7 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
         db.beginTransaction();
         try {
             DirectLocator inserted = null;
-            int rowsAffected = 0;
+            int rowsAffected;
             if (countOf(selection) < 1) {
                 inserted = insert(cv);
                 rowsAffected = 1;
@@ -155,7 +155,6 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
             buf.delete(buf.length() - 2, buf.length());
         }
 
-        // TODO: using string concatenation in the string buffer is a little smelly
         final String joinString = qc.getJoinString();
         final String where = qc.getSelection(true);
         final String orderBy = qc.getOrderBy();
@@ -169,7 +168,6 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
     }
 
     private int countOf(FSSelection selection) {
-        // TODO: make the select query generation part of the DBMSIntegrator
         QueryCorrector qc = new QueryCorrector(locator.table, null, selection, null);
         Cursor c = null;
         try {
