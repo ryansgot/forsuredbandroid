@@ -10,7 +10,7 @@ import com.fsryan.forsuredb.annotations.FSColumn;
 import com.fsryan.forsuredb.annotations.FSTable;
 
 @FSTable("profile_info")
-@FSStaticData(asset = "profile_info.xml", recordName = "profile_info")
+@FSStaticData("profile_info.xml")
 @FSPrimaryKey({"email_address", "uuid"})
 public interface ProfileInfoTable extends FSGetApi {
 

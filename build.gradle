@@ -11,12 +11,12 @@ buildscript { scriptHandler ->
     ]
     ext.versions = [
             'minSdk': 16,
-            'compileSdk': 25,
-            'buildTools': '25.0.3',
+            'compileSdk': 26,
+            'buildTools': '26.0.2',
 
-            'supportLibrary': '25.3.1',
-            'androidPlugin': '3.0.0-beta2',
-            'forsuredb': '0.12.0-alpha',
+            'supportLibrary': '26.0.2',
+            'androidPlugin': '3.0.0',
+            'forsuredb': '0.12.13-test+1514211003905',
             'release': [
                     'buildTime': Long.toString(new Date().getTime()),
                     'remote': 'origin',
@@ -48,10 +48,12 @@ buildscript { scriptHandler ->
             junit: 'junit:junit:4.12',
             mockito: 'org.mockito:mockito-core:1.10.19',
             forsuredb: [
-                    'plugin': 'com.fsryan:forsuredbplugin:0.4.0',
+                    'plugin': 'com.fsryan.gradle.forsuredb:forsuredbplugin:0.5.0',
                     'api': "com.fsryan.forsuredb:forsuredbapi:${versions.forsuredb}",
                     'compiler': "com.fsryan.forsuredb:forsuredbcompiler:${versions.forsuredb}",
-                    'sqlitelib': 'com.fsryan.forsuredb:sqlitelib:0.6.0-alpha'
+                    'sqlitelib': "com.fsryan.forsuredb:sqlitelib:${versions.forsuredb}",
+                    'dbinfo': "com.fsryan.forsuredb:dbinfo:${versions.forsuredb}",
+                    'modelsGson': "com.fsryan.forsuredb:forsuredbmodels-gson:${versions.forsuredb}"
             ]
     ]
 
@@ -59,6 +61,7 @@ buildscript { scriptHandler ->
         maven {
             url  "http://dl.bintray.com/ryansgot/maven"
         }
+        mavenLocal()
         maven {
             url 's3://repo.fsryan.com/release'
             credentials(AwsCredentials) {
@@ -96,6 +99,7 @@ allprojects {
         maven {
             url  "http://dl.bintray.com/ryansgot/maven"
         }
+        mavenLocal()
         maven {
             url 's3://repo.fsryan.com/release'
             credentials(AwsCredentials) {

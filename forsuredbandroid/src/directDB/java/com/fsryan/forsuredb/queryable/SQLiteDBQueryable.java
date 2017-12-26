@@ -1,7 +1,8 @@
 package com.fsryan.forsuredb.queryable;
 
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
@@ -12,6 +13,9 @@ import com.fsryan.forsuredb.api.FSProjection;
 import com.fsryan.forsuredb.api.FSQueryable;
 import com.fsryan.forsuredb.api.FSSelection;
 import com.fsryan.forsuredb.api.Retriever;
+import com.fsryan.forsuredb.api.SaveResult;
+import com.fsryan.forsuredb.api.adapter.SaveResultFactory;
+import com.fsryan.forsuredb.api.sqlgeneration.DBMSIntegrator;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.cursor.FSCursor;
 
@@ -40,6 +44,7 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
         }
     };
 
+    private final DBMSIntegrator sqlGenerator;
     private final DirectLocator locator;
     private final DBProvider dbProvider;
 
@@ -51,8 +56,13 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
         this(locator, realProvider);
     }
 
+    private SQLiteDBQueryable(@NonNull DirectLocator locator, @NonNull DBProvider dbProvider) {
+        this(Sql.generator(), locator, dbProvider);
+    }
+
     @VisibleForTesting
-    /*package*/ SQLiteDBQueryable(@NonNull DirectLocator locator, @NonNull DBProvider dbProvider) {
+    SQLiteDBQueryable(@NonNull DBMSIntegrator sqlGenerator, @NonNull DirectLocator locator, @NonNull DBProvider dbProvider) {
+        this.sqlGenerator = sqlGenerator;
         this.locator = locator;
         this.dbProvider = dbProvider;
     }
@@ -77,14 +87,36 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
 
     @Override
     public int update(FSContentValues cv, FSSelection selection, List<FSOrdering> orderings) {
-        final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, Sql.generator().expressOrdering(orderings));
+        final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, sqlGenerator.expressOrdering(orderings));
         return dbProvider.writeableDb()
                 .update(locator.table, cv.getContentValues(), qc.getSelection(false), qc.getSelectionArgs());
     }
 
     @Override
+    public SaveResult<DirectLocator> upsert(FSContentValues cv, FSSelection selection, List<FSOrdering> orderings) {
+        SQLiteDatabase db = dbProvider.writeableDb();
+        db.beginTransaction();
+        try {
+            DirectLocator inserted = null;
+            int rowsAffected;
+            if (countOf(selection) < 1) {
+                inserted = insert(cv);
+                rowsAffected = 1;
+            } else {
+                rowsAffected = update(cv, selection, orderings);
+            }
+            db.setTransactionSuccessful();
+            return SaveResultFactory.create(inserted, rowsAffected, null);
+        } catch (Exception e) {
+            return SaveResultFactory.create(null, 0, e);
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    @Override
     public int delete(FSSelection selection, List<FSOrdering> orderings) {
-        final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, Sql.generator().expressOrdering(orderings));
+        final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, sqlGenerator.expressOrdering(orderings));
         return dbProvider.writeableDb()
                 .delete(locator.table, qc.getSelection(false), qc.getSelectionArgs());
     }
@@ -92,7 +124,7 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
     @Override
     public Retriever query(FSProjection projection, FSSelection selection, List<FSOrdering> orderings) {
         final String[] p = formatProjection(projection);
-        final String orderBy = Sql.generator().expressOrdering(orderings);
+        final String orderBy = sqlGenerator.expressOrdering(orderings);
         final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, orderBy);
         final String limit = qc.getLimit() > 0 ? "LIMIT " + qc.getLimit() : null;
         final boolean distinct = projection != null && projection.isDistinct();
@@ -102,11 +134,12 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
 
     @Override
     public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
-        final QueryCorrector qc = new QueryCorrector(locator.table, joins, selection, Sql.generator().expressOrdering(orderings));
+        final QueryCorrector qc = new QueryCorrector(locator.table, joins, selection, sqlGenerator.expressOrdering(orderings));
         final String sql = buildJoinQuery(projections, qc);
         return (FSCursor) dbProvider.readableDb().rawQuery(sql, qc.getSelectionArgs());
     }
 
+    // TODO: get rid of this ugly code and just use the DBMSIntegrator to handle query generation
     private String buildJoinQuery(List<FSProjection> projections, QueryCorrector qc) {
         final StringBuilder buf = new StringBuilder("SELECT ");
 
@@ -121,7 +154,6 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
             buf.delete(buf.length() - 2, buf.length());
         }
 
-        // TODO: using string concatenation in the string buffer is a little smelly
         final String joinString = qc.getJoinString();
         final String where = qc.getSelection(true);
         final String orderBy = qc.getOrderBy();
@@ -132,5 +164,28 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
                 .append(qc.getLimit() > 0 ? " LIMIT " + qc.getLimit() : "") // limit
                 .append(';')
                 .toString();
+    }
+
+    private int countOf(FSSelection selection) {
+        QueryCorrector qc = new QueryCorrector(locator.table, null, selection, null);
+        Cursor c = null;
+        try {
+            SQLiteQueryBuilder sql = new SQLiteQueryBuilder();
+            sql.setTables(locator.table);
+            c = sql.query(dbProvider.readableDb(),
+                    new String[] {"COUNT(*)"},
+                    qc.getSelection(true),
+                    qc.getSelectionArgs(),
+                    null,
+                    null,
+                    null
+            );
+
+            return c == null || !c.moveToFirst() ? 0 : c.getInt(0);
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
     }
 }

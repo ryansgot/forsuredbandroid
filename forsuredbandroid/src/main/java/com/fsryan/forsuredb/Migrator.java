@@ -22,7 +22,8 @@ import android.content.res.AssetManager;
 import android.util.Log;
 
 import com.fsryan.forsuredb.api.migration.MigrationRetrieverFactory;
-import com.fsryan.forsuredb.api.migration.MigrationSet;
+import com.fsryan.forsuredb.migration.MigrationSet;
+import com.fsryan.forsuredb.serialization.FSDbInfoSerializer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,10 +36,12 @@ import java.util.PriorityQueue;
     private static final String LOG_TAG = Migrator.class.getSimpleName();
 
     private final Context context;
+    private final FSDbInfoSerializer serializer;
     private List<MigrationSet> migrationSets;
 
-    /*package*/ Migrator(Context context) {
+    /*package*/ Migrator(Context context, FSDbInfoSerializer serializer) {
         this.context = context;
+        this.serializer = serializer;
     }
 
     /**
@@ -65,7 +68,8 @@ import java.util.PriorityQueue;
         InputStream in = null;
         try {
             in = assetManager.open(filename);
-            migrationSets.addAll(new MigrationRetrieverFactory(new ADBFSLogger(LOG_TAG)).fromStream(in).getMigrationSets());
+            // TODO: this has got to be a plugin model to avoid the direct dependency on Gson
+            migrationSets.addAll(new MigrationRetrieverFactory(serializer, new ADBFSLogger(LOG_TAG)).fromStream(in).getMigrationSets());
         } catch (IOException ioe) {
             throw new IllegalStateException(ioe);
         } finally {
