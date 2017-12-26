@@ -85,7 +85,9 @@ import java.util.Map;
             if (xmlStream != null) {
                 try {
                     xmlStream.close();
-                } catch (IOException e) {}
+                } catch (IOException e) {
+                    log.e(e.getMessage());
+                }
             }
         }
     }

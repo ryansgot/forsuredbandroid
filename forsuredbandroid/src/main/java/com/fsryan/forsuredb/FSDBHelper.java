@@ -63,7 +63,7 @@ public class FSDBHelper extends SQLiteOpenHelper {
      * @param tables The information for creating tables
      * @see #initDebug(Context, String, List)
      */
-    public static void init(Context context, String dbName, List<FSTableCreator> tables) {
+    public static synchronized void init(Context context, String dbName, List<FSTableCreator> tables) {
         if (Holder.instance == null) {
             Holder.instance = new FSDBHelper(context, dbName, tables, new Migrator(context).getMigrationSets(), false);
         }
@@ -81,7 +81,7 @@ public class FSDBHelper extends SQLiteOpenHelper {
      * @param tables The information for creating tables
      * @see #init(Context, String, List)
      */
-    public static void initDebug(Context context, String dbName, List<FSTableCreator> tables) {
+    public static synchronized void initDebug(Context context, String dbName, List<FSTableCreator> tables) {
         if (Holder.instance == null) {
             Holder.instance = new FSDBHelper(context, dbName, tables, new Migrator(context).getMigrationSets(), true);
         }

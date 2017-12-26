@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.forsuredb">
+    <application>
+        <provider
+            android:name="com.fsryan.forsuredb.queryable.FSDefaultProvider"
+            android:authorities="com.fsryan.forsuredb.test.content" />
+    </application>
+</manifest>
