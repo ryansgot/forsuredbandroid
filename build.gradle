@@ -61,7 +61,6 @@ buildscript { scriptHandler ->
         maven {
             url  "http://dl.bintray.com/ryansgot/maven"
         }
-        mavenLocal()
         maven {
             url 's3://repo.fsryan.com/release'
             credentials(AwsCredentials) {
@@ -99,7 +98,6 @@ allprojects {
         maven {
             url  "http://dl.bintray.com/ryansgot/maven"
         }
-        mavenLocal()
         maven {
             url 's3://repo.fsryan.com/release'
             credentials(AwsCredentials) {
