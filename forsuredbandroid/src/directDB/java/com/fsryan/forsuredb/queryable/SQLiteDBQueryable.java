@@ -129,7 +129,7 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
         final String limit = qc.getLimit() > 0 ? "LIMIT " + qc.getLimit() : null;
         final boolean distinct = projection != null && projection.isDistinct();
         return (FSCursor) dbProvider.readableDb()
-                .query(distinct, locator.table, p, qc.getSelection(true), qc.getSelectionArgs(), null, null, orderBy, limit);
+                .query(distinct, locator.table, p, qc.getSelection(true), qc.getSelectionArgs(), null, null, qc.getOrderBy(), limit);
     }
 
     @Override
