@@ -22,6 +22,8 @@ import android.support.annotation.VisibleForTesting;
 
 import com.fsryan.forsuredb.api.RecordContainer;
 
+import java.util.Set;
+
 /**
  * <p>
  *     This is a wrapper for a {@link ContentValues} object. Because it implements
@@ -122,12 +124,22 @@ public class FSContentValues implements RecordContainer {
         cv.put(column, value);
     }
 
+    @Override
+    public void put(String column, float value) {
+        cv.put(column, value);
+    }
+
     /**
      * @see ContentValues#put(String, byte[])
      */
     @Override
     public void put(String column, byte[] value) {
         cv.put(column, value);
+    }
+
+    @Override
+    public Set<String> keySet() {
+        return cv.keySet();
     }
 
     /**

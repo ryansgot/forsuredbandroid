@@ -63,15 +63,22 @@ public class FSDefaultProvider extends ContentProvider {
         return null;
     }
 
+    /**
+     * <p>Actually an upsert, you can pass in the query parameter UPSERT=true on the {@link Uri}
+     * in order to run a transaction which first checks for existence of any records matching the
+     * selection criteria. If such a record exists, then all matching records are updated. If such
+     * a record does not exist, then one is inserted.
+     * @param uri the {@link Uri} describing the resource including any query parameters
+     * @param values the {@link ContentValues} to update
+     * @param selection the parameterized WHERE clause (prameterized using ?s for values)
+     * @param selectionArgs the replacements for the parameterized WHERE clause
+     * @return the number of rows affected by the query
+     */
     @Override
     public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-        final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
-        final QueryCorrector qc = new UriQueryCorrector(uri, selection, selectionArgs);
-        final int rowsAffected = FSDBHelper.inst().getWritableDatabase().update(tableName, values, qc.getSelection(false), qc.getSelectionArgs());
-        if (rowsAffected != 0) {
-            getContext().getContentResolver().notifyChange(uri, null);
-        }
-        return rowsAffected;
+        return Boolean.parseBoolean(uri.getQueryParameter("UPSERT"))
+                ? performUpsert(uri, values, selection, selectionArgs)
+                : updateInternal(uri, values, selection, selectionArgs);
     }
 
     @Override
@@ -79,7 +86,7 @@ public class FSDefaultProvider extends ContentProvider {
         final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
         final QueryCorrector qc = new UriQueryCorrector(uri, selection, selectionArgs);
 
-        if (UriEvaluator.hasFirstOrLastParam(uri)) {
+        if (UriEvaluator.isLimitingOrOffsetting(uri)) {
             FSDBHelper.inst().getWritableDatabase().delete(tableName, qc.getSelection(false), qc.getSelectionArgs());
         }
 
@@ -101,26 +108,131 @@ public class FSDefaultProvider extends ContentProvider {
 
     private Cursor performJoinQuery(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         QueryCorrector qc = new UriQueryCorrector(uri, selection, selectionArgs);
-        SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
-        builder.setTables(UriJoinTranslator.joinStringFrom(uri));
-        boolean isDistinct = Boolean.parseBoolean(uri.getQueryParameter("DISTINCT"));
-        builder.setDistinct(isDistinct);
-        final String limit = qc.getLimit() > 0 ? String.valueOf(qc.getLimit()) : null;
-        return builder.query(FSDBHelper.inst().getReadableDatabase(),
-                projection,
-                qc.getSelection(true),
-                qc.getSelectionArgs(),
-                null,
-                null,
-                sortOrder,
-                limit);
+        String sql = buildJoinQuery(UriJoinTranslator.joinStringFrom(uri), projection, qc);
+        return FSDBHelper.inst().getReadableDatabase().rawQuery(sql, qc.getSelectionArgs());
+//        QueryCorrector qc = new UriQueryCorrector(uri, selection, selectionArgs);
+//        SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
+//        builder.setTables(UriJoinTranslator.joinStringFrom(uri));
+//        boolean isDistinct = Boolean.parseBoolean(uri.getQueryParameter("DISTINCT"));
+//        builder.setDistinct(isDistinct);
+//        final String limit = qc.getLimit() > 0 ? String.valueOf(qc.getLimit()) : null;
+//        return builder.query(FSDBHelper.inst().getReadableDatabase(),
+//                projection,
+//                qc.getSelection(true),
+//                qc.getSelectionArgs(),
+//                null,
+//                null,
+//                sortOrder,
+//                limit);
     }
 
     private Cursor performQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
         final QueryCorrector qc = new UriQueryCorrector(uri, selection, selectionArgs);
-        final String limit = qc.getLimit() > 0 ? String.valueOf(qc.getLimit()) : null;
-        boolean isDistinct = Boolean.parseBoolean(uri.getQueryParameter("DISTINCT"));
-        return FSDBHelper.inst().getReadableDatabase().query(isDistinct, tableName, projection, qc.getSelection(true), qc.getSelectionArgs(), null, null, sortOrder, limit);
+
+        // TODO: use the DBMSIntegrator method like you should
+        // The following is a terrible hack to make offset without limit work without correctly
+        // in an expedient way without correctly using the underlying DBMSIntegrator method
+        final String limit = qc.getLimit() == 0 ? null
+                : qc.getOffset() == 0 ? String.valueOf(qc.getLimit())
+                : qc.getOffset() + "," + Math.abs(qc.getLimit());
+        String sql = SQLiteQueryBuilder.buildQueryString(
+                Boolean.parseBoolean(uri.getQueryParameter("DISTINCT")),
+                tableName,
+                projection,
+                qc.getSelection(true),
+                null,
+                null,
+                qc.getOrderBy(),
+                qc.isFindingLast() ? null : limit
+        );
+        if (!qc.isFindingLast() && qc.getLimit() == QueryCorrector.LIMIT_OFFSET_NO_LIMIT) {
+            sql = sql.replace("LIMIT 1," + qc.getOffset(), "LIMIT -1 OFFSET " + qc.getOffset());
+        }
+        return FSDBHelper.inst().getReadableDatabase().rawQuery(sql, qc.getSelectionArgs());
+//        final String limit = qc.getLimit() > 0 ? String.valueOf(qc.getLimit()) : null;
+//        boolean isDistinct = Boolean.parseBoolean(uri.getQueryParameter("DISTINCT"));
+//        return FSDBHelper.inst().getReadableDatabase().query(isDistinct, tableName, projection, qc.getSelection(true), qc.getSelectionArgs(), null, null, sortOrder, limit);
+    }
+
+    private int performUpsert(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        SQLiteDatabase db = FSDBHelper.inst().getWritableDatabase();
+        db.beginTransaction();
+        try {
+            int rowsAffected;
+            if (countOf(uri, selection, selectionArgs) < 1) {
+                Uri inserted = insert(uri, values);
+                rowsAffected = inserted == null ? 0 : 1;
+            } else {
+                rowsAffected = updateInternal(uri, values, selection, selectionArgs);
+            }
+            if (rowsAffected > 0) {
+                db.setTransactionSuccessful();
+            }
+            return rowsAffected;
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    private int updateInternal(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        final String tableName = ForSureAndroidInfoFactory.inst().tableName(uri);
+        final QueryCorrector qc = new UriQueryCorrector(uri, selection, selectionArgs);
+        final int rowsAffected = FSDBHelper.inst().getWritableDatabase().update(tableName, values, qc.getSelection(false), qc.getSelectionArgs());
+        if (rowsAffected != 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return rowsAffected;
+    }
+
+    private int countOf(Uri uri, String where, String[] selectionArgs) {
+        // TODO: make the select query generation part of the DBMSIntegrator
+        QueryCorrector qc = new UriQueryCorrector(uri, where, selectionArgs);
+        Cursor c = null;
+        try {
+            SQLiteQueryBuilder sql = new SQLiteQueryBuilder();
+            sql.setTables(ForSureAndroidInfoFactory.inst().tableName(uri));
+            c = sql.query(FSDBHelper.inst().getReadableDatabase(),
+                    new String[] {"COUNT(*)"},
+                    qc.getSelection(true),
+                    qc.getSelectionArgs(),
+                    null,
+                    null,
+                    null
+            );
+
+            return c == null || !c.moveToFirst() ? 0 : c.getInt(0);
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
+    }
+
+    // TODO: get rid of this ugly code and just use the DBMSIntegrator to handle query generation
+    private String buildJoinQuery(String joinString, String[] projection, QueryCorrector qc) {
+        final StringBuilder buf = new StringBuilder("SELECT ");
+
+        // projection
+        if (projection == null || projection.length == 0) {
+            buf.append("* ");
+        } else {
+            for (String column : projection) {
+                buf.append(column).append(", ");
+            }
+            buf.delete(buf.length() - 2, buf.length());
+        }
+
+        final String where = qc.getSelection(true);
+        final String orderBy = qc.getOrderBy();
+        buf.append(" FROM ").append(joinString)                             // joins
+                .append(where.isEmpty() ? "" : " WHERE " + where)           // selection
+                .append(orderBy.isEmpty() ? "" : " ORDER BY " + orderBy);   // ordering
+        if (qc.isFindingLast()) {
+            return buf.append(';').toString();
+        }
+        return buf.append(qc.getLimit() == 0 ? "" : " LIMIT " + qc.getLimit()) // limit
+                .append(qc.getOffset() < 1 ? "" : " OFFSET " + qc.getOffset())
+                .append(';').toString();
     }
 }
