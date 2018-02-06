@@ -38,7 +38,7 @@ buildscript { scriptHandler ->
             ],
             'bintrayPlugin': 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3',
             'fsryanGradle': [
-                    'autosemver': 'com.fsryan.gradle.autosemver:autosemver-git:0.1.0-alpha',
+                    'autosemver': 'com.fsryan.gradle.autosemver:autosemver-git:0.2.0-beta',
                     'androidJavaCoverageMerger': 'com.fsryan.gradle.coverage:android-java-coverage-merger:0.0.0',
                     'findbugsVariants': 'com.fsryan.gradle.findbugsvariants:findbugs-variants:0.1.0-alpha'
             ],
