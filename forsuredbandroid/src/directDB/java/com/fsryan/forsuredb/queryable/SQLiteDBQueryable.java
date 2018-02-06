@@ -123,13 +123,31 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
 
     @Override
     public Retriever query(FSProjection projection, FSSelection selection, List<FSOrdering> orderings) {
+        final boolean distinct = projection != null && projection.isDistinct();
         final String[] p = formatProjection(projection);
         final String orderBy = sqlGenerator.expressOrdering(orderings);
         final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, orderBy);
-        final String limit = qc.getLimit() > 0 ? "LIMIT " + qc.getLimit() : null;
-        final boolean distinct = projection != null && projection.isDistinct();
-        return (FSCursor) dbProvider.readableDb()
-                .query(distinct, locator.table, p, qc.getSelection(true), qc.getSelectionArgs(), null, null, qc.getOrderBy(), limit);
+
+        // TODO: use the DBMSIntegrator method like you should
+        // The following is a terrible hack to make offset without limit work without correctly
+        // in an expedient way without correctly using the underlying DBMSIntegrator method
+        final String limit = qc.getLimit() == 0 ? null
+                : qc.getOffset() == 0 ? String.valueOf(qc.getLimit())
+                : qc.getOffset() + "," + Math.abs(qc.getLimit());
+        String sql = SQLiteQueryBuilder.buildQueryString(
+                distinct,
+                locator.table,
+                p,
+                qc.getSelection(true),
+                null,
+                null,
+                qc.getOrderBy(),
+                qc.isFindingLast() ? null : limit
+        );
+        if (!qc.isFindingLast() && qc.getLimit() == QueryCorrector.LIMIT_OFFSET_NO_LIMIT) {
+            sql = sql.replace("LIMIT 1," + qc.getOffset(), "LIMIT -1 OFFSET " + qc.getOffset());
+        }
+        return (FSCursor) dbProvider.readableDb().rawQuery(sql, qc.getSelectionArgs());
     }
 
     @Override
@@ -157,13 +175,16 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
         final String joinString = qc.getJoinString();
         final String where = qc.getSelection(true);
         final String orderBy = qc.getOrderBy();
-        return buf.append(" FROM ").append(locator.table)
+        buf.append(" FROM ").append(locator.table)
                 .append(joinString.isEmpty() ? "" : " " + joinString)       // joins
                 .append(where.isEmpty() ? "" : " WHERE " + where)           // selection
-                .append(orderBy.isEmpty() ? "" : " ORDER BY " + orderBy)    // ordering
-                .append(qc.getLimit() > 0 ? " LIMIT " + qc.getLimit() : "") // limit
-                .append(';')
-                .toString();
+                .append(orderBy.isEmpty() ? "" : " ORDER BY " + orderBy);   // ordering
+        if (qc.isFindingLast()) {
+            return buf.append(';').toString();
+        }
+        return buf.append(qc.getLimit() == 0 ? "" : " LIMIT " + qc.getLimit()) // limit
+                .append(qc.getOffset() < 1 ? "" : " OFFSET " + qc.getOffset())
+                .append(';').toString();
     }
 
     private int countOf(FSSelection selection) {

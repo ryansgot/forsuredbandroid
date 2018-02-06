@@ -37,8 +37,8 @@ import java.util.Set;
 public class UriEvaluator {
 
     public static final String DISTINCT_QUERY_PARAM = "DISTINCT";
-    public static final String LAST_QUERY_PARAM = "LAST";
-    public static final String FIRST_QUERY_PARAM = "FIRST";
+    public static final String FROM_BOTTOM_QUERY_PARAM = "FROM_BOTTOM";
+    public static final String LIMIT_QUERY_PARAM = "LIMIT";
     public static final String OFFSET_QUERY_PARAM = "OFFSET";
     public static final String ORDER_BY_QUERY_PARM = "ORDER_BY";
 
@@ -103,11 +103,9 @@ public class UriEvaluator {
         return false;
     }
 
-    public static boolean hasFirstOrLastParam(@NonNull Uri uri) {
+    public static boolean isLimitingOrOffsetting(@NonNull Uri uri) {
         final Set<String> names = uri.getQueryParameterNames();
-        return names.contains(FIRST_QUERY_PARAM)
-                || names.contains(LAST_QUERY_PARAM)
-                || names.contains(OFFSET_QUERY_PARAM);
+        return names.contains(LIMIT_QUERY_PARAM) || names.contains(OFFSET_QUERY_PARAM);
     }
 
     public static int offsetFrom(@NonNull Uri uri) {
@@ -116,15 +114,12 @@ public class UriEvaluator {
     }
 
     public static int limitFrom(@NonNull Uri uri) {
-        String offset = uri.getQueryParameter(FIRST_QUERY_PARAM);
-        offset = offset == null ? uri.getQueryParameter(LAST_QUERY_PARAM) : offset;
+        String offset = uri.getQueryParameter(LIMIT_QUERY_PARAM);
         return offset == null ? 0 : Integer.parseInt(offset);
     }
 
-    public static boolean offsetFromLast(@NonNull Uri uri) {
-        String offset = uri.getQueryParameter(FIRST_QUERY_PARAM);
-        int frontOffset = offset == null ? 0 : Integer.parseInt(offset);
-        return frontOffset <= 0 && limitFrom(uri) > 0;
+    public static boolean queryFromBottom(@NonNull Uri uri) {
+        return uri.getQueryParameter(FROM_BOTTOM_QUERY_PARAM) != null;
     }
 
     @NonNull

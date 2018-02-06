@@ -50,6 +50,11 @@ public class ContentProviderQueryableTest extends BasicQueryableTestsWithSeedDat
     }
 
     @Override
+    protected long idFrom(Uri insertedRecord) {
+        return Long.parseLong(insertedRecord.getLastPathSegment());
+    }
+
+    @Override
     protected FSQueryable<Uri, FSContentValues> createQueryable(Uri locator) {
         return new ContentProviderQueryable(getTargetContext(), locator);
     }
