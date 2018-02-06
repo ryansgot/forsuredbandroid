@@ -11,11 +11,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static com.fsryan.forsuredb.queryable.UriEvaluator.queryFromBottom;
 import static com.fsryan.forsuredb.queryable.UriJoinTranslator.joinStringFrom;
 import static com.fsryan.forsuredb.queryable.UriEvaluator.isSpecificRecordUri;
 import static com.fsryan.forsuredb.queryable.UriEvaluator.limitFrom;
 import static com.fsryan.forsuredb.queryable.UriEvaluator.offsetFrom;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.offsetFromLast;
 import static com.fsryan.forsuredb.queryable.UriEvaluator.orderingFrom;
 
 /*package*/ class UriQueryCorrector extends QueryCorrector {
@@ -32,7 +32,7 @@ import static com.fsryan.forsuredb.queryable.UriEvaluator.orderingFrom;
                 orderingFrom(uri),
                 offsetFrom(uri),
                 limitFrom(uri),
-                offsetFromLast(uri)
+                queryFromBottom(uri)
         );
     }
 

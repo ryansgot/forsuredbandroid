@@ -40,9 +40,9 @@ import java.util.List;
 
 import static com.fsryan.forsuredb.queryable.ProjectionHelper.formatProjection;
 import static com.fsryan.forsuredb.queryable.ProjectionHelper.isDistinct;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.FIRST_QUERY_PARAM;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.FROM_BOTTOM_QUERY_PARAM;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.LIMIT_QUERY_PARAM;
 import static com.fsryan.forsuredb.queryable.UriEvaluator.OFFSET_QUERY_PARAM;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.LAST_QUERY_PARAM;
 import static com.fsryan.forsuredb.queryable.UriEvaluator.ORDER_BY_QUERY_PARM;
 
 public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValues> {
@@ -158,12 +158,15 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
             builder.appendQueryParameter("UPSERT", "true");
         }
 
-        if (limits.offset() > 0 || limits.count() > 0) {
-            final String limitType = limits.isBottom() ? LAST_QUERY_PARAM : FIRST_QUERY_PARAM;
-            builder.appendQueryParameter(limitType, String.valueOf(limits.count()))
-                    .appendQueryParameter(OFFSET_QUERY_PARAM, String.valueOf(limits.offset()));
+        if (limits.offset() > 0) {
+            builder.appendQueryParameter(OFFSET_QUERY_PARAM, String.valueOf(limits.offset()));
         }
-
+        if (limits.count() > 0) {
+            builder.appendQueryParameter(LIMIT_QUERY_PARAM, String.valueOf(limits.count()));
+        }
+        if (limits.isBottom()) {
+            builder.appendQueryParameter(FROM_BOTTOM_QUERY_PARAM, "");
+        }
         if (!orderings.isEmpty()) {
             builder.appendQueryParameter(ORDER_BY_QUERY_PARM, Sql.generator().expressOrdering(orderings));
         }

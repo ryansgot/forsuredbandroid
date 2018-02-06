@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.fsryan.forsuredb.queryable.UriEvaluator.DISTINCT_QUERY_PARAM;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.FIRST_QUERY_PARAM;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.LAST_QUERY_PARAM;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.FROM_BOTTOM_QUERY_PARAM;
+import static com.fsryan.forsuredb.queryable.UriEvaluator.LIMIT_QUERY_PARAM;
 import static com.fsryan.forsuredb.queryable.UriEvaluator.OFFSET_QUERY_PARAM;
 import static com.fsryan.forsuredb.queryable.UriEvaluator.ORDER_BY_QUERY_PARM;
 import static org.mockito.Matchers.eq;
@@ -72,13 +72,13 @@ public class MockUriBuilder {
         return this;
     }
 
-    public MockUriBuilder first(int first) {
-        addQueryParameter(FIRST_QUERY_PARAM, Integer.toString(first));
+    public MockUriBuilder limit(int limit) {
+        addQueryParameter(LIMIT_QUERY_PARAM, Integer.toString(limit));
         return this;
     }
 
-    public MockUriBuilder last(int last) {
-        addQueryParameter(LAST_QUERY_PARAM, Integer.toString(last));
+    public MockUriBuilder queryFromBottom() {
+        addQueryParameter(FROM_BOTTOM_QUERY_PARAM, "");
         return this;
     }
 
@@ -98,7 +98,7 @@ public class MockUriBuilder {
         for (Map.Entry<String, List<String>> queryParamsWithSameKey : queryParamMap.entrySet()) {
             final String key = queryParamsWithSameKey.getKey();
             final List<String> values = queryParamsWithSameKey.getValue();
-            for (int i = values.size() - 1; i >= 0; i--) {  // <-- return first added occurrence of the query parameter
+            for (int i = values.size() - 1; i >= 0; i--) {  // <-- return limit added occurrence of the query parameter
                 when(uri.getQueryParameter(eq(key))).thenReturn(values.get(i));
             }
             when(uri.getQueryParameters(eq(key))).thenReturn(values);

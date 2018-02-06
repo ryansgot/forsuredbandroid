@@ -181,7 +181,7 @@ public abstract class UriQueryCorrectorTest {
                     {   // 00: no limit or offset case
                             new MockUriBuilder("table")
                                     .orderBy(" ORDER BY table.column ASC")
-                                    .build(),                  // inputUri
+                                    .build(),                                   // inputUri
                             "",                                                 // expectedSelectionRetrieval
                             "",                                                 // expectedSelectionEdit
                             new String[0],                                      // expectedSelectionArgs
@@ -189,207 +189,214 @@ public abstract class UriQueryCorrectorTest {
                             0,                                                  // expectedOffset
                             0                                                   // expectedLimit
                     },
-                    {   // 01: limit provided by first with no offset--should NOT flip ordering in inner select for update/delete query
+                    {   // 01: limit provided by limit with no offset--should NOT flip ordering in inner select for update/delete query
                             new MockUriBuilder("table")
-                                    .first(10)
+                                    .limit(10)
                                     .orderBy(" ORDER BY table.column ASC")
-                                    .build(),                                                  // inputUri
-                            "",                                                                                 // expectedSelectionRetrieval
+                                    .build(),                                                                       // inputUri
+                            "",                                                                                     // expectedSelectionRetrieval
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column ASC LIMIT 10)",    // expectedSelectionEdit
-                            new String[0],                                                                      // expectedSelectionArgs
-                            "table.column ASC",                                                                 // expectedOrderBy
-                            0,                                                                                  // expectedOffset
-                            10                                                                                  // expectedLimit
+                            new String[0],                                                                          // expectedSelectionArgs
+                            "table.column ASC",                                                                     // expectedOrderBy
+                            0,                                                                                      // expectedOffset
+                            10                                                                                      // expectedLimit
                     },
                     {   // 02: limit provided by last with no offset--should flip ordering in inner select for update/delete query
                             new MockUriBuilder("table")
-                                    .last(10)
+                                    .limit(10)
+                                    .queryFromBottom()
                                     .orderBy(" ORDER BY table.column ASC")
-                                    .build(),                                                  // inputUri
+                                    .build(),                                                                       // inputUri
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column DESC LIMIT 10)",   // expectedSelectionRetrieval
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column DESC LIMIT 10)",   // expectedSelectionEdit
-                            new String[0],                                                                      // expectedSelectionArgs
-                            "table.column ASC",                                                                 // expectedOrderBy
-                            0,                                                                                  // expectedOffset
-                            10                                                                                  // expectedLimit
+                            new String[0],                                                                          // expectedSelectionArgs
+                            "table.column ASC",                                                                     // expectedOrderBy
+                            0,                                                                                      // expectedOffset
+                            10                                                                                      // expectedLimit
                     },
                     {   // 03: no order by clause and no offset should order by _id
                             new MockUriBuilder("table")
-                                    .first(10)
-                                    .build(),                                              // inputUri
-                            "",                                                                             // expectedSelectionRetrieval
+                                    .limit(10)
+                                    .build(),                                                                   // inputUri
+                            "",                                                                                 // expectedSelectionRetrieval
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table._id ASC LIMIT 10)",   // expectedSelectionEdit
-                            new String[0],                                                                  // expectedSelectionArgs
-                            "",                                                                             // expectedOrderBy
-                            0,                                                                              // expectedOffset
-                            10                                                                              // expectedLimit
+                            new String[0],                                                                      // expectedSelectionArgs
+                            "",                                                                                 // expectedOrderBy
+                            0,                                                                                  // expectedOffset
+                            10                                                                                  // expectedLimit
                     },
                     {   // 04: no order by clause should not be a problem when limiting from last
                             new MockUriBuilder("table")
-                                    .last(10)
-                                    .build(),                                              // inputUri
+                                    .limit(10)
+                                    .queryFromBottom()
+                                    .build(),                                                                   // inputUri
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table._id DESC LIMIT 10)",  // expectedSelectionRetrieval
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table._id DESC LIMIT 10)",  // expectedSelectionEdit
-                            new String[0],                                                                  // expectedSelectionArgs
-                            "table._id ASC",                                                                // expectedOrderBy
-                            0,                                                                              // expectedOffset
-                            10                                                                              // expectedLimit
+                            new String[0],                                                                      // expectedSelectionArgs
+                            "table._id ASC",                                                                    // expectedOrderBy
+                            0,                                                                                  // expectedOffset
+                            10                                                                                  // expectedLimit
                     },
-                    {   // 05: multiple order by clauses while limiting from first
+                    {   // 05: multiple order by clauses while limiting from limit
                             new MockUriBuilder("table")
-                                    .first(10)
+                                    .limit(10)
                                     .orderBy(" ORDER BY table.column1 ASC, table.column2 DESC")
-                                    .build(),                                                                      // inputUri
-                            "",                                                                                                     // expectedSelectionRetrieval
+                                    .build(),                                                                                           // inputUri
+                            "",                                                                                                         // expectedSelectionRetrieval
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column1 ASC, table.column2 DESC LIMIT 10)",   // expectedSelectionEdit
-                            new String[0],                                                                                          // expectedSelectionArgs
-                            "table.column1 ASC, table.column2 DESC",                                                                // expectedOrderBy
-                            0,                                                                                                      // expectedOffset
-                            10                                                                                                      // expectedLimit
+                            new String[0],                                                                                              // expectedSelectionArgs
+                            "table.column1 ASC, table.column2 DESC",                                                                    // expectedOrderBy
+                            0,                                                                                                          // expectedOffset
+                            10                                                                                                          // expectedLimit
                     },
                     {   // 06: multiple order by clauses while limiting from last
                             new MockUriBuilder("table")
-                                    .last(10)
+                                    .limit(10)
+                                    .queryFromBottom()
                                     .orderBy(" ORDER BY table.column1 ASC, table.column2 DESC")
-                                    .build(),                                                                      // inputUri
+                                    .build(),                                                                                           // inputUri
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10)",   // expectedSelectionRetrieval
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10)",   // expectedSelectionEdit
-                            new String[0],                                                                                          // expectedSelectionArgs
-                            "table.column1 ASC, table.column2 DESC",                                                                // expectedOrderBy
-                            0,                                                                                                      // expectedOffset
-                            10                                                                                                      // expectedLimit
+                            new String[0],                                                                                              // expectedSelectionArgs
+                            "table.column1 ASC, table.column2 DESC",                                                                    // expectedOrderBy
+                            0,                                                                                                          // expectedOffset
+                            10                                                                                                          // expectedLimit
                     },
                     {   // 07: offset clause by itself only affects update/delete queries
                             new MockUriBuilder("table")
                                     .orderBy(" ORDER BY table.column ASC")
                                     .offset(5)
-                                    .build(),                                                  // inputUri
-                            "",                                                                                 // expectedSelectionRetrieval
-                            "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column ASC OFFSET 5)",    // expectedSelectionEdit
-                            new String[0],                                                                      // expectedSelectionArgs
-                            "table.column ASC",                                                                 // expectedOrderBy
-                            5,                                                                                  // expectedOffset
-                            0                                                                                   // expectedLimit
+                                    .build(),                                                                               // inputUri
+                            "",                                                                                             // expectedSelectionRetrieval
+                            "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column ASC LIMIT -1 OFFSET 5)",   // expectedSelectionEdit
+                            new String[0],                                                                                  // expectedSelectionArgs
+                            "table.column ASC",                                                                             // expectedOrderBy
+                            5,                                                                                              // expectedOffset
+                            -1                                                                                              // expectedLimit
                     },
-                    {   // 08: limit provided by first with offset--should NOT flip ordering in inner select for update/delete query
+                    {   // 08: limit provided by limit with offset--should NOT flip ordering in inner select for update/delete query
                             new MockUriBuilder("table")
-                                    .first(10)
+                                    .limit(10)
                                     .offset(5)
                                     .orderBy(" ORDER BY table.column ASC")
-                                    .build(),                                                          // inputUri
-                            "",                                                                                         // expectedSelectionRetrieval
+                                    .build(),                                                                               // inputUri
+                            "",                                                                                             // expectedSelectionRetrieval
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column ASC LIMIT 10 OFFSET 5)",   // expectedSelectionEdit
-                            new String[0],                                                                              // expectedSelectionArgs
-                            "table.column ASC",                                                                         // expectedOrderBy
-                            5,                                                                                          // expectedOffset
-                            10                                                                                          // expectedLimit
+                            new String[0],                                                                                  // expectedSelectionArgs
+                            "table.column ASC",                                                                             // expectedOrderBy
+                            5,                                                                                              // expectedOffset
+                            10                                                                                              // expectedLimit
                     },
                     {   // 09: limit provided by last with offset--should flip ordering in inner select for update/delete query
                             new MockUriBuilder("table")
-                                    .last(10)
+                                    .limit(10)
+                                    .queryFromBottom()
                                     .offset(5)
                                     .orderBy(" ORDER BY table.column ASC")
-                                    .build(),                                                          // inputUri
+                                    .build(),                                                                               // inputUri
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column DESC LIMIT 10 OFFSET 5)",  // expectedSelectionRetrieval
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column DESC LIMIT 10 OFFSET 5)",  // expectedSelectionEdit
-                            new String[0],                                                                              // expectedSelectionArgs
-                            "table.column ASC",                                                                         // expectedOrderBy
-                            5,                                                                                          // expectedOffset
-                            10                                                                                          // expectedLimit
+                            new String[0],                                                                                  // expectedSelectionArgs
+                            "table.column ASC",                                                                             // expectedOrderBy
+                            5,                                                                                              // expectedOffset
+                            10                                                                                              // expectedLimit
                     },
                     {   // 10: no order by clause with offset should order by _id
                             new MockUriBuilder("table")
-                                    .first(10)
+                                    .limit(10)
                                     .offset(5)
-                                    .build(),                                                      // inputUri
-                            "",                                                                                     // expectedSelectionRetrieval
+                                    .build(),                                                                           // inputUri
+                            "",                                                                                         // expectedSelectionRetrieval
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table._id ASC LIMIT 10 OFFSET 5)",  // expectedSelectionEdit
-                            new String[0],                                                                          // expectedSelectionArgs
-                            "",                                                                                     // expectedOrderBy
-                            5,                                                                                      // expectedOffset
-                            10                                                                                      // expectedLimit
+                            new String[0],                                                                              // expectedSelectionArgs
+                            "",                                                                                         // expectedOrderBy
+                            5,                                                                                          // expectedOffset
+                            10                                                                                          // expectedLimit
                     },
                     {   // 11: no order by clause with offset should order by _id DESC in inner SELECT query and ASC in outer retrieval
                             new MockUriBuilder("table")
-                                    .last(10)
+                                    .limit(10)
+                                    .queryFromBottom()
                                     .offset(5)
-                                    .build(),                                                      // inputUri
+                                    .build(),                                                                           // inputUri
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table._id DESC LIMIT 10 OFFSET 5)", // expectedSelectionRetrieval
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table._id DESC LIMIT 10 OFFSET 5)", // expectedSelectionEdit
-                            new String[0],                                                                          // expectedSelectionArgs
-                            "table._id ASC",                                                                        // expectedOrderBy
-                            5,                                                                                      // expectedOffset
-                            10                                                                                      // expectedLimit
+                            new String[0],                                                                              // expectedSelectionArgs
+                            "table._id ASC",                                                                            // expectedOrderBy
+                            5,                                                                                          // expectedOffset
+                            10                                                                                          // expectedLimit
                     },
-                    {   // 12: multiple order by clauses with offset while limiting from first
+                    {   // 12: multiple order by clauses with offset while limiting from limit
                             new MockUriBuilder("table")
-                                    .first(10)
+                                    .limit(10)
                                     .offset(5)
                                     .orderBy(" ORDER BY table.column1 ASC, table.column2 DESC")
-                                    .build(),                                                                              // inputUri
-                            "",                                                                                                             // expectedSelectionRetrieval
+                                    .build(),                                                                                                   // inputUri
+                            "",                                                                                                                 // expectedSelectionRetrieval
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column1 ASC, table.column2 DESC LIMIT 10 OFFSET 5)",  // expectedSelectionEdit
-                            new String[0],                                                                                                  // expectedSelectionArgs
-                            "table.column1 ASC, table.column2 DESC",                                                                        // expectedOrderBy
-                            5,                                                                                                              // expectedOffset
-                            10                                                                                                              // expectedLimit
+                            new String[0],                                                                                                      // expectedSelectionArgs
+                            "table.column1 ASC, table.column2 DESC",                                                                            // expectedOrderBy
+                            5,                                                                                                                  // expectedOffset
+                            10                                                                                                                  // expectedLimit
                     },
                     {   // 13: multiple order by clauses with offset while limiting from last
                             new MockUriBuilder("table")
-                                    .last(10)
+                                    .limit(10)
+                                    .queryFromBottom()
                                     .offset(5)
                                     .orderBy(" ORDER BY table.column1 ASC, table.column2 DESC")
-                                    .build(),                                                                              // inputUri
+                                    .build(),                                                                                                   // inputUri
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10 OFFSET 5)",  // expectedSelectionRetrieval
                             "table.rowid IN (SELECT table.rowid FROM table ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10 OFFSET 5)",  // expectedSelectionEdit
-                            new String[0],                                                                                                  // expectedSelectionArgs
-                            "table.column1 ASC, table.column2 DESC",                                                                        // expectedOrderBy
-                            5,                                                                                                              // expectedOffset
-                            10                                                                                                              // expectedLimit
+                            new String[0],                                                                                                      // expectedSelectionArgs
+                            "table.column1 ASC, table.column2 DESC",                                                                            // expectedOrderBy
+                            5,                                                                                                                  // expectedOffset
+                            10                                                                                                                  // expectedLimit
                     },
                     {   // 14: single table join uri selecting last
                             new MockUriBuilder("table")
-                                    .last(10)
+                                    .limit(10)
+                                    .queryFromBottom()
                                     .addJoin(FSJoin.Type.INNER, "table", "child_table", "parent_column", "child_column")
                                     .orderBy(" ORDER BY table.column1 ASC, table.column2 DESC")
-                                    .build(),                                                                              // inputUri
+                                    .build(),                                                                                                                                                                   // inputUri
                             "table.rowid IN (SELECT table.rowid FROM table INNER JOIN child_table ON child_table.child_column = table.parent_column ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10)",  // expectedSelectionRetrieval
                             "table.rowid IN (SELECT table.rowid FROM table INNER JOIN child_table ON child_table.child_column = table.parent_column ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10)",  // expectedSelectionEdit
-                            new String[0],                                                                                                  // expectedSelectionArgs
-                            "table.column1 ASC, table.column2 DESC",                                                                        // expectedOrderBy
-                            0,                                                                                                              // expectedOffset
-                            10                                                                                                              // expectedLimit
+                            new String[0],                                                                                                                                                                      // expectedSelectionArgs
+                            "table.column1 ASC, table.column2 DESC",                                                                                                                                            // expectedOrderBy
+                            0,                                                                                                                                                                                  // expectedOffset
+                            10                                                                                                                                                                                  // expectedLimit
                     },
                     {   // 15: multiple table join uri selecting last
                             new MockUriBuilder("table")
-                                    .last(10)
+                                    .limit(10)
+                                    .queryFromBottom()
                                     .addJoin(FSJoin.Type.INNER, "table", "child_table", "parent_column", "child_column")
                                     .addJoin(FSJoin.Type.LEFT, "child_table", "grandchild_table", "child_column2", "grandchild_column")
                                     .orderBy(" ORDER BY table.column1 ASC, table.column2 DESC")
-                                    .build(),                                                                              // inputUri
-                            "table.rowid IN (SELECT table.rowid FROM table INNER JOIN child_table ON child_table.child_column = table.parent_column LEFT JOIN grandchild_table ON grandchild_table.grandchild_column = child_table.child_column2 ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10)",  // expectedSelectionRetrieval
-                            "table.rowid IN (SELECT table.rowid FROM table INNER JOIN child_table ON child_table.child_column = table.parent_column LEFT JOIN grandchild_table ON grandchild_table.grandchild_column = child_table.child_column2 ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10)",  // expectedSelectionEdit
-                            new String[0],                                                                                                  // expectedSelectionArgs
-                            "table.column1 ASC, table.column2 DESC",                                                                        // expectedOrderBy
-                            0,                                                                                                              // expectedOffset
-                            10                                                                                                              // expectedLimit
+                                    .build(),                                                                                                                                                                                                                                                               // inputUri
+                            "table.rowid IN (SELECT table.rowid FROM table INNER JOIN child_table ON child_table.child_column = table.parent_column LEFT JOIN grandchild_table ON grandchild_table.grandchild_column = child_table.child_column2 ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10)", // expectedSelectionRetrieval
+                            "table.rowid IN (SELECT table.rowid FROM table INNER JOIN child_table ON child_table.child_column = table.parent_column LEFT JOIN grandchild_table ON grandchild_table.grandchild_column = child_table.child_column2 ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10)", // expectedSelectionEdit
+                            new String[0],                                                                                                                                                                                                                                                                  // expectedSelectionArgs
+                            "table.column1 ASC, table.column2 DESC",                                                                                                                                                                                                                                        // expectedOrderBy
+                            0,                                                                                                                                                                                                                                                                              // expectedOffset
+                            10                                                                                                                                                                                                                                                                              // expectedLimit
                     },
                     {   // 15: multiple table join uri with multiple join conditions selecting last
                             new MockUriBuilder("table")
-                                    .last(10)
+                                    .limit(10)
+                                    .queryFromBottom()
                                     .addJoin(FSJoin.Type.INNER, "table", "child_table", "parent_column", "child_column", "parent_column2", "child_column2")
                                     .addJoin(FSJoin.Type.LEFT, "child_table", "grandchild_table", "child_column2", "grandchild_column")
                                     .orderBy(" ORDER BY table.column1 ASC, table.column2 DESC")
-                                    .build(),                                                                              // inputUri
-                            "table.rowid IN (SELECT table.rowid FROM table INNER JOIN child_table ON child_table.child_column = table.parent_column AND child_table.child_column2 = table.parent_column2 LEFT JOIN grandchild_table ON grandchild_table.grandchild_column = child_table.child_column2 ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10)",  // expectedSelectionRetrieval
-                            "table.rowid IN (SELECT table.rowid FROM table INNER JOIN child_table ON child_table.child_column = table.parent_column AND child_table.child_column2 = table.parent_column2 LEFT JOIN grandchild_table ON grandchild_table.grandchild_column = child_table.child_column2 ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10)",  // expectedSelectionEdit
-                            new String[0],                                                                                                  // expectedSelectionArgs
-                            "table.column1 ASC, table.column2 DESC",                                                                        // expectedOrderBy
-                            0,                                                                                                              // expectedOffset
-                            10                                                                                                              // expectedLimit
+                                    .build(),                                                                                                                                                                                                                                                                                                                       // inputUri
+                            "table.rowid IN (SELECT table.rowid FROM table INNER JOIN child_table ON child_table.child_column = table.parent_column AND child_table.child_column2 = table.parent_column2 LEFT JOIN grandchild_table ON grandchild_table.grandchild_column = child_table.child_column2 ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10)",    // expectedSelectionRetrieval
+                            "table.rowid IN (SELECT table.rowid FROM table INNER JOIN child_table ON child_table.child_column = table.parent_column AND child_table.child_column2 = table.parent_column2 LEFT JOIN grandchild_table ON grandchild_table.grandchild_column = child_table.child_column2 ORDER BY table.column1 DESC, table.column2 ASC LIMIT 10)",    // expectedSelectionEdit
+                            new String[0],                                                                                                                                                                                                                                                                                                                          // expectedSelectionArgs
+                            "table.column1 ASC, table.column2 DESC",                                                                                                                                                                                                                                                                                                // expectedOrderBy
+                            0,                                                                                                                                                                                                                                                                                                                                      // expectedOffset
+                            10                                                                                                                                                                                                                                                                                                                                      // expectedLimit
                     }
-                    // TODO: test join URIs with respect to the queries that have to get run.
-                    // It is likely that joining when you have filtered with last() will end up crashing
             });
         }
 
