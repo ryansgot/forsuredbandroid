@@ -76,7 +76,7 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
             int rowsAffected;
             if (countOf(selection) < 1) {
                 inserted = insert(cv);
-                rowsAffected = 1;
+                rowsAffected = inserted == null ? 0 : 1;
             } else {
                 rowsAffected = update(cv, selection, orderings);
             }
