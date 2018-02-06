@@ -25,46 +25,21 @@ import static com.fsryan.forsuredb.queryable.ProjectionHelper.formatProjection;
 
 public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentValues> {
 
-    /*package*/ interface DBProvider {
-        SQLiteDatabase writeableDb();
-        SQLiteDatabase readableDb();
-    }
-
-    private static final DBProvider realProvider = new DBProvider() {
-        @NonNull
-        @Override
-        public SQLiteDatabase writeableDb() {
-            return FSDBHelper.inst().getWritableDatabase();
-        }
-
-        @NonNull
-        @Override
-        public SQLiteDatabase readableDb() {
-            return FSDBHelper.inst().getReadableDatabase();
-        }
-    };
-
     private final DBMSIntegrator sqlGenerator;
     private final DirectLocator locator;
-    private final DBProvider dbProvider;
 
     public SQLiteDBQueryable(@NonNull String tableToQuery) {
         this(new DirectLocator(tableToQuery));
     }
 
     public SQLiteDBQueryable(@NonNull DirectLocator locator) {
-        this(locator, realProvider);
-    }
-
-    private SQLiteDBQueryable(@NonNull DirectLocator locator, @NonNull DBProvider dbProvider) {
-        this(Sql.generator(), locator, dbProvider);
+        this(Sql.generator(), locator);
     }
 
     @VisibleForTesting
-    SQLiteDBQueryable(@NonNull DBMSIntegrator sqlGenerator, @NonNull DirectLocator locator, @NonNull DBProvider dbProvider) {
+    SQLiteDBQueryable(@NonNull DBMSIntegrator sqlGenerator, @NonNull DirectLocator locator) {
         this.sqlGenerator = sqlGenerator;
         this.locator = locator;
-        this.dbProvider = dbProvider;
     }
 
     @Override
@@ -80,7 +55,7 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
             cv.put("deleted", 0);
         }
 
-        long id = dbProvider.writeableDb().insert(locator.table, null, cv.getContentValues());
+        long id = FSDBHelper.inst().getWritableDatabase().insert(locator.table, null, cv.getContentValues());
         // TODO: check whether returning null is okay
         return id < 1 ? null : new DirectLocator(locator.table, id);
     }
@@ -88,13 +63,13 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
     @Override
     public int update(FSContentValues cv, FSSelection selection, List<FSOrdering> orderings) {
         final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, sqlGenerator.expressOrdering(orderings));
-        return dbProvider.writeableDb()
+        return FSDBHelper.inst().getWritableDatabase()
                 .update(locator.table, cv.getContentValues(), qc.getSelection(false), qc.getSelectionArgs());
     }
 
     @Override
     public SaveResult<DirectLocator> upsert(FSContentValues cv, FSSelection selection, List<FSOrdering> orderings) {
-        SQLiteDatabase db = dbProvider.writeableDb();
+        SQLiteDatabase db = FSDBHelper.inst().getWritableDatabase();
         db.beginTransaction();
         try {
             DirectLocator inserted = null;
@@ -117,7 +92,7 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
     @Override
     public int delete(FSSelection selection, List<FSOrdering> orderings) {
         final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, sqlGenerator.expressOrdering(orderings));
-        return dbProvider.writeableDb()
+        return FSDBHelper.inst().getWritableDatabase()
                 .delete(locator.table, qc.getSelection(false), qc.getSelectionArgs());
     }
 
@@ -147,14 +122,14 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
         if (!qc.isFindingLast() && qc.getLimit() == QueryCorrector.LIMIT_OFFSET_NO_LIMIT) {
             sql = sql.replace("LIMIT 1," + qc.getOffset(), "LIMIT -1 OFFSET " + qc.getOffset());
         }
-        return (FSCursor) dbProvider.readableDb().rawQuery(sql, qc.getSelectionArgs());
+        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(sql, qc.getSelectionArgs());
     }
 
     @Override
     public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
         final QueryCorrector qc = new QueryCorrector(locator.table, joins, selection, sqlGenerator.expressOrdering(orderings));
         final String sql = buildJoinQuery(projections, qc);
-        return (FSCursor) dbProvider.readableDb().rawQuery(sql, qc.getSelectionArgs());
+        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(sql, qc.getSelectionArgs());
     }
 
     // TODO: get rid of this ugly code and just use the DBMSIntegrator to handle query generation
@@ -193,7 +168,7 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
         try {
             SQLiteQueryBuilder sql = new SQLiteQueryBuilder();
             sql.setTables(locator.table);
-            c = sql.query(dbProvider.readableDb(),
+            c = sql.query(FSDBHelper.inst().getReadableDatabase(),
                     new String[] {"COUNT(*)"},
                     qc.getSelection(true),
                     qc.getSelectionArgs(),
