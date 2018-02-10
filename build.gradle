@@ -58,7 +58,6 @@ buildscript { scriptHandler ->
     ]
 
     repositories {
-        mavenLocal()
         maven {
             url  "http://dl.bintray.com/ryansgot/maven"
         }
@@ -96,7 +95,6 @@ allprojects {
     apply plugin: 'autosemver-git'
 
     repositories {
-        mavenLocal()
         maven {
             url  "http://dl.bintray.com/ryansgot/maven"
         }
