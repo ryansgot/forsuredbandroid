@@ -31,7 +31,6 @@ import com.fsryan.forsuredb.api.Limits;
 import com.fsryan.forsuredb.api.Retriever;
 import com.fsryan.forsuredb.api.SaveResult;
 import com.fsryan.forsuredb.api.adapter.SaveResultFactory;
-import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.cursor.FSCursor;
 
 import java.util.Arrays;
@@ -40,10 +39,6 @@ import java.util.List;
 
 import static com.fsryan.forsuredb.queryable.ProjectionHelper.formatProjection;
 import static com.fsryan.forsuredb.queryable.ProjectionHelper.isDistinct;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.FROM_BOTTOM_QUERY_PARAM;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.LIMIT_QUERY_PARAM;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.OFFSET_QUERY_PARAM;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.ORDER_BY_QUERY_PARM;
 
 public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValues> {
 
@@ -103,23 +98,20 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
     public Retriever query(FSProjection projection, FSSelection selection, List<FSOrdering> orderings) {
         final String[] p = formatProjection(Arrays.asList(projection));
         final Uri uri = enrichUri(projection, selection, orderings, false);
-        final String orderBy = Sql.generator().expressOrdering(orderings).replace("ORDER BY", "").trim();
         return selection == null
-                ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, orderBy))
-                : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), selection.replacements(), orderBy));
+                ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, null))
+                : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), selection.replacements(), null));
     }
 
     @Override
     public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
         final String[] p = formatProjection(projections);
-        final Uri uri = enrichUri(projections, selection, orderings, false);
-        final String orderBy = Sql.generator().expressOrdering(orderings).replace("ORDER BY", "").trim();
+        final Uri uri = enrichUri(projections, selection, orderings, joins, false);
         return selection == null
-                ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, orderBy))
-                : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), selection.replacements(), orderBy));
+                ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, null))
+                : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), selection.replacements(), null));
     }
 
-    // TODO: create separate class for enriching Uris
     private Uri enrichUri(@Nullable FSSelection selection, @Nullable List<FSOrdering> orderings, boolean upsert) {
         return enrichUri((FSProjection) null, selection, orderings, upsert);
     }
@@ -132,6 +124,7 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
                 projection == null ? Collections.<FSProjection>emptyList() : Arrays.asList(projection),
                 selection,
                 orderings,
+                null,
                 upsert
         );
     }
@@ -139,11 +132,13 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
     private Uri enrichUri(@NonNull List<FSProjection> projections,
                           @Nullable FSSelection selection,
                           @Nullable List<FSOrdering> orderings,
+                          @Nullable List<FSJoin> joins,
                           boolean upsert) {
         return enrichUri(
                 projections,
                 selection == null || selection.limits() == null ? Limits.NONE : selection.limits(),
                 orderings == null ? Collections.<FSOrdering>emptyList() : orderings,
+                joins == null ? Collections.<FSJoin>emptyList() : joins,
                 upsert
         );
     }
@@ -151,25 +146,74 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
     private Uri enrichUri(@NonNull List<FSProjection> projections,
                           @NonNull Limits limits,
                           @NonNull List<FSOrdering> orderings,
+                          @NonNull List<FSJoin> joins,
                           boolean upsert) {
-        Uri.Builder builder = resource.buildUpon()
-                .appendQueryParameter("DISTINCT", isDistinct(projections) ? "true" : "false");
-        if (upsert) {
-            builder.appendQueryParameter("UPSERT", "true");
+        Uri.Builder builder = resource.buildUpon();
+        // TODO: this could fail upon passing in a URI that already has different limits. Account for this situation
+        if (limits.count() != 0 || limits.offset() > 0) {
+            builder.appendQueryParameter(UriAnalyzer.QUERY_PARAM_LIMITS, UriAnalyzer.stringify(limits));
+        }
+        if (isDistinct(projections) && !UriAnalyzer.isForDistinctQuery(resource)) {
+            builder.appendQueryParameter(UriAnalyzer.QUERY_PARAM_DISTINCT, String.valueOf(true));
+        }
+        if (upsert && !UriAnalyzer.isForUpsert(resource)) {
+            builder.appendQueryParameter(UriAnalyzer.QUERY_PARAM_UPSERT, String.valueOf(true));
         }
 
-        if (limits.offset() > 0) {
-            builder.appendQueryParameter(OFFSET_QUERY_PARAM, String.valueOf(limits.offset()));
+        List<FSOrdering> includedOrderings = UriAnalyzer.extractOrderingsUnsafe(resource);
+        for (FSOrdering ordering : orderings) {
+            boolean included = false;
+            for (FSOrdering includedOrdering : includedOrderings) {
+                if (orderingEquals(ordering, includedOrdering)) {
+                    included = true;
+                    break;
+                }
+            }
+            if (!included) {
+                builder.appendQueryParameter(UriAnalyzer.QUERY_PARAM_ORDERING, UriAnalyzer.stringify(ordering));
+            }
         }
-        if (limits.count() > 0) {
-            builder.appendQueryParameter(LIMIT_QUERY_PARAM, String.valueOf(limits.count()));
-        }
-        if (limits.isBottom()) {
-            builder.appendQueryParameter(FROM_BOTTOM_QUERY_PARAM, "");
-        }
-        if (!orderings.isEmpty()) {
-            builder.appendQueryParameter(ORDER_BY_QUERY_PARM, Sql.generator().expressOrdering(orderings));
+
+        List<FSJoin> includedJoins = UriAnalyzer.extractJoinsUnsafe(resource);
+        for (FSJoin join : joins) {
+            boolean included = false;
+            for (FSJoin includedJoin : includedJoins) {
+                if (joinEquals(join, includedJoin)) {
+                    included = true;
+                    break;
+                }
+            }
+            if (!included) {
+                builder.appendQueryParameter(UriAnalyzer.QUERY_PARAM_JOIN, UriAnalyzer.stringify(join));
+            }
         }
         return builder.build();
+    }
+
+    // The below should be included in forsuredblib
+
+    private static boolean joinEquals(FSJoin j1, FSJoin j2) {
+        if (j1 == j2) {
+            return true;
+        }
+        if (j1 == null ^ j2 == null) {
+            return false;
+        }
+        return ((j1.getChildTable() == null && j2.getChildTable() == null) || j1.getChildTable().equals(j2.getChildTable()))
+                && ((j1.getParentTable() == null && j2.getParentTable() == null) || j1.getParentTable().equals(j2.getParentTable()))
+                && ((j1.getType() == null && j2.getType() == null) || j1.getType().equals(j2.getType()))
+                && ((j1.getChildToParentColumnMap() == null && j2.getChildToParentColumnMap() == null) || j1.getChildToParentColumnMap().equals(j2.getChildToParentColumnMap()));
+    }
+
+    private static boolean orderingEquals(FSOrdering o1, FSOrdering o2) {
+        if (o1 == o2) {
+            return true;
+        }
+        if (o1 == null ^ o2 == null) {
+            return false;
+        }
+        return o1.direction == o2.direction
+                && ((o1.table == null && o2.table == null) || o1.table.equals(o2.table))
+                && ((o1.column == null && o2.column == null) || o1.column.equals(o2.column));
     }
 }

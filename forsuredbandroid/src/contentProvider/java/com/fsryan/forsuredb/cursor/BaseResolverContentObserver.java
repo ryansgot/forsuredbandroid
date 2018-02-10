@@ -7,7 +7,7 @@ import android.os.Handler;
 
 import com.fsryan.forsuredb.api.Resolver;
 import com.fsryan.forsuredb.queryable.FSContentValues;
-import com.fsryan.forsuredb.queryable.UriEvaluator;
+import com.fsryan.forsuredb.queryable.UriAnalyzer;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +33,7 @@ import java.util.Map;
                                        Handler handler,
                                        final boolean deliverSelfNotifications) {
         this.context = context;
-        this.tableUris = UriEvaluator.tableReferences(resolver.currentLocator());
+        this.tableUris = UriAnalyzer.tableLocatorsOf(resolver.currentLocator());
         for (final Uri tableUri : tableUris) {
             contentObservers.put(tableUri, new ContentObserver(handler) {
 

@@ -26,7 +26,7 @@ public class TestQueryUtil {
             return this;
         }
 
-        public SelectionBuilder limitFromBottom(boolean limitFromBottom) {
+        public SelectionBuilder fromBottom(boolean limitFromBottom) {
             this.limitFromBottom = limitFromBottom;
             return this;
         }

@@ -1,8 +1,8 @@
 package com.fsryan.forsuredb.queryable;
 
-import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQueryBuilder;
+import android.database.sqlite.SQLiteStatement;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
@@ -17,11 +17,13 @@ import com.fsryan.forsuredb.api.SaveResult;
 import com.fsryan.forsuredb.api.adapter.SaveResultFactory;
 import com.fsryan.forsuredb.api.sqlgeneration.DBMSIntegrator;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
+import com.fsryan.forsuredb.api.sqlgeneration.SqlForPreparedStatement;
 import com.fsryan.forsuredb.cursor.FSCursor;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import static com.fsryan.forsuredb.queryable.ProjectionHelper.formatProjection;
+import static com.fsryan.forsuredb.StatementBinder.bindObjects;
 
 public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentValues> {
 
@@ -55,16 +57,45 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
             cv.put("deleted", 0);
         }
 
-        long id = FSDBHelper.inst().getWritableDatabase().insert(locator.table, null, cv.getContentValues());
-        // TODO: check whether returning null is okay
-        return id < 1 ? null : new DirectLocator(locator.table, id);
+        List<String> columns = new ArrayList<>(cv.keySet());
+        String sql = sqlGenerator.newSingleRowInsertionSql(locator.table, columns);
+
+        SQLiteStatement statement = null;
+        try {
+            statement = FSDBHelper.inst().getWritableDatabase().compileStatement(sql);
+            bindObjects(statement, columns, cv);
+            long id = statement.executeInsert();
+            return id < 1 ? null : new DirectLocator(locator.table, id);
+        } catch (SQLException sqle) {
+            return null;    // TODO: propagate instead of trap
+        } finally {
+            if (statement != null) {
+                statement.close();
+            }
+        }
     }
 
     @Override
     public int update(FSContentValues cv, FSSelection selection, List<FSOrdering> orderings) {
-        final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, sqlGenerator.expressOrdering(orderings));
-        return FSDBHelper.inst().getWritableDatabase()
-                .update(locator.table, cv.getContentValues(), qc.getSelection(false), qc.getSelectionArgs());
+        List<String> columns = new ArrayList<>(cv.keySet());
+        SqlForPreparedStatement ps = sqlGenerator.createUpdateSql(locator.table, columns, selection, orderings);
+        SQLiteStatement statement = null;
+        try {
+            statement = FSDBHelper.inst().getWritableDatabase().compileStatement(ps.getSql());
+            bindObjects(statement, columns, cv);
+            if (ps.getReplacements() != null) {
+                for (int pos = 0; pos < ps.getReplacements().length; pos++) {
+                    statement.bindString(pos + columns.size() + 1, ps.getReplacements()[pos]);
+                }
+            }
+            return statement.executeUpdateDelete();
+        } catch (SQLException sqle) {
+            return 0;
+        } finally {
+            if (statement != null) {
+                statement.close();
+            }
+        }
     }
 
     @Override
@@ -74,11 +105,11 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
         try {
             DirectLocator inserted = null;
             int rowsAffected;
-            if (countOf(selection) < 1) {
+            if (hasMatchingRecord(selection)) {
+                rowsAffected = update(cv, selection, orderings);
+            } else {
                 inserted = insert(cv);
                 rowsAffected = inserted == null ? 0 : 1;
-            } else {
-                rowsAffected = update(cv, selection, orderings);
             }
             db.setTransactionSuccessful();
             return SaveResultFactory.create(inserted, rowsAffected, null);
@@ -91,96 +122,41 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
 
     @Override
     public int delete(FSSelection selection, List<FSOrdering> orderings) {
-        final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, sqlGenerator.expressOrdering(orderings));
-        return FSDBHelper.inst().getWritableDatabase()
-                .delete(locator.table, qc.getSelection(false), qc.getSelectionArgs());
+        SqlForPreparedStatement ps = sqlGenerator.createDeleteSql(locator.table, selection, orderings);
+        SQLiteStatement statement = null;
+        try {
+            statement = FSDBHelper.inst().getWritableDatabase().compileStatement(ps.getSql());
+            statement.bindAllArgsAsStrings(ps.getReplacements());
+            return statement.executeUpdateDelete();
+        } catch (SQLException sqle) {
+            return 0;
+        } finally {
+            if (statement != null) {
+                statement.close();
+            }
+        }
     }
 
     @Override
     public Retriever query(FSProjection projection, FSSelection selection, List<FSOrdering> orderings) {
-        final boolean distinct = projection != null && projection.isDistinct();
-        final String[] p = formatProjection(projection);
-        final String orderBy = sqlGenerator.expressOrdering(orderings);
-        final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, orderBy);
-
-        // TODO: use the DBMSIntegrator method like you should
-        // The following is a terrible hack to make offset without limit work without correctly
-        // in an expedient way without correctly using the underlying DBMSIntegrator method
-        final String limit = qc.getLimit() == 0 ? null
-                : qc.getOffset() == 0 ? String.valueOf(qc.getLimit())
-                : qc.getOffset() + "," + Math.abs(qc.getLimit());
-        String sql = SQLiteQueryBuilder.buildQueryString(
-                distinct,
-                locator.table,
-                p,
-                qc.getSelection(true),
-                null,
-                null,
-                qc.getOrderBy(),
-                qc.isFindingLast() ? null : limit
-        );
-        if (!qc.isFindingLast() && qc.getLimit() == QueryCorrector.LIMIT_OFFSET_NO_LIMIT) {
-            sql = sql.replace("LIMIT 1," + qc.getOffset(), "LIMIT -1 OFFSET " + qc.getOffset());
-        }
-        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(sql, qc.getSelectionArgs());
+        SqlForPreparedStatement ps = sqlGenerator.createQuerySql(locator.table, projection, selection, orderings);
+        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(ps.getSql(), ps.getReplacements());
     }
 
     @Override
     public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
-        final QueryCorrector qc = new QueryCorrector(locator.table, joins, selection, sqlGenerator.expressOrdering(orderings));
-        final String sql = buildJoinQuery(projections, qc);
-        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(sql, qc.getSelectionArgs());
+        SqlForPreparedStatement ps = sqlGenerator.createQuerySql(locator.table, joins, projections, selection, orderings);
+        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(ps.getSql(), ps.getReplacements());
     }
 
-    // TODO: get rid of this ugly code and just use the DBMSIntegrator to handle query generation
-    private String buildJoinQuery(List<FSProjection> projections, QueryCorrector qc) {
-        final StringBuilder buf = new StringBuilder("SELECT ");
-
-        // projection
-        final String[] p = formatProjection(projections);
-        if (p == null || p.length == 0) {
-            buf.append("* ");
-        } else {
-            for (String column : p) {
-                buf.append(column).append(", ");
-            }
-            buf.delete(buf.length() - 2, buf.length());
-        }
-
-        final String joinString = qc.getJoinString();
-        final String where = qc.getSelection(true);
-        final String orderBy = qc.getOrderBy();
-        buf.append(" FROM ").append(locator.table)
-                .append(joinString.isEmpty() ? "" : " " + joinString)       // joins
-                .append(where.isEmpty() ? "" : " WHERE " + where)           // selection
-                .append(orderBy.isEmpty() ? "" : " ORDER BY " + orderBy);   // ordering
-        if (qc.isFindingLast()) {
-            return buf.append(';').toString();
-        }
-        return buf.append(qc.getLimit() == 0 ? "" : " LIMIT " + qc.getLimit()) // limit
-                .append(qc.getOffset() < 1 ? "" : " OFFSET " + qc.getOffset())
-                .append(';').toString();
-    }
-
-    private int countOf(FSSelection selection) {
-        QueryCorrector qc = new QueryCorrector(locator.table, null, selection, null);
-        Cursor c = null;
+    private boolean hasMatchingRecord(FSSelection selection) {
+        Retriever r = null;
         try {
-            SQLiteQueryBuilder sql = new SQLiteQueryBuilder();
-            sql.setTables(locator.table);
-            c = sql.query(FSDBHelper.inst().getReadableDatabase(),
-                    new String[] {"COUNT(*)"},
-                    qc.getSelection(true),
-                    qc.getSelectionArgs(),
-                    null,
-                    null,
-                    null
-            );
-
-            return c == null || !c.moveToFirst() ? 0 : c.getInt(0);
+            r = query(null, selection, null);
+            return r != null && r.moveToFirst();
         } finally {
-            if (c != null) {
-                c.close();
+            if (r != null) {
+                r.close();
             }
         }
     }

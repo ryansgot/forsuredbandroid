@@ -1,5 +1,6 @@
 package com.fsryan.forsuredb;
 
+import android.content.ContentValues;
 import android.database.sqlite.SQLiteStatement;
 
 import com.fsryan.forsuredb.api.RecordContainer;
@@ -11,6 +12,12 @@ public abstract class StatementBinder {
     public static void bindObjects(SQLiteStatement pStatement, List<String> columns, RecordContainer recordContainer) {
         for (int pos = 0; pos < columns.size(); pos ++) {
             bindObject(pos + 1, pStatement, recordContainer.get(columns.get(pos)));
+        }
+    }
+
+    public static void bindObjects(SQLiteStatement pStatement, List<String> columns, ContentValues cv) {
+        for (int pos = 0; pos < columns.size(); pos ++) {
+            bindObject(pos + 1, pStatement, cv.get(columns.get(pos)));
         }
     }
 
@@ -28,6 +35,8 @@ public abstract class StatementBinder {
             pStatement.bindString(idx, (String) obj);
         } else if (cls == byte[].class) {
             pStatement.bindBlob(idx, (byte[]) obj);
+        } else if (cls == Boolean.class) {
+            pStatement.bindLong(idx, ((boolean) obj) ? 1L : 0L);
         } else {
             throw new IllegalArgumentException("Cannot bind object of type: " + cls);
         }
