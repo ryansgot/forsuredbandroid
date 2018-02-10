@@ -12,6 +12,7 @@ import org.junit.runners.Parameterized;
 import java.text.ParseException;
 import java.util.Arrays;
 
+import static com.fsryan.forsuredb.TestQueryUtil.selection;
 import static com.fsryan.forsuredb.queryable.Assertions.assertFSSelectionEquals;
 import static com.fsryan.forsuredb.TestObjectUtil.addLimitsTo;
 import static com.fsryan.forsuredb.TestObjectUtil.createLimits;
@@ -22,33 +23,16 @@ public class UriAnalyzerGetFSSelectionTest extends BaseUriAnalyzerTest {
 
     private final String inputSelection;
     private final String[] inputSelectionArgs;
-    private final FSSelection expectedFSSelection;
+    private final FSSelection expectedSelection;
 
     public UriAnalyzerGetFSSelectionTest(Uri inputUri,
                                          String inputSelection,
                                          String[] inputSelectionArgs,
-                                         final String expectedSelection,
-                                         final String[] expectedSelectionArgs,
-                                         final Limits expectedLimits) {
+                                         FSSelection expectedSelection) {
         super(inputUri);
         this.inputSelection = inputSelection;
         this.inputSelectionArgs = inputSelectionArgs;
-        this.expectedFSSelection = new FSSelection() {
-            @Override
-            public String where() {
-                return expectedSelection;
-            }
-
-            @Override
-            public String[] replacements() {
-                return expectedSelectionArgs;
-            }
-
-            @Override
-            public Limits limits() {
-                return expectedLimits;
-            }
-        };
+        this.expectedSelection = expectedSelection;
     }
 
     @Parameterized.Parameters
@@ -57,50 +41,47 @@ public class UriAnalyzerGetFSSelectionTest extends BaseUriAnalyzerTest {
                 {   // 00: table uri without selection or selection args
                         starterUri(),
                         null,
-                        null,
-                        null,
-                        null,
-                        null
+                        (String[]) null,
+                        selection().build()
                 },
                 {   // 01: specific record uri without selection or selection args
                         starterUri(1L),
                         null,
-                        null,
-                        "_id = ?",
-                        new String[] {"1"},
-                        null
+                        (String[]) null,
+                        selection().where("_id = ?", new String[] {"1"}).build()
                 },
                 {   // 02: specific record uri with selection and selection args
                         starterUri(982374L),
                         "column1 = ?",
                         new String[] {"something"},
-                        "_id = ? AND (column1 = ?)",
-                        new String[] {"982374", "something"},
-                        null
+                        selection().where("_id = ? AND (column1 = ?)", new String[] {"982374", "something"}).build()
                 },
                 {   // 03: specific record uri with selection and selection args and limits
                         addLimitsTo(starterUri(982374L), createLimits(1, 3, true)).build(),
                         "column1 = ?",
                         new String[] {"something"},
-                        "_id = ? AND (column1 = ?)",
-                        new String[] {"982374", "something"},
-                        createLimits(1, 3, true)
-                },
+                        selection()
+                                .where("_id = ? AND (column1 = ?)", new String[] {"982374", "something"})
+                                .limitCount(1)
+                                .offset(3)
+                                .fromBottom(true)
+                                .build(),                },
                 {   // 04: table uri with other selection arguments
                         starterUri(),
                         "column1 = ?",
                         new String[] {"something"},
-                        "column1 = ?",
-                        new String[] {"something"},
-                        null
+                        selection().where("column1 = ?", new String[] {"something"}).build()
                 },
                 {   // 05: table uri with other selection arguments
                         addLimitsTo(starterUri(), createLimits(5, 2, false)).build(),
                         "column1 = ?",
                         new String[] {"something"},
-                        "column1 = ?",
-                        new String[] {"something"},
-                        createLimits(5, 2, false)
+                        selection()
+                                .where("column1 = ?", new String[] {"something"})
+                                .fromBottom(false)
+                                .limitCount(5)
+                                .offset(2)
+                                .build()
                 }
         });
     }
@@ -108,6 +89,6 @@ public class UriAnalyzerGetFSSelectionTest extends BaseUriAnalyzerTest {
     @Test
     public void shouldCorrectlyAnalyzeSelection() throws ParseException {
         final FSSelection actual = analyzerUnderTest.getSelection(inputSelection, inputSelectionArgs);
-        assertFSSelectionEquals(expectedFSSelection, actual);
+        assertFSSelectionEquals(expectedSelection, actual);
     }
 }

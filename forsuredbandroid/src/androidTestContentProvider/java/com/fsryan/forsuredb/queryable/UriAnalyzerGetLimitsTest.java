@@ -35,7 +35,7 @@ public class UriAnalyzerGetLimitsTest extends BaseUriAnalyzerTest {
                 {   // 00: no limits should return null limits
                         starterUri(),
                         false,
-                        null
+                        (Limits) null
                 },
                 {   // 01: zero limits should return zero limits
                         tableUriWithLimits(createLimits(0, 0, false)),
