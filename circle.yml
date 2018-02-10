@@ -16,7 +16,7 @@ dependencies:
     - ./gradlew dependencies -PawsMavenAccessKey=$AWS_ACCESS_KEY_ID -PawsMavenSecretKey=$AWS_SECRET_KEY
 test:
   pre:
-    - emulator -avd circleci-android22 -no-audio -no-window:
+    - emulator -avd circleci-android24 -no-audio -no-window:
         background: true
         parallel: false
     - circle-android wait-for-boot
