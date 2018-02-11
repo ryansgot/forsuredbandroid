@@ -20,13 +20,38 @@ import static org.junit.Assert.assertEquals;
 @RunWith(Parameterized.class)
 public class UriAnalyzerGetLimitsTest extends BaseUriAnalyzerTest {
 
+    // workaround for the fact that Parameterized Runner on Android 22, the input argument null
+    // is being detected as the string "null". This, for some reason, does not happen on Android24+
+    private static final Limits NULL_LIMITS_HACK = new Limits() {
+        @Override
+        public int count() {
+            return Integer.MIN_VALUE;
+        }
+
+        @Override
+        public int offset() {
+            return Integer.MIN_VALUE;
+        }
+
+        @Override
+        public boolean isBottom() {
+            return false;
+        }
+    };
+
     private final boolean expectedHasLimits;
     private final Limits expectedLimits;
 
     public UriAnalyzerGetLimitsTest(Uri input, boolean expectedHasLimits, Limits expectedLimits) {
         super(input);
         this.expectedHasLimits = expectedHasLimits;
-        this.expectedLimits = expectedLimits;
+        if (NULL_LIMITS_HACK.offset() == expectedLimits.offset()
+            && NULL_LIMITS_HACK.count() == expectedLimits.offset()
+            && NULL_LIMITS_HACK.isBottom() == expectedLimits.isBottom()) {
+            this.expectedLimits = null;
+        } else {
+            this.expectedLimits = expectedLimits;
+        }
     }
 
     @Parameterized.Parameters
@@ -35,7 +60,7 @@ public class UriAnalyzerGetLimitsTest extends BaseUriAnalyzerTest {
                 {   // 00: no limits should return null limits
                         starterUri(),
                         false,
-                        (Limits) null
+                        NULL_LIMITS_HACK
                 },
                 {   // 01: zero limits should return zero limits
                         tableUriWithLimits(createLimits(0, 0, false)),

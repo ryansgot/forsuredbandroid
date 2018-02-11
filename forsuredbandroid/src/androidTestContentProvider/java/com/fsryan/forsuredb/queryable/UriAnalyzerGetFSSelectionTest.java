@@ -3,7 +3,6 @@ package com.fsryan.forsuredb.queryable;
 import android.net.Uri;
 
 import com.fsryan.forsuredb.api.FSSelection;
-import com.fsryan.forsuredb.api.Limits;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,6 +20,14 @@ import static com.fsryan.forsuredb.TestObjectUtil.starterUri;
 @RunWith(Parameterized.class)
 public class UriAnalyzerGetFSSelectionTest extends BaseUriAnalyzerTest {
 
+    // workaround for the fact that Parameterized Runner on Android 22, the input argument null
+    // is being detected as a null string, causing an intantiation exception. This, for some reason,
+    // does not happen on Android24+
+    private static final String[] NULL_ARRAY_HACK = new String[] {"THIS", "IS", "A", "NULL", "ARRAY", "HACK"};
+    // workaround for the fact that Parameterized Runner on Android 22, the input argument null
+    // is being detected as the string "null". This, for some reason, does not happen on Android24+
+    private static final String NULL_STRING_HACK = "null";
+
     private final String inputSelection;
     private final String[] inputSelectionArgs;
     private final FSSelection expectedSelection;
@@ -30,8 +37,8 @@ public class UriAnalyzerGetFSSelectionTest extends BaseUriAnalyzerTest {
                                          String[] inputSelectionArgs,
                                          FSSelection expectedSelection) {
         super(inputUri);
-        this.inputSelection = inputSelection;
-        this.inputSelectionArgs = inputSelectionArgs;
+        this.inputSelection = NULL_STRING_HACK.equals(inputSelection) ? null : inputSelection;
+        this.inputSelectionArgs = Arrays.equals(inputSelectionArgs, NULL_ARRAY_HACK) ? null : inputSelectionArgs;
         this.expectedSelection = expectedSelection;
     }
 
@@ -41,13 +48,13 @@ public class UriAnalyzerGetFSSelectionTest extends BaseUriAnalyzerTest {
                 {   // 00: table uri without selection or selection args
                         starterUri(),
                         null,
-                        (String[]) null,
+                        NULL_ARRAY_HACK,
                         selection().build()
                 },
                 {   // 01: specific record uri without selection or selection args
                         starterUri(1L),
                         null,
-                        (String[]) null,
+                        NULL_ARRAY_HACK,
                         selection().where("_id = ?", new String[] {"1"}).build()
                 },
                 {   // 02: specific record uri with selection and selection args
