@@ -7,7 +7,10 @@ import com.fsryan.forsuredb.api.FSProjection;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /*package*/ class ProjectionHelper {
 
@@ -50,6 +53,86 @@ import java.util.List;
             appendProjectionToList(formattedProjectionList, projection);
         }
         return formattedProjectionList.toArray(new String[formattedProjectionList.size()]);
+    }
+
+    public static FSProjection toFSProjection(@NonNull final String table,
+                                              final boolean distinct,
+                                              @Nullable final String[] formattedProjection) {
+        final String[] actualProjection = new String[formattedProjection == null ? 0 : formattedProjection.length];
+        for (int i = 0; i < (formattedProjection == null ? 0 : formattedProjection.length); i++) {
+            int delim = formattedProjection[i].indexOf('.');
+            if (delim < 0 || delim == formattedProjection[i].length() - 1 || delim == 0) {
+                throw new IllegalArgumentException("input projection must be formatted (include a . that is not the first or final character): " + Arrays.toString(formattedProjection));
+            }
+
+            final String cutTable = formattedProjection[i].substring(delim + 1);
+            delim = cutTable.indexOf(' ');
+            if (delim == 0) {
+                throw new IllegalArgumentException("input projection cannot have space following dot: " + formattedProjection[i]);
+            }
+            actualProjection[i] = delim < 0 ? cutTable : cutTable.substring(0, delim);
+        }
+        return new FSProjection() {
+            @Override
+            public String tableName() {
+                return table;
+            }
+
+            @Override
+            public String[] columns() {
+                return actualProjection.length == 0 ? null : actualProjection;
+            }
+
+            @Override
+            public boolean isDistinct() {
+                return distinct;
+            }
+        };
+    }
+
+    public static List<FSProjection> toFSProjections(final boolean distinct, String[] formattedProjection) {
+        Map<String, List<String>> tableToProjectionMap = new HashMap<>();
+        for (String p : formattedProjection) {
+            int delim = p.indexOf('.');
+            if (delim < 0 || delim == p.length() - 1 || delim == 0) {
+                throw new IllegalArgumentException("input projection must be formatted (include a . that is not the first or final character): " + p);
+            }
+
+            final String table = p.substring(0, delim);
+            final String cutTable = p.substring(delim + 1);
+            delim = cutTable.indexOf(' ');
+            if (delim == 0) {
+                throw new IllegalArgumentException("input projection cannot have space following dot: " + p);
+            }
+            final String column = delim < 0 ? cutTable : cutTable.substring(0, delim);
+            List<String> pList = tableToProjectionMap.get(table);
+            if (pList == null) {
+                pList = new ArrayList<>();
+                tableToProjectionMap.put(table, pList);
+            }
+            pList.add(column);
+        }
+
+        List<FSProjection> ret = new ArrayList<>(tableToProjectionMap.size());
+        for (final Map.Entry<String, List<String>> entry : tableToProjectionMap.entrySet()) {
+            ret.add(new FSProjection() {
+                @Override
+                public String tableName() {
+                    return entry.getKey();
+                }
+
+                @Override
+                public String[] columns() {
+                    return entry.getValue().toArray(new String[0]);
+                }
+
+                @Override
+                public boolean isDistinct() {
+                    return distinct;
+                }
+            });
+        }
+        return ret;
     }
 
     private static void appendProjectionToList(List<String> listToAddTo, FSProjection projection) {

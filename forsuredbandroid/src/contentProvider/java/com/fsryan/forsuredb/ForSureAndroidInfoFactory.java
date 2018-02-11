@@ -26,8 +26,9 @@ import com.fsryan.forsuredb.api.FSQueryable;
 import com.fsryan.forsuredb.api.ForSureInfoFactory;
 import com.fsryan.forsuredb.queryable.ContentProviderQueryable;
 import com.fsryan.forsuredb.queryable.FSContentValues;
-import com.fsryan.forsuredb.queryable.UriJoinTranslator;
+import com.fsryan.forsuredb.queryable.UriAnalyzer;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -94,7 +95,13 @@ public class ForSureAndroidInfoFactory implements ForSureInfoFactory<Uri, FSCont
 
     @Override
     public Uri locatorWithJoins(Uri uri, List<FSJoin> joins) {
-        return UriJoinTranslator.join(uri, tableName(uri), joins);
+        String tableName = tableName(uri);
+        Uri tableUri = tableResource(tableName);
+        Uri.Builder builder = tableUri.buildUpon();
+        for (FSJoin join : joins == null ? Collections.<FSJoin>emptyList() : joins) {
+            builder.appendQueryParameter(UriAnalyzer.QUERY_PARAM_JOIN, UriAnalyzer.stringify(join));
+        }
+        return builder.build();
     }
 
     @Override

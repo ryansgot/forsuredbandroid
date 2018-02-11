@@ -106,11 +106,363 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
     }
 
     @Test
+    public void shouldUpdateAllRecords() {
+        insertConsecutivelyIncreasingValuedUsers(5);
+
+        final FSContentValues update = new FSContentValues(userCV(3.1, BigDecimal.ONE, 2L, 3));
+        int rowsAffected = createQueryable(userTableLocator()).update(update, null, null);
+        assertEquals(5, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        for (int pos = 0; pos < 5; pos++) {
+            assertUserValueInCursorAtPosition(r, pos, pos + 1, 3.1, BigDecimal.ONE, 2L, 3);
+        }
+    }
+
+    @Test
+    public void shouldUpdateAllRecordsWithLimitAndNoOffset() {
+        insertConsecutivelyIncreasingValuedUsers(10);
+
+        final FSContentValues update = new FSContentValues(userCV(3.1, BigDecimal.ONE, 2L, 3));
+        FSSelection selection = selection().limitCount(3).build();
+        int rowsAffected = createQueryable(userTableLocator()).update(update, selection, null);
+        assertEquals(3, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        for (int pos = 0; pos < 3; pos++) {
+            assertUserValueInCursorAtPosition(r, pos, pos + 1, 3.1, BigDecimal.ONE, 2L, 3);
+        }
+        assertConsecutivelyIncreasingUsers(
+                r,
+                3,
+                10,
+                10,
+                4L,
+                standardUserAppRating + 3,
+                standardUserCompetitorAppRating.add(new BigDecimal(3)),
+                standardUserGlobalId + 3,
+                standardUserLoginCount + 3
+        );
+    }
+
+    @Test
+    public void shouldUpdateAllRecordsWithOffsetAndNoLimit() {
+        insertConsecutivelyIncreasingValuedUsers(10);
+
+        final FSContentValues update = new FSContentValues(userCV(3.1, BigDecimal.ONE, 2L, 3));
+        FSSelection selection = selection().offset(6).build();
+        int rowsAffected = createQueryable(userTableLocator()).update(update, selection, null);
+        assertEquals(4, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        assertConsecutivelyIncreasingUsers(
+                r,
+                0,
+                6,
+                10,
+                1L,
+                standardUserAppRating,
+                standardUserCompetitorAppRating,
+                standardUserGlobalId,
+                standardUserLoginCount
+        );
+        for (int pos = 6; pos < 10; pos++) {
+            assertUserValueInCursorAtPosition(r, pos, pos + 1, 3.1, BigDecimal.ONE, 2L, 3);
+        }
+    }
+
+    @Test
+    public void shouldUpdateAllRecordsWithOffsetAndLimit() {
+        insertConsecutivelyIncreasingValuedUsers(10);
+
+        final FSContentValues update = new FSContentValues(userCV(3.1, BigDecimal.ONE, 2L, 3));
+        FSSelection selection = selection().offset(2).limitCount(5).build();
+        int rowsAffected = createQueryable(userTableLocator()).update(update, selection, null);
+        assertEquals(5, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        assertConsecutivelyIncreasingUsers(
+                r,
+                0,
+                2,
+                10,
+                1L,
+                standardUserAppRating,
+                standardUserCompetitorAppRating,
+                standardUserGlobalId,
+                standardUserLoginCount
+        );
+        for (int pos = 2; pos < 7; pos++) {
+            assertUserValueInCursorAtPosition(r, pos, pos + 1, 3.1, BigDecimal.ONE, 2L, 3);
+        }
+        assertConsecutivelyIncreasingUsers(
+                r,
+                7,
+                10,
+                10,
+                8L,
+                standardUserAppRating + 7,
+                standardUserCompetitorAppRating.add(new BigDecimal(7)),
+                standardUserGlobalId + 7,
+                standardUserLoginCount + 7
+        );
+    }
+
+    @Test
+    public void shouldUpdateAllRecordsWithLimitAndNoOffsetFromBottom() {
+        insertConsecutivelyIncreasingValuedUsers(10);
+
+        final FSContentValues update = new FSContentValues(userCV(3.1, BigDecimal.ONE, 2L, 3));
+        FSSelection selection = selection().limitCount(3).fromBottom(true).build();
+        int rowsAffected = createQueryable(userTableLocator()).update(update, selection, null);
+        assertEquals(3, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        assertConsecutivelyIncreasingUsers(
+                r,
+                0,
+                7,
+                10,
+                1L,
+                standardUserAppRating ,
+                standardUserCompetitorAppRating,
+                standardUserGlobalId,
+                standardUserLoginCount
+        );
+        for (int pos = 7; pos < 10; pos++) {
+            assertUserValueInCursorAtPosition(r, pos, pos + 1, 3.1, BigDecimal.ONE, 2L, 3);
+        }
+    }
+
+    @Test
+    public void shouldUpdateAllRecordsWithOffsetAndNoLimitFromBottom() {
+        insertConsecutivelyIncreasingValuedUsers(10);
+
+        final FSContentValues update = new FSContentValues(userCV(3.1, BigDecimal.ONE, 2L, 3));
+        FSSelection selection = selection().offset(6).fromBottom(true).build();
+        int rowsAffected = createQueryable(userTableLocator()).update(update, selection, null);
+        assertEquals(4, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        for (int pos = 0; pos < 4; pos++) {
+            assertUserValueInCursorAtPosition(r, pos, pos + 1, 3.1, BigDecimal.ONE, 2L, 3);
+        }
+        assertConsecutivelyIncreasingUsers(
+                r,
+                4,
+                10,
+                10,
+                5L,
+                standardUserAppRating + 4,
+                standardUserCompetitorAppRating.add(new BigDecimal(4)),
+                standardUserGlobalId + 4,
+                standardUserLoginCount + 4
+        );
+    }
+
+    @Test
+    public void shouldUpdateAllRecordsWithOffsetAndLimitFromBottom() {
+        insertConsecutivelyIncreasingValuedUsers(10);
+
+        final FSContentValues update = new FSContentValues(userCV(3.1, BigDecimal.ONE, 2L, 3));
+        FSSelection selection = selection().offset(2).limitCount(5).fromBottom(true).build();
+        int rowsAffected = createQueryable(userTableLocator()).update(update, selection, null);
+        assertEquals(5, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        assertConsecutivelyIncreasingUsers(
+                r,
+                0,
+                3,
+                10,
+                1L,
+                standardUserAppRating,
+                standardUserCompetitorAppRating,
+                standardUserGlobalId,
+                standardUserLoginCount
+        );
+        for (int pos = 3; pos < 8; pos++) {
+            assertUserValueInCursorAtPosition(r, pos, pos + 1, 3.1, BigDecimal.ONE, 2L, 3);
+        }
+        assertConsecutivelyIncreasingUsers(
+                r,
+                8,
+                10,
+                10,
+                9L,
+                standardUserAppRating + 8,
+                standardUserCompetitorAppRating.add(new BigDecimal(8)),
+                standardUserGlobalId + 8,
+                standardUserLoginCount + 8
+        );
+    }
+
+    @Test
     public void shouldDeleteSpecificRecord() {
         insertStandardUser();
 
         int rowsAffected = createQueryable(userRecordLocator(1L)).delete(null, null);
         assertEquals(1, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        assertEquals(0, r.getCount());
+    }
+
+    @Test
+    public void shouldDeleteAllRecords() {
+        insertConsecutivelyIncreasingValuedUsers(10);
+
+        int rowsAffected = createQueryable(userTableLocator()).delete(null, null);
+        assertEquals(10, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        assertEquals(0, r.getCount());
+    }
+
+    @Test
+    public void shouldDeleteAllRecordsWithLimitAndNoOffset() {
+        insertConsecutivelyIncreasingValuedUsers(10);
+
+        FSSelection selection = selection().limitCount(3).build();
+        int rowsAffected = createQueryable(userTableLocator()).delete(selection, null);
+        assertEquals(3, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        assertConsecutivelyIncreasingUsers(
+                r,
+                7,
+                4L,
+                standardUserAppRating + 3,
+                standardUserCompetitorAppRating.add(new BigDecimal(3)),
+                standardUserGlobalId + 3,
+                standardUserLoginCount + 3
+        );
+    }
+
+    @Test
+    public void shouldDeleteAllRecordsWithOffsetAndNoLimit() {
+        insertConsecutivelyIncreasingValuedUsers(10);
+
+        FSSelection selection = selection().offset(4).build();
+        int rowsAffected = createQueryable(userTableLocator()).delete(selection, null);
+        assertEquals(6, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        assertConsecutivelyIncreasingUsers(
+                r,
+                4,
+                1L,
+                standardUserAppRating,
+                standardUserCompetitorAppRating,
+                standardUserGlobalId,
+                standardUserLoginCount
+        );
+    }
+
+    @Test
+    public void shouldDeleteAllRecordsWithLimitAndOffset() {
+        insertConsecutivelyIncreasingValuedUsers(10);
+
+        FSSelection selection = selection().limitCount(5).offset(2).build();
+        int rowsAffected = createQueryable(userTableLocator()).delete(selection, null);
+        assertEquals(5, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        assertConsecutivelyIncreasingUsers(
+                r,
+                0,
+                2,
+                5,
+                1L,
+                standardUserAppRating,
+                standardUserCompetitorAppRating,
+                standardUserGlobalId,
+                standardUserLoginCount
+        );
+        assertConsecutivelyIncreasingUsers(
+                r,
+                2,
+                4,
+                5,
+                8L,
+                standardUserAppRating + 7,
+                standardUserCompetitorAppRating.add(new BigDecimal(7)),
+                standardUserGlobalId + 7,
+                standardUserLoginCount + 7
+        );
+    }
+
+    @Test
+    public void shouldDeleteAllRecordsWithLimitAndNoOffsetFromBottom() {
+        insertConsecutivelyIncreasingValuedUsers(10);
+
+        FSSelection selection = selection().limitCount(4).fromBottom(true).build();
+        int rowsAffected = createQueryable(userTableLocator()).delete(selection, null);
+        assertEquals(4, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        assertConsecutivelyIncreasingUsers(
+                r,
+                6,
+                1L,
+                standardUserAppRating,
+                standardUserCompetitorAppRating,
+                standardUserGlobalId,
+                standardUserLoginCount
+        );
+    }
+
+    @Test
+    public void shouldDeleteAllRecordsWithOffsetAndNoLimitFromBottom() {
+        insertConsecutivelyIncreasingValuedUsers(10);
+
+        FSSelection selection = selection().offset(4).fromBottom(true).build();
+        int rowsAffected = createQueryable(userTableLocator()).delete(selection, null);
+        assertEquals(6, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        assertConsecutivelyIncreasingUsers(
+                r,
+                4,
+                7L,
+                standardUserAppRating + 6,
+                standardUserCompetitorAppRating.add(new BigDecimal(6)),
+                standardUserGlobalId + 6,
+                standardUserLoginCount + 6
+        );
+    }
+
+    @Test
+    public void shouldDeleteAllRecordsWithLimitAndOffsetFromBottom() {
+        insertConsecutivelyIncreasingValuedUsers(10);
+
+        FSSelection selection = selection().limitCount(5).offset(2).fromBottom(true).build();
+        int rowsAffected = createQueryable(userTableLocator()).delete(selection, null);
+        assertEquals(5, rowsAffected);
+
+        r = createQueryable(userTableLocator()).query(userTableProjection(), null, null);
+        assertConsecutivelyIncreasingUsers(
+                r,
+                0,
+                3,
+                5,
+                1L,
+                standardUserAppRating,
+                standardUserCompetitorAppRating,
+                standardUserGlobalId,
+                standardUserLoginCount
+        );
+        assertConsecutivelyIncreasingUsers(
+                r,
+                3,
+                4,
+                5,
+                9L,
+                standardUserAppRating + 8,
+                standardUserCompetitorAppRating.add(new BigDecimal(8)),
+                standardUserGlobalId + 8,
+                standardUserLoginCount + 8
+        );
     }
 
     @Test
@@ -161,53 +513,33 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
         FSSelection selection = selection().limitCount(2).build();
         r = createQueryable(userTableLocator()).query(userTableProjection(), selection, orderings(idOrderingASC("user")));
 
-        assertUserValueInCursorAtPosition(
+        assertConsecutivelyIncreasingUsers(
                 r,
-                0,
+                2,
                 1L,
                 standardUserAppRating,
                 standardUserCompetitorAppRating,
                 standardUserGlobalId,
                 standardUserLoginCount
         );
-        assertUserValueInCursorAtPosition(
-                r,
-                1,
-                2L,
-                standardUserAppRating + 1,
-                standardUserCompetitorAppRating.add(BigDecimal.ONE),
-                standardUserGlobalId + 1,
-                standardUserLoginCount + 1
-        );
-        assertEquals(2, r.getCount());
     }
 
     @Test
     public void shouldCorectlyLimitOnRetrievalQueryFromBottom() {
         insertConsecutivelyIncreasingValuedUsers(4);
 
-        FSSelection selection = selection().limitCount(2).limitFromBottom(true).build();
+        FSSelection selection = selection().limitCount(2).fromBottom(true).build();
         r = createQueryable(userTableLocator()).query(userTableProjection(), selection, orderings(idOrderingASC("user")));
 
-        assertUserValueInCursorAtPosition(
+        assertConsecutivelyIncreasingUsers(
                 r,
-                0,
+                2,
                 3L,
                 standardUserAppRating + 2,
                 standardUserCompetitorAppRating.add(new BigDecimal(2)),
                 standardUserGlobalId + 2,
                 standardUserLoginCount + 2
         );
-        assertUserValueInCursorAtPosition(
-                r,
-                1,
-                4L,
-                standardUserAppRating + 3,
-                standardUserCompetitorAppRating.add(new BigDecimal(3)),
-                standardUserGlobalId + 3,
-                standardUserLoginCount + 3
-        );
-        assertEquals(2, r.getCount());
     }
 
     @Test
@@ -217,71 +549,33 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
         FSSelection selection = selection().offset(1).build();
         r = createQueryable(userTableLocator()).query(userTableProjection(), selection, orderings(idOrderingASC("user")));
 
-        assertUserValueInCursorAtPosition(
+        assertConsecutivelyIncreasingUsers(
                 r,
-                0,
+                3,
                 2L,
                 standardUserAppRating + 1,
-                standardUserCompetitorAppRating.add(BigDecimal.ONE),
+                standardUserCompetitorAppRating.add(new BigDecimal(1)),
                 standardUserGlobalId + 1,
                 standardUserLoginCount + 1
         );
-        assertUserValueInCursorAtPosition(
-                r,
-                1,
-                3L,
-                standardUserAppRating + 2,
-                standardUserCompetitorAppRating.add(new BigDecimal(2)),
-                standardUserGlobalId + 2,
-                standardUserLoginCount + 2
-        );
-        assertUserValueInCursorAtPosition(
-                r,
-                2,
-                4L,
-                standardUserAppRating + 3,
-                standardUserCompetitorAppRating.add(new BigDecimal(3)),
-                standardUserGlobalId + 3,
-                standardUserLoginCount + 3
-        );
-        assertEquals(3, r.getCount());
     }
 
     @Test
     public void shouldCorrectlyOffsetQueryWithoutLimitFromBottom() {
         insertConsecutivelyIncreasingValuedUsers(4);
 
-        FSSelection selection = selection().offset(1).limitFromBottom(true).build();
+        FSSelection selection = selection().offset(1).fromBottom(true).build();
         r = createQueryable(userTableLocator()).query(userTableProjection(), selection, orderings(idOrderingASC("user")));
 
-        assertUserValueInCursorAtPosition(
+        assertConsecutivelyIncreasingUsers(
                 r,
-                0,
+                3,
                 1L,
                 standardUserAppRating,
                 standardUserCompetitorAppRating,
                 standardUserGlobalId,
                 standardUserLoginCount
         );
-        assertUserValueInCursorAtPosition(
-                r,
-                1,
-                2L,
-                standardUserAppRating + 1,
-                standardUserCompetitorAppRating.add(BigDecimal.ONE),
-                standardUserGlobalId + 1,
-                standardUserLoginCount + 1
-        );
-        assertUserValueInCursorAtPosition(
-                r,
-                2,
-                3L,
-                standardUserAppRating + 2,
-                standardUserCompetitorAppRating.add(new BigDecimal(2)),
-                standardUserGlobalId + 2,
-                standardUserLoginCount + 2
-        );
-        assertEquals(3, r.getCount());
     }
 
     @Test
@@ -291,53 +585,33 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
         FSSelection selection = selection().offset(1).limitCount(2).build();
         r = createQueryable(userTableLocator()).query(userTableProjection(), selection, orderings(idOrderingASC("user")));
 
-        assertUserValueInCursorAtPosition(
+        assertConsecutivelyIncreasingUsers(
                 r,
-                0,
+                2,
                 2L,
                 standardUserAppRating + 1,
                 standardUserCompetitorAppRating.add(BigDecimal.ONE),
                 standardUserGlobalId + 1,
                 standardUserLoginCount + 1
         );
-        assertUserValueInCursorAtPosition(
-                r,
-                1,
-                3L,
-                standardUserAppRating + 2,
-                standardUserCompetitorAppRating.add(new BigDecimal(2)),
-                standardUserGlobalId + 2,
-                standardUserLoginCount + 2
-        );
-        assertEquals(2, r.getCount());
     }
 
     @Test
     public void shouldCorrectlyOffsetQueryWithLimitFromBottom() {
         insertConsecutivelyIncreasingValuedUsers(4);
 
-        FSSelection selection = selection().offset(1).limitCount(2).limitFromBottom(true).build();
+        FSSelection selection = selection().offset(1).limitCount(2).fromBottom(true).build();
         r = createQueryable(userTableLocator()).query(userTableProjection(), selection, orderings(idOrderingASC("user")));
 
-        assertUserValueInCursorAtPosition(
+        assertConsecutivelyIncreasingUsers(
                 r,
-                0,
+                2,
                 2L,
                 standardUserAppRating + 1,
                 standardUserCompetitorAppRating.add(BigDecimal.ONE),
                 standardUserGlobalId + 1,
                 standardUserLoginCount + 1
         );
-        assertUserValueInCursorAtPosition(
-                r,
-                1,
-                3L,
-                standardUserAppRating + 2,
-                standardUserCompetitorAppRating.add(new BigDecimal(2)),
-                standardUserGlobalId + 2,
-                standardUserLoginCount + 2
-        );
-        assertEquals(2, r.getCount());
     }
 
     @Test
@@ -348,54 +622,34 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
         r = createQueryable(userProfileInfoJoinLocator())
                 .query(userProfileInfoJoin(), userProfileInfoJoinProjections(), selection, orderings(idOrderingASC("user")));
 
-        assertUserValueInCursorAtPosition(
+        assertConsecutivelyIncreasingUsers(
                 r,
-                0,
+                2,
                 1L,
                 standardUserAppRating,
                 standardUserCompetitorAppRating,
                 standardUserGlobalId,
                 standardUserLoginCount
         );
-        assertUserValueInCursorAtPosition(
-                r,
-                1,
-                2L,
-                standardUserAppRating + 1,
-                standardUserCompetitorAppRating.add(BigDecimal.ONE),
-                standardUserGlobalId + 1,
-                standardUserLoginCount + 1
-        );
-        assertEquals(2, r.getCount());
     }
 
     @Test
     public void shouldCorectlyLimitOnRetrievalJoinQueryFromBottom() {
         insertConsecutivelyIncreasingValuedUsers(4, true);
 
-        FSSelection selection = selection().limitCount(2).limitFromBottom(true).build();
+        FSSelection selection = selection().limitCount(2).fromBottom(true).build();
         r = createQueryable(userProfileInfoJoinLocator())
                 .query(userProfileInfoJoin(), userProfileInfoJoinProjections(), selection, orderings(idOrderingASC("user")));
 
-        assertUserValueInCursorAtPosition(
+        assertConsecutivelyIncreasingUsers(
                 r,
-                0,
+                2,
                 3L,
                 standardUserAppRating + 2,
                 standardUserCompetitorAppRating.add(new BigDecimal(2)),
                 standardUserGlobalId + 2,
                 standardUserLoginCount + 2
         );
-        assertUserValueInCursorAtPosition(
-                r,
-                1,
-                4L,
-                standardUserAppRating + 3,
-                standardUserCompetitorAppRating.add(new BigDecimal(3)),
-                standardUserGlobalId + 3,
-                standardUserLoginCount + 3
-        );
-        assertEquals(2, r.getCount());
     }
 
     @Test
@@ -406,72 +660,34 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
         r = createQueryable(userProfileInfoJoinLocator())
                 .query(userProfileInfoJoin(), userProfileInfoJoinProjections(), selection, orderings(idOrderingASC("user")));
 
-        assertUserValueInCursorAtPosition(
+        assertConsecutivelyIncreasingUsers(
                 r,
-                0,
+                3,
                 2L,
                 standardUserAppRating + 1,
                 standardUserCompetitorAppRating.add(BigDecimal.ONE),
                 standardUserGlobalId + 1,
                 standardUserLoginCount + 1
         );
-        assertUserValueInCursorAtPosition(
-                r,
-                1,
-                3L,
-                standardUserAppRating + 2,
-                standardUserCompetitorAppRating.add(new BigDecimal(2)),
-                standardUserGlobalId + 2,
-                standardUserLoginCount + 2
-        );
-        assertUserValueInCursorAtPosition(
-                r,
-                2,
-                4L,
-                standardUserAppRating + 3,
-                standardUserCompetitorAppRating.add(new BigDecimal(3)),
-                standardUserGlobalId + 3,
-                standardUserLoginCount + 3
-        );
-        assertEquals(3, r.getCount());
     }
 
     @Test
     public void shouldCorrectlyOffsetJoinQueryWithoutLimitFromBottom() {
         insertConsecutivelyIncreasingValuedUsers(4, true);
 
-        FSSelection selection = selection().offset(1).limitFromBottom(true).build();
+        FSSelection selection = selection().offset(1).fromBottom(true).build();
         r = createQueryable(userProfileInfoJoinLocator())
                 .query(userProfileInfoJoin(), userProfileInfoJoinProjections(), selection, orderings(idOrderingASC("user")));
 
-        assertUserValueInCursorAtPosition(
+        assertConsecutivelyIncreasingUsers(
                 r,
-                0,
+                3,
                 1L,
                 standardUserAppRating,
                 standardUserCompetitorAppRating,
                 standardUserGlobalId,
                 standardUserLoginCount
         );
-        assertUserValueInCursorAtPosition(
-                r,
-                1,
-                2L,
-                standardUserAppRating + 1,
-                standardUserCompetitorAppRating.add(BigDecimal.ONE),
-                standardUserGlobalId + 1,
-                standardUserLoginCount + 1
-        );
-        assertUserValueInCursorAtPosition(
-                r,
-                2,
-                3L,
-                standardUserAppRating + 2,
-                standardUserCompetitorAppRating.add(new BigDecimal(2)),
-                standardUserGlobalId + 2,
-                standardUserLoginCount + 2
-        );
-        assertEquals(3, r.getCount());
     }
 
     @Test
@@ -482,54 +698,34 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
         r = createQueryable(userProfileInfoJoinLocator())
                 .query(userProfileInfoJoin(), userProfileInfoJoinProjections(), selection, orderings(idOrderingASC("user")));
 
-        assertUserValueInCursorAtPosition(
+        assertConsecutivelyIncreasingUsers(
                 r,
-                0,
+                2,
                 2L,
                 standardUserAppRating + 1,
                 standardUserCompetitorAppRating.add(BigDecimal.ONE),
                 standardUserGlobalId + 1,
                 standardUserLoginCount + 1
         );
-        assertUserValueInCursorAtPosition(
-                r,
-                1,
-                3L,
-                standardUserAppRating + 2,
-                standardUserCompetitorAppRating.add(new BigDecimal(2)),
-                standardUserGlobalId + 2,
-                standardUserLoginCount + 2
-        );
-        assertEquals(2, r.getCount());
     }
 
     @Test
     public void shouldCorrectlyOffsetJoinQueryWithLimitFromBottom() {
         insertConsecutivelyIncreasingValuedUsers(4, true);
 
-        FSSelection selection = selection().offset(1).limitCount(2).limitFromBottom(true).build();
+        FSSelection selection = selection().offset(1).limitCount(2).fromBottom(true).build();
         r = createQueryable(userProfileInfoJoinLocator())
                 .query(userProfileInfoJoin(), userProfileInfoJoinProjections(), selection, orderings(idOrderingASC("user")));
 
-        assertUserValueInCursorAtPosition(
+        assertConsecutivelyIncreasingUsers(
                 r,
-                0,
+                2,
                 2L,
                 standardUserAppRating + 1,
                 standardUserCompetitorAppRating.add(BigDecimal.ONE),
                 standardUserGlobalId + 1,
                 standardUserLoginCount + 1
         );
-        assertUserValueInCursorAtPosition(
-                r,
-                1,
-                3L,
-                standardUserAppRating + 2,
-                standardUserCompetitorAppRating.add(new BigDecimal(2)),
-                standardUserGlobalId + 2,
-                standardUserLoginCount + 2
-        );
-        assertEquals(2, r.getCount());
     }
 
     protected abstract long idFrom(L insertedRecord);
@@ -611,6 +807,50 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
                 return distinct;
             }
         };
+    }
+
+    private void assertConsecutivelyIncreasingUsers(Retriever r,
+                                                    int expectedCount,
+                                                    long startingId,
+                                                    double startingUserAppRating,
+                                                    BigDecimal startingCompetitorAppRating,
+                                                    long startingGlobalId,
+                                                    int startingLoginCount) {
+        assertConsecutivelyIncreasingUsers(
+                r,
+                0,
+                expectedCount - 1,
+                expectedCount,
+                startingId,
+                startingUserAppRating,
+                startingCompetitorAppRating,
+                startingGlobalId,
+                startingLoginCount
+        );
+    }
+
+    private void assertConsecutivelyIncreasingUsers(Retriever r,
+                                                    int startingPosition,
+                                                    int endingPosition,
+                                                    int expectedCount,
+                                                    long startingId,
+                                                    double startingUserAppRating,
+                                                    BigDecimal startingCompetitorAppRating,
+                                                    long startingGlobalId,
+                                                    int startingLoginCount) {
+        BigDecimal competitorAppRating = startingCompetitorAppRating;
+        for (int i = 0; i < endingPosition - startingPosition; i++) {
+            assertUserValueInCursorAtPosition(
+                    r,
+                    startingPosition + i,
+                    startingId + i,
+                    startingUserAppRating + i,
+                    competitorAppRating.add(new BigDecimal(i)),
+                    startingGlobalId + i,
+                    startingLoginCount + i
+            );
+        }
+        assertEquals(expectedCount, r.getCount());
     }
 
     private void assertUserValueInCursorAtPosition(Retriever r, int position, long expectedId, double expectedAppRating, BigDecimal expectedCompetitorAppRating, long expectedGlobalId, int expectedLoginCount) {
