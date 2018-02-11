@@ -56,6 +56,15 @@ public class FSCursor extends CursorWrapper implements Retriever {
     }
 
     @Override
+    public float getFloat(String column) {
+        return getFloat(getColumnIndex(column));
+    }
+
+    @Override
+    public byte[] getBytes(String column) {
+        return getBlob(column);
+    }
+
     public byte[] getBlob(String column) {
         return getBlob(getColumnIndex(column));
     }

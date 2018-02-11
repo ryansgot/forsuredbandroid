@@ -11,8 +11,10 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class SQLiteDBQueryableTest extends BasicQueryableTestsWithSeedDataInAssets<DirectLocator> {
 
-    @Test
-    public void should() {}
+    @Override
+    protected long idFrom(DirectLocator insertedRecord) {
+        return insertedRecord.id;
+    }
 
     @Override
     protected FSQueryable<DirectLocator, FSContentValues> createQueryable(DirectLocator locator) {

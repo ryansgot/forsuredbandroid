@@ -1,12 +1,16 @@
 package com.forsuredb.testapp;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,6 +22,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.fsryan.forsuredb.FSDBHelper;
 import com.fsryan.forsuredb.api.FSJoin;
 import com.fsryan.forsuredb.api.Retriever;
 import com.fsryan.forsuredb.api.SaveResult;
@@ -31,6 +36,12 @@ import com.forsuredb.testapp.model.AdditionalDataTable;
 import com.forsuredb.testapp.model.ProfileInfoTable;
 import com.forsuredb.testapp.model.UserTable;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Random;
@@ -68,6 +79,7 @@ public class TestActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_test, menu);
         menu.removeItem(R.id.action_test_relational);
+        menu.add("copy db to sd");
         return true;
     }
 
@@ -78,8 +90,30 @@ public class TestActivity extends AppCompatActivity {
                 startActivity(new Intent(this, DocStoreTestActivity.class));
                 finish();
                 return true;
+
+        }
+        if ("copy db to sd".equals(item.getTitle().toString())) {
+            requestWriteExternalStoragePermissionsIfNecessary();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantRequests) {
+        if (requestCode != 10) {
+            super.onRequestPermissionsResult(requestCode, permissions, grantRequests);
+        }
+        int granted = grantRequests[0];
+        if (granted == PackageManager.PERMISSION_GRANTED) {
+            try {
+                writeDbToExternalStorage();
+                Toast.makeText(this, "wrote db file to /sdcard/forsuredb-example.db", Toast.LENGTH_LONG).show();
+            } catch (IOException ioe) {
+                Toast.makeText(this, "could not write db file", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            requestWriteExternalStoragePermissionsIfNecessary();
+        }
     }
 
     public void onEditUserTableClicked(View v) {
@@ -263,6 +297,38 @@ public class TestActivity extends AppCompatActivity {
         Log.i(LOG_TAG, sb.toString());
     }
 
+    private void requestWriteExternalStoragePermissionsIfNecessary() {
+        String p = Manifest.permission.WRITE_EXTERNAL_STORAGE;
+        String[] ps = new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE};
+        int granted = ActivityCompat.checkSelfPermission(this, p);
+        if (granted == PackageManager.PERMISSION_GRANTED) {
+            try {
+                writeDbToExternalStorage();
+                Toast.makeText(this, "wrote db file to /sdcard/forsuredb-example.db", Toast.LENGTH_LONG).show();
+            } catch (IOException ioe) {
+                Toast.makeText(this, "could not write db file", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            ActivityCompat.requestPermissions(this, ps, 10);
+        }
+    }
+
+    private void writeDbToExternalStorage() throws IOException {
+        InputStream inStream = new FileInputStream(getDatabasePath(FSDBHelper.inst().getDatabaseName()));
+        File outputFile = new File(Environment.getExternalStorageDirectory(), "forsuredb-example.db");
+        outputFile.delete();
+        outputFile.createNewFile();
+        OutputStream outStream = new FileOutputStream(outputFile);
+
+        byte[] buffer = new byte[8 * 1024];
+        int bytesRead;
+        while ((bytesRead = inStream.read(buffer)) != -1) {
+            outStream.write(buffer, 0, bytesRead);
+        }
+        inStream.close();
+        outStream.close();
+    }
+
     private class JoinLoader implements LoaderManager.LoaderCallbacks<FSCursor> {
 
         private final ProfileInfoTable profileInfoTable = profileInfoTable().getApi();
@@ -335,7 +401,7 @@ public class TestActivity extends AppCompatActivity {
                                                                                 // the result set return 9th through 4th from
                                                                                 // last in the result set.
                                                                                 // The offset argument is optional.
-                            .byAwesome()                                        // <-- adds AND profile_info.awesome = 1 to the
+                            .byNotAwesome()                                     // <-- adds AND profile_info.awesome = 0 to the
                                                                                 // generated query's WHERE clause
                             .then()                                             // <-- exits the profile_info table's Finder
                                                                                 // context

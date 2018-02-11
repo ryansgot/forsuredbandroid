@@ -32,7 +32,7 @@ public class ContentProviderQueryableTest extends BasicQueryableTestsWithSeedDat
 
     @Override
     protected Uri recordLocator(String table, long id) {
-        return ForSureAndroidInfoFactory.inst().locatorFor(table, 1L);
+        return ForSureAndroidInfoFactory.inst().locatorFor(table, id);
     }
 
     @Override
@@ -47,6 +47,11 @@ public class ContentProviderQueryableTest extends BasicQueryableTestsWithSeedDat
             builder.appendQueryParameter(joinKVPair.first, joinKVPair.second);
         }
         return builder.build();
+    }
+
+    @Override
+    protected long idFrom(Uri insertedRecord) {
+        return Long.parseLong(insertedRecord.getLastPathSegment());
     }
 
     @Override

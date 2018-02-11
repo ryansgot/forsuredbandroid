@@ -1,7 +1,8 @@
 package com.fsryan.forsuredb.queryable;
 
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
+import android.database.sqlite.SQLiteStatement;
 import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
@@ -12,49 +13,35 @@ import com.fsryan.forsuredb.api.FSProjection;
 import com.fsryan.forsuredb.api.FSQueryable;
 import com.fsryan.forsuredb.api.FSSelection;
 import com.fsryan.forsuredb.api.Retriever;
+import com.fsryan.forsuredb.api.SaveResult;
+import com.fsryan.forsuredb.api.adapter.SaveResultFactory;
+import com.fsryan.forsuredb.api.sqlgeneration.DBMSIntegrator;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
+import com.fsryan.forsuredb.api.sqlgeneration.SqlForPreparedStatement;
 import com.fsryan.forsuredb.cursor.FSCursor;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import static com.fsryan.forsuredb.queryable.ProjectionHelper.formatProjection;
+import static com.fsryan.forsuredb.StatementBinder.bindObjects;
 
 public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentValues> {
 
-    /*package*/ interface DBProvider {
-        SQLiteDatabase writeableDb();
-        SQLiteDatabase readableDb();
-    }
-
-    private static final DBProvider realProvider = new DBProvider() {
-        @NonNull
-        @Override
-        public SQLiteDatabase writeableDb() {
-            return FSDBHelper.inst().getWritableDatabase();
-        }
-
-        @NonNull
-        @Override
-        public SQLiteDatabase readableDb() {
-            return FSDBHelper.inst().getReadableDatabase();
-        }
-    };
-
+    private final DBMSIntegrator sqlGenerator;
     private final DirectLocator locator;
-    private final DBProvider dbProvider;
 
     public SQLiteDBQueryable(@NonNull String tableToQuery) {
         this(new DirectLocator(tableToQuery));
     }
 
     public SQLiteDBQueryable(@NonNull DirectLocator locator) {
-        this(locator, realProvider);
+        this(Sql.generator(), locator);
     }
 
     @VisibleForTesting
-    /*package*/ SQLiteDBQueryable(@NonNull DirectLocator locator, @NonNull DBProvider dbProvider) {
+    SQLiteDBQueryable(@NonNull DBMSIntegrator sqlGenerator, @NonNull DirectLocator locator) {
+        this.sqlGenerator = sqlGenerator;
         this.locator = locator;
-        this.dbProvider = dbProvider;
     }
 
     @Override
@@ -70,67 +57,107 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
             cv.put("deleted", 0);
         }
 
-        long id = dbProvider.writeableDb().insert(locator.table, null, cv.getContentValues());
-        // TODO: check whether returning null is okay
-        return id < 1 ? null : new DirectLocator(locator.table, id);
+        List<String> columns = new ArrayList<>(cv.keySet());
+        String sql = sqlGenerator.newSingleRowInsertionSql(locator.table, columns);
+
+        SQLiteStatement statement = null;
+        try {
+            statement = FSDBHelper.inst().getWritableDatabase().compileStatement(sql);
+            bindObjects(statement, columns, cv);
+            long id = statement.executeInsert();
+            return id < 1 ? null : new DirectLocator(locator.table, id);
+        } catch (SQLException sqle) {
+            return null;    // TODO: propagate instead of trap
+        } finally {
+            if (statement != null) {
+                statement.close();
+            }
+        }
     }
 
     @Override
     public int update(FSContentValues cv, FSSelection selection, List<FSOrdering> orderings) {
-        final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, Sql.generator().expressOrdering(orderings));
-        return dbProvider.writeableDb()
-                .update(locator.table, cv.getContentValues(), qc.getSelection(false), qc.getSelectionArgs());
+        List<String> columns = new ArrayList<>(cv.keySet());
+        SqlForPreparedStatement ps = sqlGenerator.createUpdateSql(locator.table, columns, selection, orderings);
+        SQLiteStatement statement = null;
+        try {
+            statement = FSDBHelper.inst().getWritableDatabase().compileStatement(ps.getSql());
+            bindObjects(statement, columns, cv);
+            if (ps.getReplacements() != null) {
+                for (int pos = 0; pos < ps.getReplacements().length; pos++) {
+                    statement.bindString(pos + columns.size() + 1, ps.getReplacements()[pos]);
+                }
+            }
+            return statement.executeUpdateDelete();
+        } catch (SQLException sqle) {
+            return 0;
+        } finally {
+            if (statement != null) {
+                statement.close();
+            }
+        }
+    }
+
+    @Override
+    public SaveResult<DirectLocator> upsert(FSContentValues cv, FSSelection selection, List<FSOrdering> orderings) {
+        SQLiteDatabase db = FSDBHelper.inst().getWritableDatabase();
+        db.beginTransaction();
+        try {
+            DirectLocator inserted = null;
+            int rowsAffected;
+            if (hasMatchingRecord(selection)) {
+                rowsAffected = update(cv, selection, orderings);
+            } else {
+                inserted = insert(cv);
+                rowsAffected = inserted == null ? 0 : 1;
+            }
+            db.setTransactionSuccessful();
+            return SaveResultFactory.create(inserted, rowsAffected, null);
+        } catch (Exception e) {
+            return SaveResultFactory.create(null, 0, e);
+        } finally {
+            db.endTransaction();
+        }
     }
 
     @Override
     public int delete(FSSelection selection, List<FSOrdering> orderings) {
-        final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, Sql.generator().expressOrdering(orderings));
-        return dbProvider.writeableDb()
-                .delete(locator.table, qc.getSelection(false), qc.getSelectionArgs());
+        SqlForPreparedStatement ps = sqlGenerator.createDeleteSql(locator.table, selection, orderings);
+        SQLiteStatement statement = null;
+        try {
+            statement = FSDBHelper.inst().getWritableDatabase().compileStatement(ps.getSql());
+            statement.bindAllArgsAsStrings(ps.getReplacements());
+            return statement.executeUpdateDelete();
+        } catch (SQLException sqle) {
+            return 0;
+        } finally {
+            if (statement != null) {
+                statement.close();
+            }
+        }
     }
 
     @Override
     public Retriever query(FSProjection projection, FSSelection selection, List<FSOrdering> orderings) {
-        final String[] p = formatProjection(projection);
-        final String orderBy = Sql.generator().expressOrdering(orderings);
-        final QueryCorrector qc = new QueryCorrector(locator.table, null, selection, orderBy);
-        final String limit = qc.getLimit() > 0 ? "LIMIT " + qc.getLimit() : null;
-        final boolean distinct = projection != null && projection.isDistinct();
-        return (FSCursor) dbProvider.readableDb()
-                .query(distinct, locator.table, p, qc.getSelection(true), qc.getSelectionArgs(), null, null, orderBy, limit);
+        SqlForPreparedStatement ps = sqlGenerator.createQuerySql(locator.table, projection, selection, orderings);
+        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(ps.getSql(), ps.getReplacements());
     }
 
     @Override
     public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
-        final QueryCorrector qc = new QueryCorrector(locator.table, joins, selection, Sql.generator().expressOrdering(orderings));
-        final String sql = buildJoinQuery(projections, qc);
-        return (FSCursor) dbProvider.readableDb().rawQuery(sql, qc.getSelectionArgs());
+        SqlForPreparedStatement ps = sqlGenerator.createQuerySql(locator.table, joins, projections, selection, orderings);
+        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(ps.getSql(), ps.getReplacements());
     }
 
-    private String buildJoinQuery(List<FSProjection> projections, QueryCorrector qc) {
-        final StringBuilder buf = new StringBuilder("SELECT ");
-
-        // projection
-        final String[] p = formatProjection(projections);
-        if (p == null || p.length == 0) {
-            buf.append("* ");
-        } else {
-            for (String column : p) {
-                buf.append(column).append(", ");
+    private boolean hasMatchingRecord(FSSelection selection) {
+        Retriever r = null;
+        try {
+            r = query(null, selection, null);
+            return r != null && r.moveToFirst();
+        } finally {
+            if (r != null) {
+                r.close();
             }
-            buf.delete(buf.length() - 2, buf.length());
         }
-
-        // TODO: using string concatenation in the string buffer is a little smelly
-        final String joinString = qc.getJoinString();
-        final String where = qc.getSelection(true);
-        final String orderBy = qc.getOrderBy();
-        return buf.append(" FROM ").append(locator.table)
-                .append(joinString.isEmpty() ? "" : " " + joinString)       // joins
-                .append(where.isEmpty() ? "" : " WHERE " + where)           // selection
-                .append(orderBy.isEmpty() ? "" : " ORDER BY " + orderBy)    // ordering
-                .append(qc.getLimit() > 0 ? " LIMIT " + qc.getLimit() : "") // limit
-                .append(';')
-                .toString();
     }
 }

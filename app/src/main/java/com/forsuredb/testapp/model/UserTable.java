@@ -9,7 +9,7 @@ import com.fsryan.forsuredb.annotations.FSTable;
 import java.math.BigDecimal;
 
 @FSTable("user")
-@FSStaticData(asset = "user.xml", recordName = "user")
+@FSStaticData("user.xml")
 public interface UserTable extends FSGetApi {
     @FSColumn(value = "global_id", orderable = false, searchable = false)
     long globalId(Retriever retriever);
