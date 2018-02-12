@@ -41,8 +41,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.fsryan.forsuredb.StatementBinder.bindObjects;
-import static com.fsryan.forsuredb.queryable.UriAnalyzer.extractJoinsUnsafe;
-import static com.fsryan.forsuredb.queryable.UriAnalyzer.extractOrderingsUnsafe;
 
 /**
  * <p>

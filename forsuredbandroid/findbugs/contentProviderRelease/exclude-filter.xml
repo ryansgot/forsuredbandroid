@@ -31,4 +31,11 @@
         <Class name="com.fsryan.forsuredb.cursor.FSCursorViewHolder" />
         <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD" />
     </Match>
+
+    <!-- TODO: remove when the count method is available in the sqlitelib or some other abstraction -->
+    <Match>
+        <Class name="com.fsryan.forsuredb.queryable.FSDefaultProvider" />
+        <Method name="hasMatchingRecord" />
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" />
+    </Match>
 </FindBugsFilter>

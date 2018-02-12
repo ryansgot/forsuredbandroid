@@ -160,11 +160,11 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
             builder.appendQueryParameter(UriAnalyzer.QUERY_PARAM_UPSERT, String.valueOf(true));
         }
 
-        List<FSOrdering> includedOrderings = UriAnalyzer.extractOrderingsUnsafe(resource);
+        List<FSOrdering> includedOrderings = UriAnalyzer.extractOrderingsFrom(resource);
         for (FSOrdering ordering : orderings) {
             boolean included = false;
             for (FSOrdering includedOrdering : includedOrderings) {
-                if (orderingEquals(ordering, includedOrdering)) {
+                if (EQHelper.orderingEquals(ordering, includedOrdering)) {
                     included = true;
                     break;
                 }
@@ -174,11 +174,11 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
             }
         }
 
-        List<FSJoin> includedJoins = UriAnalyzer.extractJoinsUnsafe(resource);
+        List<FSJoin> includedJoins = UriAnalyzer.extractJoinsFrom(resource);
         for (FSJoin join : joins) {
             boolean included = false;
             for (FSJoin includedJoin : includedJoins) {
-                if (joinEquals(join, includedJoin)) {
+                if (EQHelper.joinEquals(join, includedJoin)) {
                     included = true;
                     break;
                 }
@@ -188,32 +188,5 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
             }
         }
         return builder.build();
-    }
-
-    // The below should be included in forsuredblib
-
-    private static boolean joinEquals(FSJoin j1, FSJoin j2) {
-        if (j1 == j2) {
-            return true;
-        }
-        if (j1 == null ^ j2 == null) {
-            return false;
-        }
-        return ((j1.getChildTable() == null && j2.getChildTable() == null) || j1.getChildTable().equals(j2.getChildTable()))
-                && ((j1.getParentTable() == null && j2.getParentTable() == null) || j1.getParentTable().equals(j2.getParentTable()))
-                && ((j1.getType() == null && j2.getType() == null) || j1.getType().equals(j2.getType()))
-                && ((j1.getChildToParentColumnMap() == null && j2.getChildToParentColumnMap() == null) || j1.getChildToParentColumnMap().equals(j2.getChildToParentColumnMap()));
-    }
-
-    private static boolean orderingEquals(FSOrdering o1, FSOrdering o2) {
-        if (o1 == o2) {
-            return true;
-        }
-        if (o1 == null ^ o2 == null) {
-            return false;
-        }
-        return o1.direction == o2.direction
-                && ((o1.table == null && o2.table == null) || o1.table.equals(o2.table))
-                && ((o1.column == null && o2.column == null) || o1.column.equals(o2.column));
     }
 }
