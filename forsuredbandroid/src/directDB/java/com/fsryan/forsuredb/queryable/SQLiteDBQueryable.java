@@ -18,6 +18,7 @@ import com.fsryan.forsuredb.api.adapter.SaveResultFactory;
 import com.fsryan.forsuredb.api.sqlgeneration.DBMSIntegrator;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.api.sqlgeneration.SqlForPreparedStatement;
+import com.fsryan.forsuredb.cursor.FSCursor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -134,32 +135,35 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
 
     @Override
     public Retriever query(FSProjection projection, FSSelection selection, List<FSOrdering> orderings) {
-        SqlForPreparedStatement ps = sqlGenerator.createQuerySql(
+        return innerQuery(sqlGenerator.createQuerySql(
                 locator.table,
                 projection,
                 selection,
                 orderings
-        );
-
-        final SQLiteDatabase db = FSDBHelper.inst().getReadableDatabase();
-        return new CursorDriverHack(db, locator.table).query(ps);
-//        final String[] bindStrs = ReplacementStringifier.stringifyAll(ps.getReplacements());
-//        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(ps.getSql(), bindStrs);
+        ));
     }
 
     @Override
     public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
-        SqlForPreparedStatement ps = sqlGenerator.createQuerySql(
+        return innerQuery(sqlGenerator.createQuerySql(
                 locator.table,
                 joins,
                 projections,
                 selection,
                 orderings
-        );
+        ));
+    }
+
+    private Retriever innerQuery(SqlForPreparedStatement ps) {
+        // Since we're forcing our way into a non-exposed API to make the bindings work properly,
+        // the check for isAvailable falls back to the standard version. The drawback of the
+        // standard db query is that instead of binding the objects as they are and using the
+        // underlying bindings, you must first convert even bindable objects into strings. This
+        // could result in unexpected returns when using blobs and floating points as selectionArgs.
         final SQLiteDatabase db = FSDBHelper.inst().getReadableDatabase();
-        return new CursorDriverHack(db, locator.table).query(ps);
-//        final String[] bindStrs = ReplacementStringifier.stringifyAll(ps.getReplacements());
-//        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(ps.getSql(), bindStrs);
+        return CursorDriverHack.isAvailable()
+                ? new CursorDriverHack(db, locator.table).query(ps)
+                : (FSCursor) db.rawQuery(ps.getSql(), ReplacementStringifier.stringifyAll(ps.getReplacements()));
     }
 
     private boolean hasMatchingRecord(FSSelection selection) {

@@ -22,7 +22,7 @@ class CursorDriverHack implements SQLiteCursorDriver {
     private final SQLiteDatabase db;
     private final String editTable;
 
-    public static boolean initialized() {
+    public static boolean isAvailable() {
         return queryFactory != null;
     }
 
