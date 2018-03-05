@@ -728,6 +728,249 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
         );
     }
 
+    @Test
+    public void shouldCorrectlyFindByByteArray() {
+        insertConsecutivelyIncreasingValuedUsers(4, true);
+
+        FSSelection selection = selection().where("profile_info_binary_data=?", new Object[]{new byte[] {1}}).build();
+        r = createQueryable(profileInfoTableLocator())
+                .query(profileInfoTableProjection(), selection, orderings(idOrderingASC("profile_info")));
+        assertProfileInfoValueInCursorAtPosition(r, 0, 1L, "user1@email.com", "user1@email.com", false, new byte[] {1});
+        assertEquals(1, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByNotByteArray() {
+        insertConsecutivelyIncreasingValuedUsers(4, true);
+
+        FSSelection selection = selection().where("profile_info_binary_data!=?", new Object[]{new byte[] {1}}).build();
+        r = createQueryable(profileInfoTableLocator())
+                .query(profileInfoTableProjection(), selection, orderings(idOrderingASC("profile_info")));
+        assertProfileInfoValueInCursorAtPosition(r, 0, 2L, "user2@email.com", "user2@email.com", true, new byte[] {2});
+        assertProfileInfoValueInCursorAtPosition(r, 1, 3L, "user3@email.com", "user3@email.com", false, new byte[] {3});
+        assertProfileInfoValueInCursorAtPosition(r, 2, 4L, "user4@email.com", "user4@email.com", true, new byte[] {4});
+        assertEquals(3, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByByteArrayGreaterThan() {
+        insertConsecutivelyIncreasingValuedUsers(4, true);
+
+        FSSelection selection = selection().where("profile_info_binary_data>?", new Object[]{new byte[] {2}}).build();
+        r = createQueryable(profileInfoTableLocator())
+                .query(profileInfoTableProjection(), selection, orderings(idOrderingASC("profile_info")));
+        assertProfileInfoValueInCursorAtPosition(r, 0, 3L, "user3@email.com", "user3@email.com", false, new byte[] {3});
+        assertProfileInfoValueInCursorAtPosition(r, 1, 4L, "user4@email.com", "user4@email.com", true, new byte[] {4});
+        assertEquals(2, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByByteArrayGreaterThanOrEqualTo() {
+        insertConsecutivelyIncreasingValuedUsers(4, true);
+
+        FSSelection selection = selection().where("profile_info_binary_data>=?", new Object[]{new byte[] {3}}).build();
+        r = createQueryable(profileInfoTableLocator())
+                .query(profileInfoTableProjection(), selection, orderings(idOrderingASC("profile_info")));
+        assertProfileInfoValueInCursorAtPosition(r, 0, 3L, "user3@email.com", "user3@email.com", false, new byte[] {3});
+        assertProfileInfoValueInCursorAtPosition(r, 1, 4L, "user4@email.com", "user4@email.com", true, new byte[] {4});
+        assertEquals(2, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByByteArrayLessThan() {
+        insertConsecutivelyIncreasingValuedUsers(4, true);
+
+        FSSelection selection = selection().where("profile_info_binary_data<?", new Object[]{new byte[] {3}}).build();
+        r = createQueryable(profileInfoTableLocator())
+                .query(profileInfoTableProjection(), selection, orderings(idOrderingASC("profile_info")));
+        assertProfileInfoValueInCursorAtPosition(r, 0, 1L, "user1@email.com", "user1@email.com", false, new byte[] {1});
+        assertProfileInfoValueInCursorAtPosition(r, 1, 2L, "user2@email.com", "user2@email.com", true, new byte[] {2});
+        assertEquals(2, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByByteArrayLessThanOrEqualTo() {
+        insertConsecutivelyIncreasingValuedUsers(4, true);
+
+        FSSelection selection = selection().where("profile_info_binary_data<=?", new Object[]{new byte[] {3}}).build();
+        r = createQueryable(profileInfoTableLocator())
+                .query(profileInfoTableProjection(), selection, orderings(idOrderingASC("profile_info")));
+        assertProfileInfoValueInCursorAtPosition(r, 0, 1L, "user1@email.com", "user1@email.com", false, new byte[] {1});
+        assertProfileInfoValueInCursorAtPosition(r, 1, 2L, "user2@email.com", "user2@email.com", true, new byte[] {2});
+        assertProfileInfoValueInCursorAtPosition(r, 2, 3L, "user3@email.com", "user3@email.com", false, new byte[] {3});
+        assertEquals(3, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByByteArrayBetweenOpen() {
+        insertConsecutivelyIncreasingValuedUsers(4, true);
+
+        FSSelection selection = selection().where("profile_info_binary_data > ? AND profile_info_binary_data < ?", new Object[]{new byte[] {1}, new byte[] {4}}).build();
+        r = createQueryable(profileInfoTableLocator())
+                .query(profileInfoTableProjection(), selection, orderings(idOrderingASC("profile_info")));
+        assertProfileInfoValueInCursorAtPosition(r, 0, 2L, "user2@email.com", "user2@email.com", true, new byte[] {2});
+        assertProfileInfoValueInCursorAtPosition(r, 1, 3L, "user3@email.com", "user3@email.com", false, new byte[] {3});
+        assertEquals(2, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByByteArrayBetweenClopenLowerInclusive() {
+        insertConsecutivelyIncreasingValuedUsers(4, true);
+
+        FSSelection selection = selection().where("profile_info_binary_data >= ? AND profile_info_binary_data < ?", new Object[]{new byte[] {1}, new byte[] {4}}).build();
+        r = createQueryable(profileInfoTableLocator())
+                .query(profileInfoTableProjection(), selection, orderings(idOrderingASC("profile_info")));
+        assertProfileInfoValueInCursorAtPosition(r, 0, 1L, "user1@email.com", "user1@email.com", false, new byte[] {1});
+        assertProfileInfoValueInCursorAtPosition(r, 1, 2L, "user2@email.com", "user2@email.com", true, new byte[] {2});
+        assertProfileInfoValueInCursorAtPosition(r, 2, 3L, "user3@email.com", "user3@email.com", false, new byte[] {3});
+        assertEquals(3, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByByteArrayBetweenClopenUpperInclusive() {
+        insertConsecutivelyIncreasingValuedUsers(4, true);
+
+        FSSelection selection = selection().where("profile_info_binary_data > ? AND profile_info_binary_data <= ?", new Object[]{new byte[] {1}, new byte[] {4}}).build();
+        r = createQueryable(profileInfoTableLocator())
+                .query(profileInfoTableProjection(), selection, orderings(idOrderingASC("profile_info")));
+        assertProfileInfoValueInCursorAtPosition(r, 0, 2L, "user2@email.com", "user2@email.com", true, new byte[] {2});
+        assertProfileInfoValueInCursorAtPosition(r, 1, 3L, "user3@email.com", "user3@email.com", false, new byte[] {3});
+        assertProfileInfoValueInCursorAtPosition(r, 2, 4L, "user4@email.com", "user4@email.com", true, new byte[] {4});
+        assertEquals(3, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByByteArrayBetweenClosed() {
+        insertConsecutivelyIncreasingValuedUsers(4, true);
+
+        FSSelection selection = selection().where("profile_info_binary_data >= ? AND profile_info_binary_data <= ?", new Object[]{new byte[] {2}, new byte[] {3}}).build();
+        r = createQueryable(profileInfoTableLocator())
+                .query(profileInfoTableProjection(), selection, orderings(idOrderingASC("profile_info")));
+        assertProfileInfoValueInCursorAtPosition(r, 0, 2L, "user2@email.com", "user2@email.com", true, new byte[] {2});
+        assertProfileInfoValueInCursorAtPosition(r, 1, 3L, "user3@email.com", "user3@email.com", false, new byte[] {3});
+        assertEquals(2, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByDouble() {
+        insertConsecutivelyIncreasingValuedUsers(4);
+
+        FSSelection selection = selection().where("user_app_rating=?", new Object[]{5.1D}).build();
+        r = createQueryable(userTableLocator())
+                .query(userTableProjection(), selection, orderings(idOrderingASC("user")));
+        assertUserValueInCursorAtPosition(r, 0, 2L, 5.1D, standardUserCompetitorAppRating.add(BigDecimal.ONE), standardUserGlobalId + 1, standardUserLoginCount + 1);
+        assertEquals(1, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByNotDouble() {
+        insertConsecutivelyIncreasingValuedUsers(4);
+
+        FSSelection selection = selection().where("user_app_rating!=?", new Object[]{5.1D}).build();
+        r = createQueryable(userTableLocator())
+                .query(userTableProjection(), selection, orderings(idOrderingASC("user")));
+        assertUserValueInCursorAtPosition(r, 0, 1L, standardUserAppRating, standardUserCompetitorAppRating, standardUserGlobalId, standardUserLoginCount);
+        assertUserValueInCursorAtPosition(r, 1, 3L, standardUserAppRating + 2, standardUserCompetitorAppRating.add(new BigDecimal(2)), standardUserGlobalId + 2, standardUserLoginCount + 2);
+        assertUserValueInCursorAtPosition(r, 2, 4L, standardUserAppRating + 3, standardUserCompetitorAppRating.add(new BigDecimal(3)), standardUserGlobalId + 3, standardUserLoginCount + 3);
+        assertEquals(3, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByDoubleGreaterThan() {
+        insertConsecutivelyIncreasingValuedUsers(4);
+
+        FSSelection selection = selection().where("user_app_rating>?", new Object[]{5.1D}).build();
+        r = createQueryable(userTableLocator())
+                .query(userTableProjection(), selection, orderings(idOrderingASC("user")));
+        assertUserValueInCursorAtPosition(r, 0, 3L, standardUserAppRating + 2, standardUserCompetitorAppRating.add(new BigDecimal(2)), standardUserGlobalId + 2, standardUserLoginCount + 2);
+        assertUserValueInCursorAtPosition(r, 1, 4L, standardUserAppRating + 3, standardUserCompetitorAppRating.add(new BigDecimal(3)), standardUserGlobalId + 3, standardUserLoginCount + 3);
+        assertEquals(2, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByDoubleGreaterThanOrEqualTo() {
+        insertConsecutivelyIncreasingValuedUsers(4);
+
+        FSSelection selection = selection().where("user_app_rating>=?", new Object[]{6.1D}).build();
+        r = createQueryable(userTableLocator())
+                .query(userTableProjection(), selection, orderings(idOrderingASC("user")));
+        assertUserValueInCursorAtPosition(r, 0, 3L, standardUserAppRating + 2, standardUserCompetitorAppRating.add(new BigDecimal(2)), standardUserGlobalId + 2, standardUserLoginCount + 2);
+        assertUserValueInCursorAtPosition(r, 1, 4L, standardUserAppRating + 3, standardUserCompetitorAppRating.add(new BigDecimal(3)), standardUserGlobalId + 3, standardUserLoginCount + 3);
+        assertEquals(2, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByDoubleLessThan() {
+        insertConsecutivelyIncreasingValuedUsers(4);
+
+        FSSelection selection = selection().where("user_app_rating<?", new Object[]{6.1D}).build();
+        r = createQueryable(userTableLocator())
+                .query(userTableProjection(), selection, orderings(idOrderingASC("user")));
+        assertUserValueInCursorAtPosition(r, 0, 1L, standardUserAppRating, standardUserCompetitorAppRating, standardUserGlobalId, standardUserLoginCount);
+        assertUserValueInCursorAtPosition(r, 1, 2L, standardUserAppRating + 1, standardUserCompetitorAppRating.add(BigDecimal.ONE), standardUserGlobalId + 1, standardUserLoginCount + 1);
+        assertEquals(2, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByDoubleLessThanOrEqualTo() {
+        insertConsecutivelyIncreasingValuedUsers(4);
+
+        FSSelection selection = selection().where("user_app_rating<=?", new Object[]{5.1D}).build();
+        r = createQueryable(userTableLocator())
+                .query(userTableProjection(), selection, orderings(idOrderingASC("user")));
+        assertUserValueInCursorAtPosition(r, 0, 1L, standardUserAppRating, standardUserCompetitorAppRating, standardUserGlobalId, standardUserLoginCount);
+        assertUserValueInCursorAtPosition(r, 1, 2L, standardUserAppRating + 1, standardUserCompetitorAppRating.add(BigDecimal.ONE), standardUserGlobalId + 1, standardUserLoginCount + 1);
+        assertEquals(2, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByDoubleBetweenOpen() {
+        insertConsecutivelyIncreasingValuedUsers(4);
+
+        FSSelection selection = selection().where("user_app_rating>? AND user_app_rating <?", new Object[]{4.1D, 7.1D}).build();
+        r = createQueryable(userTableLocator())
+                .query(userTableProjection(), selection, orderings(idOrderingASC("user")));
+        assertUserValueInCursorAtPosition(r, 0, 2L, standardUserAppRating + 1, standardUserCompetitorAppRating.add(BigDecimal.ONE), standardUserGlobalId + 1, standardUserLoginCount + 1);
+        assertUserValueInCursorAtPosition(r, 1, 3L, standardUserAppRating + 2, standardUserCompetitorAppRating.add(new BigDecimal(2)), standardUserGlobalId + 2, standardUserLoginCount + 2);
+        assertEquals(2, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByDoubleBetweenClopenLowerInclusive() {
+        insertConsecutivelyIncreasingValuedUsers(4);
+
+        FSSelection selection = selection().where("user_app_rating>=? AND user_app_rating <?", new Object[]{5.1D, 7.1D}).build();
+        r = createQueryable(userTableLocator())
+                .query(userTableProjection(), selection, orderings(idOrderingASC("user")));
+        assertUserValueInCursorAtPosition(r, 0, 2L, standardUserAppRating + 1, standardUserCompetitorAppRating.add(BigDecimal.ONE), standardUserGlobalId + 1, standardUserLoginCount + 1);
+        assertUserValueInCursorAtPosition(r, 1, 3L, standardUserAppRating + 2, standardUserCompetitorAppRating.add(new BigDecimal(2)), standardUserGlobalId + 2, standardUserLoginCount + 2);
+        assertEquals(2, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByDoubleBetweenClopenUpperInclusive() {
+        insertConsecutivelyIncreasingValuedUsers(4);
+
+        FSSelection selection = selection().where("user_app_rating>? AND user_app_rating <=?", new Object[]{5.1D, 7.1D}).build();
+        r = createQueryable(userTableLocator())
+                .query(userTableProjection(), selection, orderings(idOrderingASC("user")));
+        assertUserValueInCursorAtPosition(r, 0, 3L, standardUserAppRating + 2, standardUserCompetitorAppRating.add(new BigDecimal(2)), standardUserGlobalId + 2, standardUserLoginCount + 2);
+        assertUserValueInCursorAtPosition(r, 1, 4L, standardUserAppRating + 3, standardUserCompetitorAppRating.add(new BigDecimal(3)), standardUserGlobalId + 3, standardUserLoginCount + 3);
+        assertEquals(2, r.getCount());
+    }
+
+    @Test
+    public void shouldCorrectlyFindByDoubleBetweenClosed() {
+        insertConsecutivelyIncreasingValuedUsers(4);
+
+        FSSelection selection = selection().where("user_app_rating>=? AND user_app_rating <=?", new Object[]{6.1D, 7.1D}).build();
+        r = createQueryable(userTableLocator())
+                .query(userTableProjection(), selection, orderings(idOrderingASC("user")));
+        assertUserValueInCursorAtPosition(r, 0, 3L, standardUserAppRating + 2, standardUserCompetitorAppRating.add(new BigDecimal(2)), standardUserGlobalId + 2, standardUserLoginCount + 2);
+        assertUserValueInCursorAtPosition(r, 1, 4L, standardUserAppRating + 3, standardUserCompetitorAppRating.add(new BigDecimal(3)), standardUserGlobalId + 3, standardUserLoginCount + 3);
+        assertEquals(2, r.getCount());
+    }
+
     protected abstract long idFrom(L insertedRecord);
 
     protected abstract FSQueryable<L, FSContentValues> createQueryable(L locator);

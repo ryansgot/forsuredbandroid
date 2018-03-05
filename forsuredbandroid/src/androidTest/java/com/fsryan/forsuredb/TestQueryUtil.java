@@ -16,11 +16,11 @@ public class TestQueryUtil {
         private int limitsOffset = 0;
         private boolean limitFromBottom = false;
         private String where = null;
-        private String[] replacements = null;
+        private Object[] replacements = null;
 
         private SelectionBuilder() {}
 
-        public SelectionBuilder where(String where, String[] replacements) {
+        public SelectionBuilder where(String where, Object[] replacements) {
             this.where = where;
             this.replacements = replacements;
             return this;
@@ -49,7 +49,7 @@ public class TestQueryUtil {
                 }
 
                 @Override
-                public String[] replacements() {
+                public Object[] replacements() {
                     return replacements;
                 }
 
@@ -84,7 +84,7 @@ public class TestQueryUtil {
     }
 
     public static FSSelection idSelection(long id) {
-        return selection().where("_id=?", new String[] {Long.toString(id)}).build();
+        return selection().where("_id=?", new Object[] {id}).build();
     }
 
     public static List<FSOrdering> orderings(FSOrdering... orderings) {
