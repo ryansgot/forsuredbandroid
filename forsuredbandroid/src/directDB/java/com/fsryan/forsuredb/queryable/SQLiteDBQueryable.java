@@ -18,12 +18,11 @@ import com.fsryan.forsuredb.api.adapter.SaveResultFactory;
 import com.fsryan.forsuredb.api.sqlgeneration.DBMSIntegrator;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.api.sqlgeneration.SqlForPreparedStatement;
-import com.fsryan.forsuredb.cursor.FSCursor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.fsryan.forsuredb.StatementBinder.bindObjects;
+import static com.fsryan.forsuredb.SqlBinder.bindObjects;
 
 public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentValues> {
 
@@ -83,11 +82,7 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
         try {
             statement = FSDBHelper.inst().getWritableDatabase().compileStatement(ps.getSql());
             bindObjects(statement, columns, cv);
-            if (ps.getReplacements() != null) {
-                for (int pos = 0; pos < ps.getReplacements().length; pos++) {
-                    statement.bindString(pos + columns.size() + 1, ps.getReplacements()[pos]);
-                }
-            }
+            bindObjects(statement, columns.size() + 1, ps.getReplacements());
             return statement.executeUpdateDelete();
         } catch (SQLException sqle) {
             return 0;
@@ -126,7 +121,7 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
         SQLiteStatement statement = null;
         try {
             statement = FSDBHelper.inst().getWritableDatabase().compileStatement(ps.getSql());
-            statement.bindAllArgsAsStrings(ps.getReplacements());
+            bindObjects(statement, ps.getReplacements());
             return statement.executeUpdateDelete();
         } catch (SQLException sqle) {
             return 0;
@@ -139,14 +134,32 @@ public class SQLiteDBQueryable implements FSQueryable<DirectLocator, FSContentVa
 
     @Override
     public Retriever query(FSProjection projection, FSSelection selection, List<FSOrdering> orderings) {
-        SqlForPreparedStatement ps = sqlGenerator.createQuerySql(locator.table, projection, selection, orderings);
-        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(ps.getSql(), ps.getReplacements());
+        SqlForPreparedStatement ps = sqlGenerator.createQuerySql(
+                locator.table,
+                projection,
+                selection,
+                orderings
+        );
+
+        final SQLiteDatabase db = FSDBHelper.inst().getReadableDatabase();
+        return new CursorDriverHack(db, locator.table).query(ps);
+//        final String[] bindStrs = ReplacementStringifier.stringifyAll(ps.getReplacements());
+//        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(ps.getSql(), bindStrs);
     }
 
     @Override
     public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
-        SqlForPreparedStatement ps = sqlGenerator.createQuerySql(locator.table, joins, projections, selection, orderings);
-        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(ps.getSql(), ps.getReplacements());
+        SqlForPreparedStatement ps = sqlGenerator.createQuerySql(
+                locator.table,
+                joins,
+                projections,
+                selection,
+                orderings
+        );
+        final SQLiteDatabase db = FSDBHelper.inst().getReadableDatabase();
+        return new CursorDriverHack(db, locator.table).query(ps);
+//        final String[] bindStrs = ReplacementStringifier.stringifyAll(ps.getReplacements());
+//        return (FSCursor) FSDBHelper.inst().getReadableDatabase().rawQuery(ps.getSql(), bindStrs);
     }
 
     private boolean hasMatchingRecord(FSSelection selection) {

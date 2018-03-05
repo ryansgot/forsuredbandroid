@@ -42,7 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.fsryan.forsuredb.StatementBinder.bindObjects;
+import static com.fsryan.forsuredb.SqlBinder.bindObjects;
 
 public class FSDBHelper extends SQLiteOpenHelper {
 

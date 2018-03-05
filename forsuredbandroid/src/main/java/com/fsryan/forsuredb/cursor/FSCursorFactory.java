@@ -29,7 +29,7 @@ import com.fsryan.forsuredb.FSDBHelper;
 public class FSCursorFactory implements SQLiteDatabase.CursorFactory {
 
     @Override
-    public Cursor newCursor(SQLiteDatabase db, SQLiteCursorDriver masterQuery, String editTable, SQLiteQuery query) {
+    public FSCursor newCursor(SQLiteDatabase db, SQLiteCursorDriver masterQuery, String editTable, SQLiteQuery query) {
         if (FSDBHelper.inst().inDebugMode()) {
             Log.d("forsuredb", "Running query: " + masterQuery.toString());
         }
