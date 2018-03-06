@@ -32,17 +32,22 @@ class CursorDriverHack implements SQLiteCursorDriver {
     }
 
     FSCursor query(@NonNull SqlForPreparedStatement ps) {
+        if (!isAvailable()) {
+            throw new IllegalStateException("Cannot handle request--queryFactory null");
+        }
         SQLiteQuery query = null;
         db.acquireReference();
         try {
             query = queryFactory.newInstance(db, ps.getSql(), null);
             SqlBinder.bindObjects(query, ps.getReplacements());
             return cursorFactory.newCursor(db, this, editTable, query);
-        } catch (Exception e) {
+        } catch (RuntimeException re) {
             if (query != null) {
                 query.close();
             }
-            throw (e instanceof RuntimeException) ? (RuntimeException) e : new RuntimeException(e);
+            throw re;
+        } catch (Exception e) { // <-- IllegalAccessException|InvocationTargetException|InstantiationException
+            throw new RuntimeException(e);
         } finally {
             db.releaseReference();
         }
@@ -50,27 +55,24 @@ class CursorDriverHack implements SQLiteCursorDriver {
 
     @Override
     public Cursor query(SQLiteDatabase.CursorFactory factory, String[] bindArgs) {
-        return null;
+        throw new UnsupportedOperationException("CursorDriverHack was not intended to be used as though it were a normal CursorDriver. Call query(SqlForPreparedStatement) instead");
     }
 
     @Override
-    public void cursorDeactivated() {
-
-    }
+    public void cursorDeactivated() {}
 
     @Override
-    public void cursorRequeried(Cursor cursor) {
-
-    }
+    public void cursorRequeried(Cursor cursor) {}
 
     @Override
-    public void cursorClosed() {
-
-    }
+    public void cursorClosed() {}
 
     @Override
-    public void setBindArguments(String[] bindArgs) {
+    public void setBindArguments(String[] bindArgs) {}
 
+    @Override
+    public String toString() {
+        return "CursorDriverHack";
     }
 
     private static Constructor<SQLiteQuery> initQueryFactory() {
@@ -82,8 +84,8 @@ class CursorDriverHack implements SQLiteCursorDriver {
             );
             ret.setAccessible(true);
             return ret;
-        } catch (Exception e) {
-            return null;
+        } catch (NoSuchMethodException e) {
+            return null;    // <-- in this case, isAvailable() will return false
         }
     }
 }

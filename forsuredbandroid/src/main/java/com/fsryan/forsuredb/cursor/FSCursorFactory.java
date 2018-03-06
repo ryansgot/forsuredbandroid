@@ -17,7 +17,6 @@
  */
 package com.fsryan.forsuredb.cursor;
 
-import android.database.Cursor;
 import android.database.sqlite.SQLiteCursor;
 import android.database.sqlite.SQLiteCursorDriver;
 import android.database.sqlite.SQLiteDatabase;
