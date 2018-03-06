@@ -36,11 +36,12 @@ import com.fsryan.forsuredb.api.FSSelection;
 import com.fsryan.forsuredb.api.sqlgeneration.DBMSIntegrator;
 import com.fsryan.forsuredb.api.sqlgeneration.Sql;
 import com.fsryan.forsuredb.api.sqlgeneration.SqlForPreparedStatement;
+import com.fsryan.forsuredb.cursor.FSCursor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.fsryan.forsuredb.StatementBinder.bindObjects;
+import static com.fsryan.forsuredb.SqlBinder.bindObjects;
 
 /**
  * <p>
@@ -112,7 +113,7 @@ public class FSDefaultProvider extends ContentProvider {
         SQLiteStatement statement = null;
         try {
             statement = FSDBHelper.inst().getWritableDatabase().compileStatement(ps.getSql());
-            statement.bindAllArgsAsStrings(ps.getReplacements());
+            bindObjects(statement, ps.getReplacements());
             rowsAffected = statement.executeUpdateDelete();
             return rowsAffected;
         } finally {
@@ -142,7 +143,7 @@ public class FSDefaultProvider extends ContentProvider {
         final List<FSJoin> joins = analyzer.getJoinsUnsafe();
         final List<FSProjection> fsProjections = ProjectionHelper.toFSProjections(analyzer.isDistinct(), projection);
         final SqlForPreparedStatement ps = sqlGenerator.createQuerySql(tableName, joins, fsProjections, fsSelection, ordering);
-        return FSDBHelper.inst().getReadableDatabase().rawQuery(ps.getSql(), ps.getReplacements());
+        return innerQuery(tableName, ps);
     }
 
     private Cursor performQuery(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
@@ -152,7 +153,7 @@ public class FSDefaultProvider extends ContentProvider {
         final List<FSOrdering> ordering = analyzer.getOrderingsUnsafe();
         final FSProjection fsProjection = ProjectionHelper.toFSProjection(tableName, analyzer.isDistinct(), projection);
         final SqlForPreparedStatement ps = sqlGenerator.createQuerySql(tableName, fsProjection, fsSelection, ordering);
-        return FSDBHelper.inst().getReadableDatabase().rawQuery(ps.getSql(), ps.getReplacements());
+        return innerQuery(tableName, ps);
     }
 
     private int performUpsert(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
@@ -188,11 +189,7 @@ public class FSDefaultProvider extends ContentProvider {
         try {
             statement = FSDBHelper.inst().getWritableDatabase().compileStatement(ps.getSql());
             bindObjects(statement, columns, values);
-            if (ps.getReplacements() != null) {
-                for (int pos = 0; pos < ps.getReplacements().length; pos++) {
-                    statement.bindString(pos + columns.size() + 1, ps.getReplacements()[pos]);
-                }
-            }
+            bindObjects(statement, columns.size() + 1, ps.getReplacements());
             rowsAffected = statement.executeUpdateDelete();
             return rowsAffected;
         } catch (SQLException sqle) {
@@ -216,5 +213,17 @@ public class FSDefaultProvider extends ContentProvider {
                 c.close();
             }
         }
+    }
+
+    private FSCursor innerQuery(String tableName, SqlForPreparedStatement ps) {
+        // Since we're forcing our way into a non-exposed API to make the bindings work properly,
+        // the check for isAvailable falls back to the standard version. The drawback of the
+        // standard db query is that instead of binding the objects as they are and using the
+        // underlying bindings, you must first convert even bindable objects into strings. This
+        // could result in unexpected returns when using blobs and floating points as selectionArgs.
+        final SQLiteDatabase db = FSDBHelper.inst().getReadableDatabase();
+        return CursorDriverHack.isAvailable()
+                ? new CursorDriverHack(db, tableName).query(ps)
+                : (FSCursor) db.rawQuery(ps.getSql(), ReplacementStringifier.stringifyAll(ps.getReplacements()));
     }
 }

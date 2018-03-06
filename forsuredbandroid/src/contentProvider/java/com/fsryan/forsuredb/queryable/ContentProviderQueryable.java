@@ -39,6 +39,7 @@ import java.util.List;
 
 import static com.fsryan.forsuredb.queryable.ProjectionHelper.formatProjection;
 import static com.fsryan.forsuredb.queryable.ProjectionHelper.isDistinct;
+import static com.fsryan.forsuredb.queryable.ReplacementSerializer.serializeAll;
 
 public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValues> {
 
@@ -70,7 +71,7 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
         final Uri uri = enrichUri(selection, orderings, false);
         return selection == null
                 ? appContext.getContentResolver().update(uri, cv.getContentValues(),null, null)
-                : appContext.getContentResolver().update(uri, cv.getContentValues(), selection.where(), selection.replacements());
+                : appContext.getContentResolver().update(uri, cv.getContentValues(), selection.where(), serializeAll(selection.replacements()));
     }
 
     @Override
@@ -79,7 +80,7 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
         try {
             int rowsAffected = selection == null
                     ? appContext.getContentResolver().update(uri, cv.getContentValues(), null, null)
-                    : appContext.getContentResolver().update(uri, cv.getContentValues(), selection.where(), selection.replacements());
+                    : appContext.getContentResolver().update(uri, cv.getContentValues(), selection.where(), serializeAll(selection.replacements()));
             return SaveResultFactory.create(null, rowsAffected, null);
         } catch (Exception e) {
             return SaveResultFactory.create(null, 0, e);
@@ -91,7 +92,7 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
         final Uri uri = enrichUri(selection, orderings, false);
         return selection == null
                 ? appContext.getContentResolver().delete(uri, null, null)
-                : appContext.getContentResolver().delete(uri, selection.where(), selection.replacements());
+                : appContext.getContentResolver().delete(uri, selection.where(), serializeAll(selection.replacements()));
     }
 
     @Override
@@ -100,7 +101,7 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
         final Uri uri = enrichUri(projection, selection, orderings, false);
         return selection == null
                 ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, null))
-                : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), selection.replacements(), null));
+                : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), serializeAll(selection.replacements()), null));
     }
 
     @Override
@@ -109,7 +110,7 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
         final Uri uri = enrichUri(projections, selection, orderings, joins, false);
         return selection == null
                 ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, null))
-                : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), selection.replacements(), null));
+                : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), serializeAll(selection.replacements()), null));
     }
 
     private Uri enrichUri(@Nullable FSSelection selection, @Nullable List<FSOrdering> orderings, boolean upsert) {
