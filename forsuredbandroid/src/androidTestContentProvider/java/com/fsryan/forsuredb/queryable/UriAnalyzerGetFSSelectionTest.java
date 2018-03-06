@@ -42,26 +42,26 @@ public class UriAnalyzerGetFSSelectionTest extends BaseUriAnalyzerTest {
                         starterUri(),
                         NullableHack.<String>forNull(),
                         NullableHack.<String[]>forNull(),
-                        selection().build()
+                        selection().where(null, new String[0]).build()
                 },
                 {   // 01: specific record uri without selection or selection args
                         starterUri(1L),
                         NullableHack.<String>forNull(),
                         NullableHack.<String[]>forNull(),
-                        selection().where("_id = ?", new String[] {"1"}).build()
+                        selection().where("_id = ?", new Object[] {1L}).build()
                 },
                 {   // 02: specific record uri with selection and selection args
                         starterUri(982374L),
                         NullableHack.create("column1 = ?"),
-                        NullableHack.create(new String[] {"something"}),
-                        selection().where("_id = ? AND (column1 = ?)", new String[] {"982374", "something"}).build()
+                        NullableHack.create(new String[] {"S", "something"}),
+                        selection().where("_id = ? AND (column1 = ?)", new Object[] {982374L, "something"})
+                                .build()
                 },
                 {   // 03: specific record uri with selection and selection args and limits
                         addLimitsTo(starterUri(982374L), createLimits(1, 3, true)).build(),
                         NullableHack.create("column1 = ?"),
-                        NullableHack.create(new String[] {"something"}),
-                        selection()
-                                .where("_id = ? AND (column1 = ?)", new String[] {"982374", "something"})
+                        NullableHack.create(new String[] {"S", "something"}),
+                        selection().where("_id = ? AND (column1 = ?)", new Object[] {982374L, "something"})
                                 .limitCount(1)
                                 .offset(3)
                                 .fromBottom(true)
@@ -70,15 +70,14 @@ public class UriAnalyzerGetFSSelectionTest extends BaseUriAnalyzerTest {
                 {   // 04: table uri with other selection arguments
                         starterUri(),
                         NullableHack.create("column1 = ?"),
-                        NullableHack.create(new String[] {"something"}),
-                        selection().where("column1 = ?", new String[] {"something"}).build()
+                        NullableHack.create(new String[] {"S", "something"}),
+                        selection().where("column1 = ?", new Object[] {"something"}).build()
                 },
                 {   // 05: table uri with other selection arguments
                         addLimitsTo(starterUri(), createLimits(5, 2, false)).build(),
                         NullableHack.create("column1 = ?"),
-                        NullableHack.create(new String[] {"something"}),
-                        selection()
-                                .where("column1 = ?", new String[] {"something"})
+                        NullableHack.create(new String[] {"S", "something"}),
+                        selection().where("column1 = ?", new Object[] {"something"})
                                 .fromBottom(false)
                                 .limitCount(5)
                                 .offset(2)

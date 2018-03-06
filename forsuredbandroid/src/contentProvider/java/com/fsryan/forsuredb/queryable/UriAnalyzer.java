@@ -500,16 +500,27 @@ public class UriAnalyzer {
     public FSSelection getSelection(final String currentSelection, final String[] currentSelectionArgs) {
         final boolean specificRecordUri = isSpecificRecordUri(uri);
         return new FSSelection() {
+
+            String actualWhere = null;
+            Object[] actualReplacements = null;
+
             @Override
             public String where() {
-                return specificRecordUri ? ensureIdInSelection(currentSelection) : currentSelection;
+                if (actualWhere == null) {
+                    actualWhere = specificRecordUri ? ensureIdInSelection(currentSelection) : currentSelection;
+                }
+                return actualWhere;
             }
 
             @Override
-            public String[] replacements() {
-                return specificRecordUri
-                        ? ensureIdInSelectionArgs(where(), currentSelectionArgs)
-                        : currentSelectionArgs;
+            public Object[] replacements() {
+                if (actualReplacements == null) {
+                    String[] toDeserialize = specificRecordUri
+                            ? ensureIdInSelectionArgs(where(), currentSelectionArgs)
+                            : currentSelectionArgs;
+                    actualReplacements = ReplacementSerializer.deserializeAll(toDeserialize);
+                }
+                return actualReplacements;
             }
 
             @Override
@@ -575,20 +586,25 @@ public class UriAnalyzer {
             return selectionArgs;
         }
 
-        final List<String> selectionArgList = selectionArgs == null || selectionArgs.length == 0
-                ? new ArrayList<String>(1)
-                : new ArrayList<>(Arrays.asList(selectionArgs));
-        selectionArgList.add(0, uri.getLastPathSegment());  // <-- prepend because the modified selection string specifies the _id selection first
-        return selectionArgList.toArray(new String[selectionArgList.size()]);
+        final int inputSize = selectionArgs == null ? 0 : selectionArgs.length;
+        List<String> ret = new ArrayList<>(inputSize + 2);
+        ret.add(0, "L");    // <-- prepend because the modified selection string specifies the _id selection first
+        ret.add(1, uri.getLastPathSegment());
+        if (inputSize > 0) {
+            ret.addAll(Arrays.asList(selectionArgs));
+        }
+        return ret.toArray(new String[ret.size()]);
     }
 
-    // If the selection was modified, then the number of ? in the selection will be one more than the length of selectionArgs
+    // The selectionArgs array contains two entries for each replacement. So if the number of
+    // question marks is greater than half the number of selection args, then the selection was
+    // modified to accommodate an id. Note that selectionArgs.length is always even or zero.
     private static boolean selectionWasModified(String selection, String[] selectionArgs) {
-        final int qMarks = selection == null ? 0 : selection.replaceAll("[^?]", "").length();
+        final int qMarkCount = selection == null ? 0 : selection.replaceAll("[^?]", "").length();
         if (selectionArgs == null || selectionArgs.length == 0) {
-            return qMarks == 1;
+            return qMarkCount == 1;
         }
-        return qMarks == selectionArgs.length + 1;
+        return qMarkCount > selectionArgs.length / 2;
     }
 
     private static StringBuilder deleteFromEnd(StringBuilder buf, int count) {
