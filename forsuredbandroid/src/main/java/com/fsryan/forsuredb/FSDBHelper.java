@@ -134,11 +134,8 @@ public class FSDBHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onOpen(SQLiteDatabase db) {
-        super.onOpen(db);
-        if (!db.isReadOnly()) {
-            db.execSQL("PRAGMA foreign_keys=ON;");
-        }
+    public void onConfigure(SQLiteDatabase db) {
+        db.setForeignKeyConstraintsEnabled(true);
     }
 
     public boolean inDebugMode() {
