@@ -10,7 +10,7 @@ apply plugin: 'findbugs-variants'
 group = 'com.fsryan.forsuredb'
 
 jacoco {
-    toolVersion = "0.7.4.+"
+    toolVersion = "0.7.9"
 }
 
 android {
@@ -62,21 +62,22 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation deps.support.recyclerviewv7
+    implementation deps.support.recyclerviewv7  // TODO: take this out (0.14.0)?
 
     api deps.forsuredb.api
     api deps.forsuredb.sqlitelib
     api deps.forsuredb.dbinfo
 
-    testImplementation deps.junit
-    testImplementation deps.guava
-    testImplementation deps.mockito
+    testImplementation deps.test.junit
+    testImplementation deps.test.guava
+    testImplementation deps.test.mockito
 
-    androidTestImplementation deps.support.test.runner
-    androidTestImplementation deps.support.annotations
-    androidTestImplementation deps.guava
-    androidTestImplementation deps.junit
     androidTestImplementation deps.forsuredb.modelsGson
+    androidTestImplementation deps.test.android.runner
+    androidTestImplementation deps.test.android.mockito
+    androidTestImplementation deps.support.annotations
+    androidTestImplementation deps.test.guava
+    androidTestImplementation deps.test.junit
 }
 
 mergedReportConfig {

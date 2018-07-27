@@ -11,12 +11,13 @@ buildscript { scriptHandler ->
     ]
     ext.versions = [
             'minSdk': 16,
-            'compileSdk': 26,
-            'buildTools': '26.0.2',
+            'compileSdk': 27,
+            'buildTools': '27.0.3',
 
-            'supportLibrary': '26.0.2',
-            'androidPlugin': '3.0.0',
+            'supportLibrary': '27.1.1',
+            'androidPlugin': '3.1.3',
             'forsuredb': '0.13.0-beta1',
+            'mockito': '2.20.1',
             'release': [
                     'buildTime': Long.toString(new Date().getTime()),
                     'remote': 'origin',
@@ -24,31 +25,34 @@ buildscript { scriptHandler ->
             ]
     ]
     ext.deps = [
-            android: [
-                    'gradlePlugin': "com.android.tools.build:gradle:${versions.androidPlugin}",
+            'plugins': [
+                    'android': "com.android.tools.build:gradle:${versions.androidPlugin}",
+                    'bintray': 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3',
+                    'fsryan': [
+                            'forsuredb': 'com.fsryan.gradle.forsuredb:forsuredbplugin:0.6.1',
+                            'autosemver': 'com.fsryan.gradle.autosemver:autosemver-git:0.2.0-beta',
+                            'androidJavaCoverageMerger': 'com.fsryan.gradle.coverage:android-java-coverage-merger:0.0.0',
+                            'findbugsVariants': 'com.fsryan.gradle.findbugsvariants:findbugs-variants:0.1.0-alpha'
+                    ],
+                    'androidMaven': 'com.github.dcendents:android-maven-gradle-plugin:1.5'
+            ],
+            'test': [
+                    'android': [
+                            'runner': 'com.android.support.test:runner:1.0.1',
+                            'mockito': "org.mockito:mockito-android:${versions.mockito}"
+                    ],
+                    'mockito': "org.mockito:mockito-core:${versions.mockito}",
+                    'junit': 'junit:junit:4.12',
+                    'guava': 'com.google.guava:guava:20.0'
             ],
             'support': [
                     'compat': "com.android.support:support-compat:${versions.supportLibrary}",
                     'annotations': "com.android.support:support-annotations:${versions.supportLibrary}",
                     'appcompatv7': "com.android.support:appcompat-v7:${versions.supportLibrary}",
-                    'recyclerviewv7': "com.android.support:recyclerview-v7:${versions.supportLibrary}",
-                    'test': [
-                            'runner': 'com.android.support.test:runner:1.0.1',
-                    ],
+                    'recyclerviewv7': "com.android.support:recyclerview-v7:${versions.supportLibrary}"
             ],
-            'bintrayPlugin': 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3',
-            'fsryanGradle': [
-                    'autosemver': 'com.fsryan.gradle.autosemver:autosemver-git:0.2.0-beta',
-                    'androidJavaCoverageMerger': 'com.fsryan.gradle.coverage:android-java-coverage-merger:0.0.0',
-                    'findbugsVariants': 'com.fsryan.gradle.findbugsvariants:findbugs-variants:0.1.0-alpha'
-            ],
-            'androidMavenPlugin': 'com.github.dcendents:android-maven-gradle-plugin:1.5',
             'mavenS3Wagon': 'org.kuali.maven.wagons:maven-s3-wagon:1.2.1',
-            guava: 'com.google.guava:guava:20.0',   // <-- do not include in artifacts--just test
-            junit: 'junit:junit:4.12',
-            mockito: 'org.mockito:mockito-core:1.10.19',
             forsuredb: [
-                    'plugin': 'com.fsryan.gradle.forsuredb:forsuredbplugin:0.5.1',
                     'api': "com.fsryan.forsuredb:forsuredbapi:${versions.forsuredb}",
                     'compiler': "com.fsryan.forsuredb:forsuredbcompiler:${versions.forsuredb}",
                     'sqlitelib': "com.fsryan.forsuredb:sqlitelib:${versions.forsuredb}",
@@ -79,13 +83,13 @@ buildscript { scriptHandler ->
         google()
     }
     dependencies {
-        classpath deps.android.gradlePlugin
-        classpath deps.forsuredb.plugin
-        classpath deps.bintrayPlugin
-        classpath deps.androidMavenPlugin
-        classpath deps.fsryanGradle.autosemver
-        classpath deps.fsryanGradle.androidJavaCoverageMerger
-        classpath deps.fsryanGradle.findbugsVariants
+        classpath deps.plugins.android
+        classpath deps.plugins.fsryan.forsuredb
+        classpath deps.plugins.bintray
+        classpath deps.plugins.androidMaven
+        classpath deps.plugins.fsryan.autosemver
+        classpath deps.plugins.fsryan.androidJavaCoverageMerger
+        classpath deps.plugins.fsryan.findbugsVariants
     }
 }
 
@@ -112,8 +116,8 @@ allprojects {
                 secretKey = keys.aws.secretKey
             }
         }
-        jcenter()
         google()
+        jcenter()
     }
 
     autosemver {
