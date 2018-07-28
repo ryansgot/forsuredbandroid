@@ -17,12 +17,6 @@ jobs:
       - restore_cache:
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "library/build.gradle" }}
       - run:
-          name: Launch emulator
-          command: export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib && emulator64-arm -avd test -noaudio -no-window
-          background: true
-          environment:
-            TERM: dumb
-      - run:
           name: Download Dependencies
           command: ./gradlew androidDependencies
       - save_cache:
@@ -30,8 +24,15 @@ jobs:
             - ~/.gradle
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "library/build.gradle" }}
       - run:
+          name: Launch emulator
+          command: export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib && emulator64-arm -avd test -noaudio -no-window
+          background: true
+          parallel: false
+          environment:
+            TERM: dumb
+      - run:
           name: Wait for emulator
-          command: chmod +x scripts/android-wait-for-boot.sh && ./scripts/android-wait-for-boot.sh
+          command: circle-android wait-for-boot
           environment:
             TERM: dumb
       - run:
