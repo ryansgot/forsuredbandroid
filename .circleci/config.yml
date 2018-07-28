@@ -1,62 +1,58 @@
 version: 2
 jobs:
   build:
+    working_directory: ~/flyve_mdm
     docker:
-      - image: drazisil/android-sdk:1.2.60
-    working_directory: ~/androidlearn
+      # Android the primary container
+      - image: circleci/android:api-26-alpha
+    environment:
+      #      QEMU_AUDIO_DRV: none
+      GIT_AUTHOR_NAME: circleci
+      GIT_AUTHOR_EMAIL: noreply@circleci.com
+      GIT_COMMITTER_NAME: circleci
+      GIT_COMMITTER_EMAIL: noreply@circleci.com
+      EMAIL: noreply@circleci.com
+      JVM_OPTS: -Xmx3200m
     steps:
-      # Ensure your image has git, otherwise the checkout step will fail
-      # - run: apt-get -qq update; apt-get -y install git
       - checkout
-      - run: mkdir artifacts
+      - restore_cache:
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
-          name: List what is currently installed
-          command: sdkmanager --list
+          name: Accept licenses
+          command: yes | sdkmanager --licenses || true
       - run:
-          name: Create AVD
-          command: |
-            echo "n" | avdmanager -v create avd -n androidlearn -k "system-images;android-25;google_apis;armeabi-v7a" -c 512M -g google_apis  -d "Nexus 7 2013"
+          name: Download Dependencies
+          command: ./gradlew androidDependencies
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: jars-{{ checksum "build.gradle" }}-{{ checksum  "app/build.gradle" }}
       - run:
-          name: Run Emulator
+          name: Accept licenses
+          command: yes | sdkmanager --licenses || true
+      - run:
+          name: Setup emulator
+          command: sdkmanager "system-images;android-25;google_apis;armeabi-v7a" && echo "no" | avdmanager create avd -n test -k "system-images;android-25;google_apis;armeabi-v7a"
+      - run:
+          name: Launch emulator
+          command: export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib && emulator64-arm -avd test -noaudio -no-boot-anim -no-window -accel on
           background: true
-          command: |
-            $ANDROID_SDK_ROOT/tools/emulator -no-window -noaudio -no-boot-anim -gpu swiftshader @androidlearn
       - run:
-          name: Wait for Emulator
-          no_output_timeout: 15m
+          name: Wait emulator
           command: |
-            sleep 15
-            $ANDROID_SDK_ROOT/platform-tools/adb devices
-            sleep 10
+            # wait for it to have booted
+            circle-android wait-for-boot
+            # unlock the emulator screen
+            sleep 30
+            adb shell input keyevent 82
       - run:
-          name: Fetch logcat and props
-          background: true
-          command: |
-            $ANDROID_SDK_ROOT/platform-tools/adb logcat >> ./artifacts/logcat.txt
-            $ANDROID_SDK_ROOT/platform-tools/adb shell getprop >> ./artifacts/props.txt
-      - run:
-          name: Run Android Connected Tests
-          command: |
-            export ADB_INSTALL_TIMEOUT=120
-            export ANDROID_HOME=$ANDROID_SDK_ROOT
-            # ./scripts/test.sh
-            ./gradlew :forsuredbandroid:assembleContentProviderDebug :forsuredbandroid:assembleDirectDBDebug
-
-            # Wait for emulator to fully boot
-            # TODO: Need to create a good check
-            sleep 60
-
-            # Is the emulator still running?
-            adb devices
-
-            # Check if package manager is running
-            adb shell pm list packages
-
-            # Install package
-            ./gradlew :forsuredbandroid:createMergedReports
+          name: Run Tests
+          command: ./gradlew :forsuredbandroid:createMergedReports
       - store_artifacts:
-          path: ~/androidlearn/artifacts
-          destination: env
+          path: app/build/reports
+          destination: reports
+      - store_test_results:
+      path: app/build/test-results
 #  build:
 #    working_directory: ~/code
 #    docker:
