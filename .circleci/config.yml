@@ -12,7 +12,7 @@ jobs:
       GIT_COMMITTER_NAME: circleci
       GIT_COMMITTER_EMAIL: noreply@circleci.com
       EMAIL: noreply@circleci.com
-      JVM_OPTS: -Xmx3200m
+      JVM_OPTS: -Xmx1024m
     steps:
       - checkout
       - restore_cache:
