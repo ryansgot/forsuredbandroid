@@ -10,7 +10,7 @@ apply plugin: 'findbugs-variants'
 group = 'com.fsryan.forsuredb'
 
 jacoco {
-    toolVersion = "0.7.4.+"
+    toolVersion = "0.7.9"
 }
 
 android {

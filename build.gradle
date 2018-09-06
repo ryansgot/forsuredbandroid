@@ -11,12 +11,12 @@ buildscript { scriptHandler ->
     ]
     ext.versions = [
             'minSdk': 16,
-            'compileSdk': 26,
-            'buildTools': '26.0.2',
+            'compileSdk': 28,
+            'buildTools': '28.0.1',
 
-            'supportLibrary': '26.0.2',
-            'androidPlugin': '3.0.0',
-            'forsuredb': '0.13.0-beta1',
+            'supportLibrary': '27.1.1',
+            'androidPlugin': '3.1.4',
+            'forsuredb': '0.13.0',
             'release': [
                     'buildTime': Long.toString(new Date().getTime()),
                     'remote': 'origin',
@@ -48,7 +48,7 @@ buildscript { scriptHandler ->
             junit: 'junit:junit:4.12',
             mockito: 'org.mockito:mockito-core:1.10.19',
             forsuredb: [
-                    'plugin': 'com.fsryan.gradle.forsuredb:forsuredbplugin:0.5.1',
+                    'plugin': 'com.fsryan.gradle.forsuredb:forsuredbplugin:0.6.2',
                     'api': "com.fsryan.forsuredb:forsuredbapi:${versions.forsuredb}",
                     'compiler': "com.fsryan.forsuredb:forsuredbcompiler:${versions.forsuredb}",
                     'sqlitelib': "com.fsryan.forsuredb:sqlitelib:${versions.forsuredb}",
@@ -58,6 +58,8 @@ buildscript { scriptHandler ->
     ]
 
     repositories {
+        jcenter()
+        google()
         maven {
             url  "http://dl.bintray.com/ryansgot/maven"
         }
@@ -75,8 +77,6 @@ buildscript { scriptHandler ->
                 secretKey = keys.aws.secretKey
             }
         }
-        jcenter()
-        google()
     }
     dependencies {
         classpath deps.android.gradlePlugin
@@ -95,6 +95,8 @@ allprojects {
     apply plugin: 'autosemver-git'
 
     repositories {
+        jcenter()
+        google()
         maven {
             url  "http://dl.bintray.com/ryansgot/maven"
         }
@@ -112,8 +114,6 @@ allprojects {
                 secretKey = keys.aws.secretKey
             }
         }
-        jcenter()
-        google()
     }
 
     autosemver {
