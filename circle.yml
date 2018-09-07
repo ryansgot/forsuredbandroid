@@ -11,7 +11,7 @@ machine:
 dependencies:
   pre:
     - echo y | android update sdk --no-ui --all --filter tools,extra-android-m2repository
-    - echo y | android update sdk --no-ui --all --filter build-tools-26.0.2,android-26
+    - echo y | android update sdk --no-ui --all --filter build-tools-28.0.1,android-28
   override:
     - ./gradlew dependencies -PawsMavenAccessKey=$AWS_ACCESS_KEY_ID -PawsMavenSecretKey=$AWS_SECRET_KEY
 test:
