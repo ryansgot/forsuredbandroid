@@ -30,22 +30,22 @@ import com.fsryan.forsuredb.api.FSLogger;
     }
 
     @Override
-    public void e(String message) {
-        Log.e(logTag, message == null ? "" : message);
+    public void e(String message, Object... objects) {
+        Log.e(logTag, message == null ? "" : String.format(message, objects));
     }
 
     @Override
-    public void i(String message) {
-        Log.i(logTag, message == null ? "" : message);
+    public void i(String message, Object... objects) {
+        Log.i(logTag, message == null ? "" : String.format(message, objects));
     }
 
     @Override
-    public void w(String message) {
-        Log.w(logTag, message == null ? "" : message);
+    public void w(String message, Object... objects) {
+        Log.w(logTag, message == null ? "" : String.format(message, objects));
     }
 
     @Override
-    public void o(String message) {
-        Log.d(logTag, message == null ? "" : message);
+    public void o(String message, Object... objects) {
+        Log.d(logTag, message == null ? "" : String.format(message, objects));
     }
 }

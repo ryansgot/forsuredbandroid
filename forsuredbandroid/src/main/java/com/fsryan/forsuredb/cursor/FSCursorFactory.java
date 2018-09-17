@@ -17,7 +17,6 @@
  */
 package com.fsryan.forsuredb.cursor;
 
-import android.database.Cursor;
 import android.database.sqlite.SQLiteCursor;
 import android.database.sqlite.SQLiteCursorDriver;
 import android.database.sqlite.SQLiteDatabase;
@@ -29,9 +28,9 @@ import com.fsryan.forsuredb.FSDBHelper;
 public class FSCursorFactory implements SQLiteDatabase.CursorFactory {
 
     @Override
-    public Cursor newCursor(SQLiteDatabase db, SQLiteCursorDriver masterQuery, String editTable, SQLiteQuery query) {
+    public FSCursor newCursor(SQLiteDatabase db, SQLiteCursorDriver masterQuery, String editTable, SQLiteQuery query) {
         if (FSDBHelper.inst().inDebugMode()) {
-            Log.d("forsuredb", "Running query: " + masterQuery.toString());
+            Log.d("forsuredb", "Running query: " + query.toString());
         }
         return new FSCursor(new SQLiteCursor(masterQuery, editTable, query));
     }

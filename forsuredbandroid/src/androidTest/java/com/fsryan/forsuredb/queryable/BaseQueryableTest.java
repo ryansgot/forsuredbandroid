@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import com.fsryan.forsuredb.FSDBHelper;
 import com.fsryan.forsuredb.api.FSGetApi;
 import com.fsryan.forsuredb.api.FSTableCreator;
+import com.fsryan.forsuredb.gsonserialization.FSDbInfoGsonSerializer;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -33,7 +34,7 @@ public abstract class BaseQueryableTest {
         tableList.add(new FSTableCreator(AUTHORITY, "user", FSGetApi.class));
 
         // Will apply migrations in the assets directory
-        FSDBHelper.initDebug(getTargetContext(), dbName, tableList);
+        FSDBHelper.initDebug(getTargetContext(), dbName, tableList, new FSDbInfoGsonSerializer());
     }
 
     @AfterClass

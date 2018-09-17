@@ -29,7 +29,8 @@ import com.fsryan.forsuredb.api.FSQueryable;
 import com.fsryan.forsuredb.api.FSSelection;
 import com.fsryan.forsuredb.api.Limits;
 import com.fsryan.forsuredb.api.Retriever;
-import com.fsryan.forsuredb.api.sqlgeneration.Sql;
+import com.fsryan.forsuredb.api.SaveResult;
+import com.fsryan.forsuredb.api.adapter.SaveResultFactory;
 import com.fsryan.forsuredb.cursor.FSCursor;
 
 import java.util.Arrays;
@@ -38,10 +39,7 @@ import java.util.List;
 
 import static com.fsryan.forsuredb.queryable.ProjectionHelper.formatProjection;
 import static com.fsryan.forsuredb.queryable.ProjectionHelper.isDistinct;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.FIRST_QUERY_PARAM;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.OFFSET_QUERY_PARAM;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.LAST_QUERY_PARAM;
-import static com.fsryan.forsuredb.queryable.UriEvaluator.ORDER_BY_QUERY_PARM;
+import static com.fsryan.forsuredb.queryable.ReplacementSerializer.serializeAll;
 
 public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValues> {
 
@@ -70,73 +68,125 @@ public class ContentProviderQueryable implements FSQueryable<Uri, FSContentValue
 
     @Override
     public int update(FSContentValues cv, FSSelection selection, List<FSOrdering> orderings) {
-        final Uri uri = enrichUri(selection, orderings);
+        final Uri uri = enrichUri(selection, orderings, false);
         return selection == null
                 ? appContext.getContentResolver().update(uri, cv.getContentValues(),null, null)
-                : appContext.getContentResolver().update(uri, cv.getContentValues(), selection.where(), selection.replacements());
+                : appContext.getContentResolver().update(uri, cv.getContentValues(), selection.where(), serializeAll(selection.replacements()));
+    }
+
+    @Override
+    public SaveResult<Uri> upsert(FSContentValues cv, FSSelection selection, List<FSOrdering> orderings) {
+        final Uri uri = enrichUri(selection, orderings, true);
+        try {
+            int rowsAffected = selection == null
+                    ? appContext.getContentResolver().update(uri, cv.getContentValues(), null, null)
+                    : appContext.getContentResolver().update(uri, cv.getContentValues(), selection.where(), serializeAll(selection.replacements()));
+            return SaveResultFactory.create(null, rowsAffected, null);
+        } catch (Exception e) {
+            return SaveResultFactory.create(null, 0, e);
+        }
     }
 
     @Override
     public int delete(FSSelection selection, List<FSOrdering> orderings) {
-        final Uri uri = enrichUri(selection, orderings);
+        final Uri uri = enrichUri(selection, orderings, false);
         return selection == null
                 ? appContext.getContentResolver().delete(uri, null, null)
-                : appContext.getContentResolver().delete(uri, selection.where(), selection.replacements());
+                : appContext.getContentResolver().delete(uri, selection.where(), serializeAll(selection.replacements()));
     }
 
     @Override
     public Retriever query(FSProjection projection, FSSelection selection, List<FSOrdering> orderings) {
         final String[] p = formatProjection(Arrays.asList(projection));
-        final Uri uri = enrichUri(projection, selection, orderings);
-        final String orderBy = Sql.generator().expressOrdering(orderings).replace("ORDER BY", "").trim();
+        final Uri uri = enrichUri(projection, selection, orderings, false);
         return selection == null
-                ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, orderBy))
-                : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), selection.replacements(), orderBy));
+                ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, null))
+                : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), serializeAll(selection.replacements()), null));
     }
 
     @Override
     public Retriever query(List<FSJoin> joins, List<FSProjection> projections, FSSelection selection, List<FSOrdering> orderings) {
         final String[] p = formatProjection(projections);
-        final Uri uri = enrichUri(projections, selection, orderings);
-        final String orderBy = Sql.generator().expressOrdering(orderings).replace("ORDER BY", "").trim();
+        final Uri uri = enrichUri(projections, selection, orderings, joins, false);
         return selection == null
-                ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, orderBy))
-                : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), selection.replacements(), orderBy));
+                ? new FSCursor(appContext.getContentResolver().query(uri, p, null, null, null))
+                : new FSCursor(appContext.getContentResolver().query(uri, p, selection.where(), serializeAll(selection.replacements()), null));
     }
 
-    // TODO: create separate class for enriching Uris
-    private Uri enrichUri(@Nullable FSSelection selection, @Nullable List<FSOrdering> orderings) {
-        return enrichUri((FSProjection) null, selection, orderings);
+    private Uri enrichUri(@Nullable FSSelection selection, @Nullable List<FSOrdering> orderings, boolean upsert) {
+        return enrichUri((FSProjection) null, selection, orderings, upsert);
     }
 
-    private Uri enrichUri(@Nullable FSProjection projection, @Nullable FSSelection selection, @Nullable List<FSOrdering> orderings) {
+    private Uri enrichUri(@Nullable FSProjection projection,
+                          @Nullable FSSelection selection,
+                          @Nullable List<FSOrdering> orderings,
+                          boolean upsert) {
         return enrichUri(
                 projection == null ? Collections.<FSProjection>emptyList() : Arrays.asList(projection),
                 selection,
-                orderings
+                orderings,
+                null,
+                upsert
         );
     }
 
-    private Uri enrichUri(@NonNull List<FSProjection> projections, @Nullable FSSelection selection, @Nullable List<FSOrdering> orderings) {
+    private Uri enrichUri(@NonNull List<FSProjection> projections,
+                          @Nullable FSSelection selection,
+                          @Nullable List<FSOrdering> orderings,
+                          @Nullable List<FSJoin> joins,
+                          boolean upsert) {
         return enrichUri(
                 projections,
                 selection == null || selection.limits() == null ? Limits.NONE : selection.limits(),
-                orderings == null ? Collections.<FSOrdering>emptyList() : orderings
+                orderings == null ? Collections.<FSOrdering>emptyList() : orderings,
+                joins == null ? Collections.<FSJoin>emptyList() : joins,
+                upsert
         );
     }
 
-    private Uri enrichUri(@NonNull List<FSProjection> projections, @NonNull Limits limits, @NonNull List<FSOrdering> orderings) {
-        Uri.Builder builder = resource.buildUpon()
-                .appendQueryParameter("DISTINCT", isDistinct(projections) ? "true" : "false");
-
-        if (limits.offset() > 0 || limits.count() > 0) {
-            final String limitType = limits.isBottom() ? LAST_QUERY_PARAM : FIRST_QUERY_PARAM;
-            builder.appendQueryParameter(limitType, String.valueOf(limits.count()))
-                    .appendQueryParameter(OFFSET_QUERY_PARAM, String.valueOf(limits.offset()));
+    private Uri enrichUri(@NonNull List<FSProjection> projections,
+                          @NonNull Limits limits,
+                          @NonNull List<FSOrdering> orderings,
+                          @NonNull List<FSJoin> joins,
+                          boolean upsert) {
+        Uri.Builder builder = resource.buildUpon();
+        // TODO: this could fail upon passing in a URI that already has different limits. Account for this situation
+        if (limits.count() != 0 || limits.offset() > 0) {
+            builder.appendQueryParameter(UriAnalyzer.QUERY_PARAM_LIMITS, UriAnalyzer.stringify(limits));
+        }
+        if (isDistinct(projections) && !UriAnalyzer.isForDistinctQuery(resource)) {
+            builder.appendQueryParameter(UriAnalyzer.QUERY_PARAM_DISTINCT, String.valueOf(true));
+        }
+        if (upsert && !UriAnalyzer.isForUpsert(resource)) {
+            builder.appendQueryParameter(UriAnalyzer.QUERY_PARAM_UPSERT, String.valueOf(true));
         }
 
-        if (!orderings.isEmpty()) {
-            builder.appendQueryParameter(ORDER_BY_QUERY_PARM, Sql.generator().expressOrdering(orderings));
+        List<FSOrdering> includedOrderings = UriAnalyzer.extractOrderingsFrom(resource);
+        for (FSOrdering ordering : orderings) {
+            boolean included = false;
+            for (FSOrdering includedOrdering : includedOrderings) {
+                if (EQHelper.orderingEquals(ordering, includedOrdering)) {
+                    included = true;
+                    break;
+                }
+            }
+            if (!included) {
+                builder.appendQueryParameter(UriAnalyzer.QUERY_PARAM_ORDERING, UriAnalyzer.stringify(ordering));
+            }
+        }
+
+        List<FSJoin> includedJoins = UriAnalyzer.extractJoinsFrom(resource);
+        for (FSJoin join : joins) {
+            boolean included = false;
+            for (FSJoin includedJoin : includedJoins) {
+                if (EQHelper.joinEquals(join, includedJoin)) {
+                    included = true;
+                    break;
+                }
+            }
+            if (!included) {
+                builder.appendQueryParameter(UriAnalyzer.QUERY_PARAM_JOIN, UriAnalyzer.stringify(join));
+            }
         }
         return builder.build();
     }

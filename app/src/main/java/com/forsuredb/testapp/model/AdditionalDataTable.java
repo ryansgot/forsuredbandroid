@@ -9,7 +9,7 @@ import com.fsryan.forsuredb.api.FSGetApi;
 import com.fsryan.forsuredb.api.Retriever;
 
 @FSTable("additional_data")
-@FSStaticData(asset = "additional_data.xml", recordName = "additional_data")
+@FSStaticData("additional_data.xml")
 public interface AdditionalDataTable extends FSGetApi {
 
     @FSColumn(value = "email", orderable = false, searchable = false)
