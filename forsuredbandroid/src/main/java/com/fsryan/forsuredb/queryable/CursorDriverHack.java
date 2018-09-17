@@ -4,6 +4,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteCursorDriver;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQuery;
+import android.os.Build;
 import android.os.CancellationSignal;
 import android.support.annotation.NonNull;
 
@@ -76,6 +77,10 @@ class CursorDriverHack implements SQLiteCursorDriver {
     }
 
     private static Constructor<SQLiteQuery> initQueryFactory() {
+        if (Build.VERSION.SDK_INT >= 28) {
+            // Android P will throw NoSuchMethodException here
+            return null;
+        }
         try {
             Constructor<SQLiteQuery> ret = SQLiteQuery.class.getDeclaredConstructor(
                     SQLiteDatabase.class,

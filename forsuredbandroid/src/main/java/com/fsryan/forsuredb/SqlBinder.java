@@ -1,6 +1,7 @@
 package com.fsryan.forsuredb;
 
 import android.content.ContentValues;
+import android.database.sqlite.SQLiteProgram;
 import android.database.sqlite.SQLiteQuery;
 import android.database.sqlite.SQLiteStatement;
 import android.support.annotation.NonNull;
@@ -38,11 +39,11 @@ public abstract class SqlBinder {
         }
     }
 
-    public static void bindObjects(@NonNull SQLiteQuery q, @Nullable Object[] objects) {
+    public static void bindObjects(@NonNull SQLiteProgram q, @Nullable Object[] objects) {
         bindObjects(q, 1, objects);
     }
 
-    public static void bindObjects(@NonNull SQLiteQuery q, int startPos, @Nullable Object[] objects) {
+    public static void bindObjects(@NonNull SQLiteProgram q, int startPos, @Nullable Object[] objects) {
         if (objects == null) {
             return;
         }
@@ -52,7 +53,7 @@ public abstract class SqlBinder {
         }
     }
 
-    public static void bindObject(int pos, SQLiteStatement s, Object obj) {
+    public static void bindObject(int pos, SQLiteProgram s, Object obj) {
         Class<?> cls = obj.getClass();
         if (cls == Long.class) {
             s.bindLong(pos, (long) obj);

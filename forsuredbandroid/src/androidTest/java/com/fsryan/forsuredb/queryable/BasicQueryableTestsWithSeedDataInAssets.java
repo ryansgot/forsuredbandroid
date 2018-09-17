@@ -1,6 +1,7 @@
 package com.fsryan.forsuredb.queryable;
 
 import android.content.ContentValues;
+import android.os.Build;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
@@ -30,6 +31,7 @@ import static com.fsryan.forsuredb.TestQueryUtil.selection;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQueryableTest {
 
@@ -730,6 +732,7 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
 
     @Test
     public void shouldCorrectlyFindByByteArray() {
+        assumeTrue(Build.VERSION_CODES.P > Build.VERSION.SDK_INT);
         insertConsecutivelyIncreasingValuedUsers(4, true);
 
         FSSelection selection = selection().where("profile_info_binary_data=?", new Object[]{new byte[] {1}}).build();
@@ -741,6 +744,7 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
 
     @Test
     public void shouldCorrectlyFindByNotByteArray() {
+        assumeTrue(Build.VERSION_CODES.P > Build.VERSION.SDK_INT);
         insertConsecutivelyIncreasingValuedUsers(4, true);
 
         FSSelection selection = selection().where("profile_info_binary_data!=?", new Object[]{new byte[] {1}}).build();
@@ -754,6 +758,7 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
 
     @Test
     public void shouldCorrectlyFindByByteArrayGreaterThan() {
+        assumeTrue(Build.VERSION_CODES.P > Build.VERSION.SDK_INT);
         insertConsecutivelyIncreasingValuedUsers(4, true);
 
         FSSelection selection = selection().where("profile_info_binary_data>?", new Object[]{new byte[] {2}}).build();
@@ -766,6 +771,7 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
 
     @Test
     public void shouldCorrectlyFindByByteArrayGreaterThanOrEqualTo() {
+        assumeTrue(Build.VERSION_CODES.P > Build.VERSION.SDK_INT);
         insertConsecutivelyIncreasingValuedUsers(4, true);
 
         FSSelection selection = selection().where("profile_info_binary_data>=?", new Object[]{new byte[] {3}}).build();
@@ -778,6 +784,7 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
 
     @Test
     public void shouldCorrectlyFindByByteArrayLessThan() {
+        assumeTrue(Build.VERSION_CODES.P > Build.VERSION.SDK_INT);
         insertConsecutivelyIncreasingValuedUsers(4, true);
 
         FSSelection selection = selection().where("profile_info_binary_data<?", new Object[]{new byte[] {3}}).build();
@@ -790,6 +797,7 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
 
     @Test
     public void shouldCorrectlyFindByByteArrayLessThanOrEqualTo() {
+        assumeTrue(Build.VERSION_CODES.P > Build.VERSION.SDK_INT);
         insertConsecutivelyIncreasingValuedUsers(4, true);
 
         FSSelection selection = selection().where("profile_info_binary_data<=?", new Object[]{new byte[] {3}}).build();
@@ -803,6 +811,7 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
 
     @Test
     public void shouldCorrectlyFindByByteArrayBetweenOpen() {
+        assumeTrue(Build.VERSION_CODES.P > Build.VERSION.SDK_INT);
         insertConsecutivelyIncreasingValuedUsers(4, true);
 
         FSSelection selection = selection().where("profile_info_binary_data > ? AND profile_info_binary_data < ?", new Object[]{new byte[] {1}, new byte[] {4}}).build();
@@ -815,6 +824,7 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
 
     @Test
     public void shouldCorrectlyFindByByteArrayBetweenClopenLowerInclusive() {
+        assumeTrue(Build.VERSION_CODES.P > Build.VERSION.SDK_INT);
         insertConsecutivelyIncreasingValuedUsers(4, true);
 
         FSSelection selection = selection().where("profile_info_binary_data >= ? AND profile_info_binary_data < ?", new Object[]{new byte[] {1}, new byte[] {4}}).build();
@@ -828,6 +838,7 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
 
     @Test
     public void shouldCorrectlyFindByByteArrayBetweenClopenUpperInclusive() {
+        assumeTrue(Build.VERSION_CODES.P > Build.VERSION.SDK_INT);
         insertConsecutivelyIncreasingValuedUsers(4, true);
 
         FSSelection selection = selection().where("profile_info_binary_data > ? AND profile_info_binary_data <= ?", new Object[]{new byte[] {1}, new byte[] {4}}).build();
@@ -841,6 +852,7 @@ public abstract class BasicQueryableTestsWithSeedDataInAssets<L> extends BaseQue
 
     @Test
     public void shouldCorrectlyFindByByteArrayBetweenClosed() {
+        assumeTrue(Build.VERSION_CODES.P > Build.VERSION.SDK_INT);
         insertConsecutivelyIncreasingValuedUsers(4, true);
 
         FSSelection selection = selection().where("profile_info_binary_data >= ? AND profile_info_binary_data <= ?", new Object[]{new byte[] {2}, new byte[] {3}}).build();
